@@ -1,5 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
 import React, { useState } from "react";
 import {
   Platform,
@@ -16,6 +18,7 @@ import {
   useGetSeasons,
   getGetLiftsPeriodQueryKey,
 } from "@workspace/api-client-react";
+import type { PeriodResult } from "@workspace/api-client-react";
 import { StatCard } from "@/components/StatCard";
 import { StatCardSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
@@ -35,6 +38,54 @@ function formatDate(dateStr: string, language: string): string {
   const d = new Date(dateStr + "T12:00:00Z");
   const locale = language === "it" ? "it-IT" : "en-GB";
   return d.toLocaleDateString(locale, { day: "numeric", month: "short", year: "numeric" });
+}
+
+function csvEscape(value: string | number): string {
+  const str = String(value);
+  if (str.includes('"') || str.includes(",") || str.includes("\n")) {
+    return `"${str.replace(/"/g, '""')}"`;
+  }
+  return str;
+}
+
+function buildCsv(data: PeriodResult): string {
+  const header = ["rank", "lift_name", "ggnr", "total_passages", "total_guests", "total_first_passages", "active_days"].join(",");
+  const rows = data.lifts.map((lift, index) =>
+    [
+      index + 1,
+      csvEscape(lift.ggbz),
+      lift.ggnr,
+      lift.totalPassages,
+      lift.totalGuests,
+      lift.totalFirstPassages,
+      lift.activeDays,
+    ].join(",")
+  );
+  return [header, ...rows].join("\n");
+}
+
+async function exportCsv(data: PeriodResult, from: string, to: string): Promise<void> {
+  const filename = `period-${from}_${to}.csv`;
+  const csv = buildCsv(data);
+
+  if (Platform.OS === "web") {
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  } else {
+    const uri = (FileSystem.cacheDirectory ?? "") + filename;
+    await FileSystem.writeAsStringAsync(uri, csv, {
+      encoding: FileSystem.EncodingType.UTF8,
+    });
+    await Sharing.shareAsync(uri, {
+      mimeType: "text/csv",
+      UTI: "public.comma-separated-values-text",
+    });
+  }
 }
 
 export default function PeriodScreen() {
@@ -94,6 +145,16 @@ export default function PeriodScreen() {
           </Text>
           <Text style={[styles.title, { color: colors.foreground }]}>{t.period}</Text>
         </View>
+        {hasData && (
+          <TouchableOpacity
+            style={[styles.exportBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+            onPress={() => exportCsv(data, appliedFrom, appliedTo)}
+            activeOpacity={0.7}
+          >
+            <Feather name="download" size={14} color={colors.primary} />
+            <Text style={[styles.exportBtnText, { color: colors.primary }]}>{t.periodExportCsv}</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       {/* Season chips */}
@@ -362,6 +423,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   titleBlock: { flex: 1 },
+  exportBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+    borderRadius: 20,
+    borderWidth: 1,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+  },
+  exportBtnText: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+  },
   subtitle: {
     fontSize: 12,
     fontFamily: "Inter_500Medium",

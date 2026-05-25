@@ -73,6 +73,7 @@ export interface Translations {
   periodNoData: string;
   periodNoDataSub: string;
   periodDays: string;
+  periodExportCsv: string;
 
   groups: string;
   noGroupData: string;
@@ -184,6 +185,7 @@ const it: Translations = {
   periodNoData: "Nessun dato per questo periodo",
   periodNoDataSub: "Prova un intervallo di date diverso",
   periodDays: "giorni",
+  periodExportCsv: "Esporta CSV",
 
   groups: "Gruppi",
   noGroupData: "Nessun dato per questo gruppo",
@@ -295,6 +297,7 @@ const en: Translations = {
   periodNoData: "No data for this period",
   periodNoDataSub: "Try a different date range",
   periodDays: "days",
+  periodExportCsv: "Export CSV",
 
   groups: "Groups",
   noGroupData: "No data for this group",
