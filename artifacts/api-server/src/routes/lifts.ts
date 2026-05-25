@@ -2,12 +2,34 @@ import { Router, type IRouter } from "express";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db, liftSnapshotsTable } from "@workspace/db";
 import {
-  SyncLiftsBody,
   GetLatestLiftsQueryParams,
   GetDashboardSummaryQueryParams,
   GetLiftHistoryQueryParams,
   GetLiftExtractionsQueryParams,
 } from "@workspace/api-zod";
+import { z } from "zod";
+
+// Coercing sync schema — uses z.coerce.number() so SQL Server string-typed
+// numeric columns (DECIMAL, CHAR-stored IDs, etc.) are accepted without error.
+const CoercedSyncBody = z.object({
+  snapshots: z.array(z.object({
+    idin:         z.string().nullish(),
+    dupd:         z.string(),
+    dtgg:         z.string(),
+    ggnr:         z.coerce.number(),
+    ggbz:         z.string(),
+    nsoc:         z.coerce.number().nullish(),
+    npin:         z.coerce.number().nullish(),
+    npic:         z.coerce.number().nullish(),
+    nuin:         z.coerce.number().nullish(),
+    npas:         z.coerce.number().nullish(),
+    eser:         z.string(),
+    nome_societa: z.string().nullish(),
+    descr_grp:    z.string().nullish(),
+    id_societa:   z.coerce.number().nullish(),
+    codgrp:       z.string().nullish(),
+  })),
+});
 const router: IRouter = Router();
 
 function todayIso(): string {
@@ -204,28 +226,11 @@ router.post("/lifts/sync", async (req, res): Promise<void> => {
     }
   }
 
-  // Defensively coerce numeric fields — SQL Server's FOR JSON PATH can emit
-  // numeric columns as quoted strings in some edge cases (e.g. DECIMAL types).
-  const coerceNum = (v: unknown) =>
-    v === null || v === undefined ? v : isNaN(Number(v)) ? v : Number(v);
+  req.log.info({ firstSnapshot: (req.body?.snapshots ?? [])[0] }, "sync first snapshot");
 
-  const rawSnapshots = Array.isArray(req.body?.snapshots) ? req.body.snapshots : [];
-  const coerced = {
-    snapshots: rawSnapshots.map((s: Record<string, unknown>) => ({
-      ...s,
-      ggnr:       coerceNum(s["ggnr"]),
-      nsoc:       coerceNum(s["nsoc"]),
-      npin:       coerceNum(s["npin"]),
-      npic:       coerceNum(s["npic"]),
-      nuin:       coerceNum(s["nuin"]),
-      npas:       coerceNum(s["npas"]),
-      id_societa: coerceNum(s["id_societa"]),
-    })),
-  };
-
-  const parsed = SyncLiftsBody.safeParse(coerced);
+  const parsed = CoercedSyncBody.safeParse(req.body);
   if (!parsed.success) {
-    req.log.error({ zodError: parsed.error.flatten() }, "sync validation failed");
+    req.log.error({ zodIssues: parsed.error.issues.slice(0, 5) }, "sync validation failed");
     res.status(400).json({ error: parsed.error.message });
     return;
   }
