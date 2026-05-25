@@ -55,6 +55,15 @@ export interface Translations {
   tabDashboard: string;
   tabLifts: string;
   tabIntegration: string;
+
+  guestsToday: string;
+  liftPrefix: string;
+
+  sqlComment1: string;
+  sqlComment2: string;
+  sqlPrintRowsToSync: string;
+  sqlPrintComplete: string;
+  sqlErrorChunkFailed: string;
 }
 
 const it: Translations = {
@@ -112,6 +121,15 @@ const it: Translations = {
   tabDashboard: "Dashboard",
   tabLifts: "Impianti",
   tabIntegration: "Integrazione",
+
+  guestsToday: "ospiti oggi",
+  liftPrefix: "Impianto #",
+
+  sqlComment1: "-- POST HTTP a blocchi — invia 50 righe per chiamata, sicuro per caricamenti completi",
+  sqlComment2: "-- Sostituisci SKP_PASSAGGI / SKP_IMPIANTI / SKP_SOCIETA con i nomi reali delle tabelle",
+  sqlPrintRowsToSync: "Righe da sincronizzare: ",
+  sqlPrintComplete: "Sincronizzazione completata",
+  sqlErrorChunkFailed: "Blocco fallito. HTTP %d all''offset %d. Body: %s",
 };
 
 const en: Translations = {
@@ -169,6 +187,15 @@ const en: Translations = {
   tabDashboard: "Dashboard",
   tabLifts: "Lifts",
   tabIntegration: "Integration",
+
+  guestsToday: "guests today",
+  liftPrefix: "Lift #",
+
+  sqlComment1: "-- Chunked HTTP POST — sends 50 rows per call, safe for full history loads",
+  sqlComment2: "-- Replace SKP_PASSAGGI / SKP_IMPIANTI / SKP_SOCIETA with your table names",
+  sqlPrintRowsToSync: "Rows to sync: ",
+  sqlPrintComplete: "Sync complete",
+  sqlErrorChunkFailed: "Chunk failed. HTTP %d at offset %d. Body: %s",
 };
 
 export const translations: Record<Language, Translations> = { it, en };

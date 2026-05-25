@@ -19,7 +19,7 @@ export function LiftRow({ name, passages, guests, firstPassage, company, group, 
   const { t } = useTranslation();
 
   const isActive = (passages ?? 0) > 0;
-  const subtitle = company ?? group ?? `${firstPassage ?? 0} guests today`;
+  const subtitle = company ?? group ?? `${firstPassage ?? 0} ${t.guestsToday}`;
 
   return (
     <TouchableOpacity

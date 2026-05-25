@@ -47,7 +47,7 @@ export default function LiftDetailScreen() {
         contentContainerStyle={[styles.content, { paddingBottom: Platform.OS === "web" ? 34 : 100 }]}
       >
         <Text style={[styles.title, { color: colors.foreground }]} numberOfLines={2}>
-          {name ?? `Lift #${ggnr}`}
+          {name ?? `${t.liftPrefix}${ggnr}`}
         </Text>
         <Text style={[styles.code, { color: colors.mutedForeground }]}>{t.code}: {ggnr}</Text>
         {latest?.nomeSocieta && (

@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import * as Haptics from "expo-haptics";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   Platform,
   ScrollView,
@@ -12,9 +12,9 @@ import {
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
+import type { Translations } from "@/i18n";
 
 const DOMAIN = process.env.EXPO_PUBLIC_DOMAIN ?? "your-app.replit.app";
-
 const syncUrl = `https://${DOMAIN}/api/lifts/sync`;
 
 const examplePayload = `{
@@ -35,10 +35,11 @@ const examplePayload = `{
   ]
 }`;
 
-const sqlExample = `-- Chunked HTTP POST — sends 50 rows per call, safe for full history loads
--- Replace SKP_PASSAGGI / SKP_IMPIANTI / SKP_SOCIETA with your table names
+function buildSqlExample(url: string, t: Translations): string {
+  return `${t.sqlComment1}
+${t.sqlComment2}
 
-DECLARE @url        NVARCHAR(512) = N'${syncUrl}'
+DECLARE @url        NVARCHAR(512) = N'${url}'
 DECLARE @chunkSize  INT           = 50   -- rows per POST; keep <= 100
 DECLARE @offset     INT           = 0
 DECLARE @total      INT
@@ -47,9 +48,6 @@ DECLARE @http       INT
 DECLARE @status     INT
 DECLARE @resp       NVARCHAR(MAX)
 
--- Stage rows — deduplicate by (dupd, ggnr) in case LEFT JOIN produces
--- multiple rows per lift snapshot (one per company relation).
--- Remove the WHERE date filter to load full history across all seasons.
 ;WITH src AS (
     SELECT
         RTRIM(CAST(p.idin AS NVARCHAR(50)))       AS idin,
@@ -79,7 +77,7 @@ DECLARE @resp       NVARCHAR(MAX)
       AND p.ggnr IS NOT NULL
       AND p.ggbz IS NOT NULL
       AND p.eser IS NOT NULL
-    -- AND CAST(p.dtgg AS DATE) = CAST(GETDATE() AS DATE)  -- today only
+    -- AND CAST(p.dtgg AS DATE) = CAST(GETDATE() AS DATE)
 )
 SELECT idin, dupd, dtgg, ggnr, ggbz, nsoc, npin, npic, nuin, npas,
        eser, nome_societa, descr_grp, id_societa, codgrp
@@ -88,7 +86,7 @@ FROM src
 WHERE rn = 1
 
 SELECT @total = COUNT(*) FROM #rows
-PRINT CONCAT('Rows to sync: ', @total)
+PRINT CONCAT(N'${t.sqlPrintRowsToSync}', @total)
 
 WHILE @offset < @total
 BEGIN
@@ -112,8 +110,7 @@ BEGIN
     IF @status NOT IN (200, 201)
     BEGIN
         DROP TABLE #rows
-        RAISERROR('Chunk failed. HTTP %d at offset %d. Body: %s',
-                  16, 1, @status, @offset, @resp)
+        RAISERROR('${t.sqlErrorChunkFailed}', 16, 1, @status, @offset, @resp)
         RETURN
     END
 
@@ -122,7 +119,8 @@ BEGIN
 END
 
 DROP TABLE #rows
-PRINT 'Sync complete'`;
+PRINT N'${t.sqlPrintComplete}'`;
+}
 
 function CopyBlock({ label, content }: { label: string; content: string }) {
   const colors = useColors();
@@ -156,6 +154,8 @@ export default function InfoScreen() {
   const colors = useColors();
   const { t } = useTranslation();
   const topPadding = Platform.OS === "web" ? 67 : 0;
+
+  const sqlExample = useMemo(() => buildSqlExample(syncUrl, t), [t]);
 
   return (
     <ScrollView
