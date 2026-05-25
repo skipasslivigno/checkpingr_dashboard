@@ -249,7 +249,7 @@ router.post("/lifts/sync", async (req, res): Promise<void> => {
     await db
       .insert(liftSnapshotsTable)
       .values(
-        chunk.map((snap) => ({
+        chunk.map((snap: z.infer<typeof CoercedSyncBody>["snapshots"][number]) => ({
           idin: snap.idin ?? null,
           dupd: snap.dupd,
           dtgg: snap.dtgg,
