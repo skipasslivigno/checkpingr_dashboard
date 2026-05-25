@@ -27,9 +27,11 @@ import type {
   GetLiftExtractionsParams,
   GetLiftHistoryParams,
   GetLiftsPeriodParams,
+  GetSeasonTrendParams,
   HealthStatus,
   LiftSnapshot,
   PeriodResult,
+  SeasonTrend,
   SyncInput,
   SyncResult
 } from './api.schemas';
@@ -770,6 +772,91 @@ export function useGetSeasons<TData = Awaited<ReturnType<typeof getSeasons>>, TE
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetSeasonsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetSeasonTrendUrl = (params?: GetSeasonTrendParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/lifts/season-trend?${stringifiedParams}` : `/api/lifts/season-trend`
+}
+
+/**
+ * Returns daily aggregated totals per season so the client can draw multi-season comparison lines. Each season entry contains an array of daily data points ordered by date.
+ * @summary Get daily passage totals per season for comparison charts
+ */
+export const getSeasonTrend = async (params?: GetSeasonTrendParams, options?: RequestInit): Promise<SeasonTrend[]> => {
+
+  return customFetch<SeasonTrend[]>(getGetSeasonTrendUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSeasonTrendQueryKey = (params?: GetSeasonTrendParams,) => {
+    return [
+    `/api/lifts/season-trend`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetSeasonTrendQueryOptions = <TData = Awaited<ReturnType<typeof getSeasonTrend>>, TError = ErrorType<unknown>>(params?: GetSeasonTrendParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSeasonTrend>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSeasonTrendQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSeasonTrend>>> = ({ signal }) => getSeasonTrend(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSeasonTrend>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSeasonTrendQueryResult = NonNullable<Awaited<ReturnType<typeof getSeasonTrend>>>
+export type GetSeasonTrendQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get daily passage totals per season for comparison charts
+ */
+
+export function useGetSeasonTrend<TData = Awaited<ReturnType<typeof getSeasonTrend>>, TError = ErrorType<unknown>>(
+ params?: GetSeasonTrendParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSeasonTrend>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSeasonTrendQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

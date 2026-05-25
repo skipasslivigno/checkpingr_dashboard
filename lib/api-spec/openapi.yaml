@@ -252,6 +252,29 @@ paths:
                 items:
                   type: string
 
+  /lifts/season-trend:
+    get:
+      operationId: getSeasonTrend
+      tags: [lifts]
+      summary: Get daily passage totals per season for comparison charts
+      description: Returns daily aggregated totals per season so the client can draw multi-season comparison lines. Each season entry contains an array of daily data points ordered by date.
+      parameters:
+        - name: seasons
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated list of season strings e.g. "2023-2024,2024-2025". Defaults to the two most recent seasons.
+      responses:
+        "200":
+          description: Season trend data
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SeasonTrend"
+
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -425,6 +448,36 @@ components:
         activeDays:
           type: integer
           description: Number of days the lift had at least one passage
+
+    SeasonTrendPoint:
+      type: object
+      required: [date, dayIndex, totalPassages, totalGuests]
+      properties:
+        date:
+          type: string
+          description: Date in YYYY-MM-DD format
+        dayIndex:
+          type: integer
+          description: 1-based index of this day within the season (for aligning seasons on the x-axis)
+        totalPassages:
+          type: integer
+          description: Total passages across all lifts on this date
+        totalGuests:
+          type: integer
+          description: Total guests on lifts across all lifts on this date
+
+    SeasonTrend:
+      type: object
+      required: [season, data]
+      properties:
+        season:
+          type: string
+          description: Season identifier e.g. "2024-2025"
+        data:
+          type: array
+          items:
+            $ref: "#/components/schemas/SeasonTrendPoint"
+          description: Daily data points ordered by date
 
     PeriodResult:
       type: object

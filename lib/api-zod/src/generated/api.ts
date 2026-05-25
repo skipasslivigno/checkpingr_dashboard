@@ -193,3 +193,23 @@ export const GetSeasonsResponseItem = zod.string()
 export const GetSeasonsResponse = zod.array(GetSeasonsResponseItem)
 
 
+/**
+ * Returns daily aggregated totals per season so the client can draw multi-season comparison lines. Each season entry contains an array of daily data points ordered by date.
+ * @summary Get daily passage totals per season for comparison charts
+ */
+export const GetSeasonTrendQueryParams = zod.object({
+  "seasons": zod.coerce.string().optional().describe('Comma-separated list of season strings e.g. \"2023-2024,2024-2025\". Defaults to the two most recent seasons.')
+})
+
+export const GetSeasonTrendResponseItem = zod.object({
+  "season": zod.string().describe('Season identifier e.g. \"2024-2025\"'),
+  "data": zod.array(zod.object({
+  "date": zod.string().describe('Date in YYYY-MM-DD format'),
+  "dayIndex": zod.number().describe('1-based index of this day within the season (for aligning seasons on the x-axis)'),
+  "totalPassages": zod.number().describe('Total passages across all lifts on this date'),
+  "totalGuests": zod.number().describe('Total guests on lifts across all lifts on this date')
+})).describe('Daily data points ordered by date')
+})
+export const GetSeasonTrendResponse = zod.array(GetSeasonTrendResponseItem)
+
+

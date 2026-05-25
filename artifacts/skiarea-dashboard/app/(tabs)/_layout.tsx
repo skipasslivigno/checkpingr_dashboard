@@ -30,6 +30,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: "calendar", selected: "calendar.badge.checkmark" }} />
         <Label>{t.tabPeriod}</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="charts">
+        <Icon sf={{ default: "chart.line.uptrend.xyaxis", selected: "chart.line.uptrend.xyaxis" }} />
+        <Label>{t.tabCharts}</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="info">
         <Icon sf={{ default: "link", selected: "link" }} />
         <Label>{t.tabIntegration}</Label>
@@ -122,6 +126,18 @@ function ClassicTabLayout() {
               <SymbolView name="calendar" tintColor={color} size={22} />
             ) : (
               <Feather name="calendar" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="charts"
+        options={{
+          title: t.tabCharts,
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="chart.line.uptrend.xyaxis" tintColor={color} size={22} />
+            ) : (
+              <Feather name="trending-up" size={22} color={color} />
             ),
         }}
       />

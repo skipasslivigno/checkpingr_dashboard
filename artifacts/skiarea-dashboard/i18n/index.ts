@@ -56,6 +56,7 @@ export interface Translations {
   tabLifts: string;
   tabGroups: string;
   tabPeriod: string;
+  tabCharts: string;
   tabIntegration: string;
 
   period: string;
@@ -76,6 +77,16 @@ export interface Translations {
   noGroupData: string;
   activeLiftsOf: string;
   firstPassages: string;
+
+  charts: string;
+  chartsSubtitle: string;
+  chartsDailyPassages: string;
+  chartsCumulative: string;
+  chartsNoData: string;
+  chartsNoDataSub: string;
+  chartsSeasonSelector: string;
+  chartsPassages: string;
+  chartsDay: string;
 
   guestsToday: string;
   liftPrefix: string;
@@ -152,6 +163,7 @@ const it: Translations = {
   tabLifts: "Impianti",
   tabGroups: "Gruppi",
   tabPeriod: "Periodo",
+  tabCharts: "Grafici",
   tabIntegration: "Integrazione",
 
   period: "Periodo",
@@ -172,6 +184,16 @@ const it: Translations = {
   noGroupData: "Nessun dato per questo gruppo",
   activeLiftsOf: "attivi su",
   firstPassages: "1° pass.",
+
+  charts: "Grafici",
+  chartsSubtitle: "Confronto stagioni",
+  chartsDailyPassages: "Passaggi giornalieri",
+  chartsCumulative: "Passaggi cumulativi",
+  chartsNoData: "Nessun dato disponibile",
+  chartsNoDataSub: "Carica dati per visualizzare i grafici",
+  chartsSeasonSelector: "Stagioni da confrontare",
+  chartsPassages: "Passaggi",
+  chartsDay: "Giorno",
 
   guestsToday: "ospiti oggi",
   liftPrefix: "Impianto #",
@@ -248,6 +270,7 @@ const en: Translations = {
   tabLifts: "Lifts",
   tabGroups: "Groups",
   tabPeriod: "Period",
+  tabCharts: "Charts",
   tabIntegration: "Integration",
 
   period: "Period",
@@ -268,6 +291,16 @@ const en: Translations = {
   noGroupData: "No data for this group",
   activeLiftsOf: "active of",
   firstPassages: "1st pass.",
+
+  charts: "Charts",
+  chartsSubtitle: "Season comparison",
+  chartsDailyPassages: "Daily passages",
+  chartsCumulative: "Cumulative passages",
+  chartsNoData: "No data available",
+  chartsNoDataSub: "Push data to see charts",
+  chartsSeasonSelector: "Seasons to compare",
+  chartsPassages: "Passages",
+  chartsDay: "Day",
 
   guestsToday: "guests today",
   liftPrefix: "Lift #",

@@ -413,4 +413,83 @@ router.get("/seasons", async (_req, res): Promise<void> => {
   res.json(rows.map((r) => r.eser));
 });
 
+router.get("/lifts/season-trend", async (req, res): Promise<void> => {
+  // Resolve the seasons to query
+  let requestedSeasons: string[] | null = null;
+  if (req.query["seasons"] && typeof req.query["seasons"] === "string") {
+    requestedSeasons = req.query["seasons"]
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 3); // max 3 seasons as per spec
+  }
+
+  // If not specified, default to the two most recent seasons
+  if (!requestedSeasons || requestedSeasons.length === 0) {
+    const allSeasons = await db
+      .selectDistinct({ eser: liftSnapshotsTable.eser })
+      .from(liftSnapshotsTable)
+      .orderBy(desc(liftSnapshotsTable.eser))
+      .limit(2);
+    requestedSeasons = allSeasons.map((r) => r.eser);
+  }
+
+  if (requestedSeasons.length === 0) {
+    res.json([]);
+    return;
+  }
+
+  // For each season, aggregate daily totals using the latest snapshot per lift per day
+  const result: Array<{
+    season: string;
+    data: Array<{ date: string; dayIndex: number; totalPassages: number; totalGuests: number }>;
+  }> = [];
+
+  for (const season of requestedSeasons) {
+    const rows = await db.execute<{
+      dtgg_date: string;
+      total_passages: string;
+      total_guests: string;
+    }>(sql`
+      WITH latest_per_lift_per_day AS (
+        SELECT DISTINCT ON (LEFT(${liftSnapshotsTable.dtgg}, 10), ${liftSnapshotsTable.ggnr})
+          LEFT(${liftSnapshotsTable.dtgg}, 10) AS dtgg_date,
+          ${liftSnapshotsTable.npas},
+          ${liftSnapshotsTable.nuin}
+        FROM ${liftSnapshotsTable}
+        WHERE ${liftSnapshotsTable.eser} = ${season}
+        ORDER BY LEFT(${liftSnapshotsTable.dtgg}, 10), ${liftSnapshotsTable.ggnr}, ${liftSnapshotsTable.dupd} DESC
+      )
+      SELECT
+        dtgg_date,
+        COALESCE(SUM(npas), 0)::int AS total_passages,
+        COALESCE(SUM(nuin), 0)::int AS total_guests
+      FROM latest_per_lift_per_day
+      GROUP BY dtgg_date
+      ORDER BY dtgg_date ASC
+    `);
+
+    // Compute dayIndex as calendar days from the first date in this season's data.
+    // This ensures cross-season alignment is by actual calendar position, not row order.
+    const firstDate = rows.rows[0]?.dtgg_date;
+    const data = rows.rows.map((r) => {
+      const dayIndex = firstDate
+        ? Math.round(
+            (new Date(r.dtgg_date).getTime() - new Date(firstDate).getTime()) / 86_400_000
+          ) + 1
+        : 1;
+      return {
+        date: r.dtgg_date,
+        dayIndex,
+        totalPassages: Number(r.total_passages),
+        totalGuests: Number(r.total_guests),
+      };
+    });
+
+    result.push({ season, data });
+  }
+
+  res.json(result);
+});
+
 export default router;

@@ -155,6 +155,24 @@ export interface PeriodLiftRow {
   activeDays: number;
 }
 
+export interface SeasonTrendPoint {
+  /** Date in YYYY-MM-DD format */
+  date: string;
+  /** 1-based index of this day within the season (for aligning seasons on the x-axis) */
+  dayIndex: number;
+  /** Total passages across all lifts on this date */
+  totalPassages: number;
+  /** Total guests on lifts across all lifts on this date */
+  totalGuests: number;
+}
+
+export interface SeasonTrend {
+  /** Season identifier e.g. "2024-2025" */
+  season: string;
+  /** Daily data points ordered by date */
+  data: SeasonTrendPoint[];
+}
+
 export interface PeriodResult {
   /** Start date YYYY-MM-DD */
   from: string;
@@ -237,5 +255,12 @@ to: string;
  * Season filter e.g. "2024-2025"
  */
 season?: string;
+};
+
+export type GetSeasonTrendParams = {
+/**
+ * Comma-separated list of season strings e.g. "2023-2024,2024-2025". Defaults to the two most recent seasons.
+ */
+seasons?: string;
 };
 
