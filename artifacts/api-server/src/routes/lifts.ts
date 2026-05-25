@@ -142,6 +142,20 @@ router.get("/lifts/summary", async (req, res): Promise<void> => {
   });
 });
 
+router.get("/lifts/dates", async (req, res): Promise<void> => {
+  const season = req.query["season"] as string | undefined;
+
+  const rows = await db
+    .selectDistinct({
+      date: sql<string>`LEFT(${liftSnapshotsTable.dtgg}, 10)`,
+    })
+    .from(liftSnapshotsTable)
+    .where(season ? eq(liftSnapshotsTable.eser, season) : undefined)
+    .orderBy(desc(sql`LEFT(${liftSnapshotsTable.dtgg}, 10)`));
+
+  res.json(rows.map((r) => r.date));
+});
+
 router.get("/lifts/extractions", async (req, res): Promise<void> => {
   const parsed = GetLiftExtractionsQueryParams.safeParse(req.query);
   const date = parsed.success && parsed.data.date ? parsed.data.date : todayIso();

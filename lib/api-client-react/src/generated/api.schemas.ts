@@ -123,6 +123,10 @@ date?: string;
 extraction?: string;
 };
 
+export type GetLiftDatesParams = {
+season?: string;
+};
+
 export type GetLiftExtractionsParams = {
 /**
  * Date in YYYY-MM-DD format, defaults to today

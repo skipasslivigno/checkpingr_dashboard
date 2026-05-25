@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -6,35 +6,38 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { useGetLiftExtractions } from "@workspace/api-client-react";
+import { useGetLiftDates, useGetLiftExtractions } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
 }
 
-function offsetDate(offsetDays: number): string {
+function yesterdayIso(): string {
   const d = new Date();
-  d.setDate(d.getDate() + offsetDays);
+  d.setDate(d.getDate() - 1);
   return d.toISOString().slice(0, 10);
 }
 
 function dateChipLabel(dateStr: string): string {
   const today = todayIso();
-  const yesterday = offsetDate(-1);
+  const yesterday = yesterdayIso();
   if (dateStr === today) return "Today";
   if (dateStr === yesterday) return "Yesterday";
+
   const d = new Date(dateStr + "T12:00:00Z");
-  return d.toLocaleDateString("en", { weekday: "short", day: "numeric" });
+  const now = new Date();
+  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
+
+  if (diffDays <= 6) {
+    return d.toLocaleDateString("en", { weekday: "short", day: "numeric" });
+  }
+  return d.toLocaleDateString("en", { day: "numeric", month: "short" });
 }
 
 export function dupdToTime(dupd: string): string {
   if (!dupd || dupd.length < 12) return dupd;
   return `${dupd.slice(8, 10)}:${dupd.slice(10, 12)}`;
-}
-
-function generateRecentDates(count: number): string[] {
-  return Array.from({ length: count }, (_, i) => offsetDate(-(count - 1 - i)));
 }
 
 interface DateExtractionPickerProps {
@@ -53,12 +56,29 @@ export function DateExtractionPicker({
   onExtractionChange,
 }: DateExtractionPickerProps) {
   const colors = useColors();
-  const dates = generateRecentDates(14);
+  const scrollRef = useRef<ScrollView>(null);
+  const hasDefaulted = useRef(false);
+
+  const { data: dates } = useGetLiftDates(season ? { season } : {});
 
   const { data: extractions } = useGetLiftExtractions(
-    season ? { date: selectedDate, season } : { date: selectedDate }
+    selectedDate ? (season ? { date: selectedDate, season } : { date: selectedDate }) : undefined,
+    { query: { enabled: !!selectedDate } }
   );
 
+  // Auto-select the most recent date with data on first load
+  useEffect(() => {
+    if (!dates || dates.length === 0 || hasDefaulted.current) return;
+    if (!selectedDate || !dates.includes(selectedDate)) {
+      hasDefaulted.current = true;
+      onDateChange(dates[0]);
+      onExtractionChange(undefined);
+    } else {
+      hasDefaulted.current = true;
+    }
+  }, [dates]);
+
+  // Auto-select last extraction when date changes
   useEffect(() => {
     if (!extractions) return;
     if (extractions.length === 0) {
@@ -71,15 +91,27 @@ export function DateExtractionPicker({
     }
   }, [extractions, selectedDate]);
 
+  // Scroll selected date chip into view
+  useEffect(() => {
+    if (!dates || !selectedDate) return;
+    const idx = dates.indexOf(selectedDate);
+    if (idx >= 0 && scrollRef.current) {
+      scrollRef.current.scrollTo({ x: idx * 84, animated: true });
+    }
+  }, [selectedDate, dates]);
+
+  if (!dates || dates.length === 0) return null;
+
   return (
     <View style={styles.wrapper}>
-      {/* Date chips */}
+      {/* Date chips — all available dates, most recent first (right end) */}
       <ScrollView
+        ref={scrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.row}
       >
-        {dates.map((d) => {
+        {[...dates].reverse().map((d) => {
           const active = d === selectedDate;
           return (
             <TouchableOpacity

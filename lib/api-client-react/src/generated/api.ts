@@ -23,6 +23,7 @@ import type {
   DashboardSummary,
   GetDashboardSummaryParams,
   GetLatestLiftsParams,
+  GetLiftDatesParams,
   GetLiftExtractionsParams,
   GetLiftHistoryParams,
   HealthStatus,
@@ -279,6 +280,91 @@ export function useGetDashboardSummary<TData = Awaited<ReturnType<typeof getDash
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetDashboardSummaryQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetLiftDatesUrl = (params?: GetLiftDatesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/lifts/dates?${stringifiedParams}` : `/api/lifts/dates`
+}
+
+/**
+ * Returns distinct dates (YYYY-MM-DD) ordered most recent first
+ * @summary List all dates that have lift data
+ */
+export const getLiftDates = async (params?: GetLiftDatesParams, options?: RequestInit): Promise<string[]> => {
+
+  return customFetch<string[]>(getGetLiftDatesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLiftDatesQueryKey = (params?: GetLiftDatesParams,) => {
+    return [
+    `/api/lifts/dates`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetLiftDatesQueryOptions = <TData = Awaited<ReturnType<typeof getLiftDates>>, TError = ErrorType<unknown>>(params?: GetLiftDatesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLiftDates>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLiftDatesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLiftDates>>> = ({ signal }) => getLiftDates(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLiftDates>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLiftDatesQueryResult = NonNullable<Awaited<ReturnType<typeof getLiftDates>>>
+export type GetLiftDatesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all dates that have lift data
+ */
+
+export function useGetLiftDates<TData = Awaited<ReturnType<typeof getLiftDates>>, TError = ErrorType<unknown>>(
+ params?: GetLiftDatesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLiftDates>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLiftDatesQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

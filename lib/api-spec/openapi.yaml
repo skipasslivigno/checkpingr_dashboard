@@ -95,6 +95,28 @@ paths:
               schema:
                 $ref: "#/components/schemas/DashboardSummary"
 
+  /lifts/dates:
+    get:
+      operationId: getLiftDates
+      tags: [lifts]
+      summary: List all dates that have lift data
+      description: Returns distinct dates (YYYY-MM-DD) ordered most recent first
+      parameters:
+        - name: season
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of date strings in YYYY-MM-DD format, most recent first
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
   /lifts/extractions:
     get:
       operationId: getLiftExtractions

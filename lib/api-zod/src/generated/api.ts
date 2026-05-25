@@ -66,6 +66,18 @@ export const GetDashboardSummaryResponse = zod.object({
 
 
 /**
+ * Returns distinct dates (YYYY-MM-DD) ordered most recent first
+ * @summary List all dates that have lift data
+ */
+export const GetLiftDatesQueryParams = zod.object({
+  "season": zod.coerce.string().optional()
+})
+
+export const GetLiftDatesResponseItem = zod.string()
+export const GetLiftDatesResponse = zod.array(GetLiftDatesResponseItem)
+
+
+/**
  * Returns distinct dupd values (extraction timestamps) for a given date, ordered ascending
  * @summary List available extraction times for a date
  */
