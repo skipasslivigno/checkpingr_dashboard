@@ -3,13 +3,17 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Ski Area Dashboard API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: lifts
+    description: Lift passage operations
+  - name: dashboard
+    description: Dashboard summary operations
 paths:
   /healthz:
     get:
@@ -24,7 +28,139 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /lifts/latest:
+    get:
+      operationId: getLatestLifts
+      tags: [lifts]
+      summary: Get latest snapshot for all lifts
+      description: Returns the most recent extraction snapshot per lift for today or latest available date
+      parameters:
+        - name: season
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Season filter e.g. "2024-2025"
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Date filter in YYYY-MM-DD format, defaults to today
+      responses:
+        "200":
+          description: List of latest lift snapshots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LiftSnapshot"
+
+  /lifts/summary:
+    get:
+      operationId: getDashboardSummary
+      tags: [dashboard]
+      summary: Get dashboard summary totals
+      description: Returns aggregated totals for the dashboard
+      parameters:
+        - name: season
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Dashboard summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardSummary"
+
+  /lifts/history:
+    get:
+      operationId: getLiftHistory
+      tags: [lifts]
+      summary: Get historical snapshots for a specific lift
+      parameters:
+        - name: ggnr
+          in: query
+          required: true
+          schema:
+            type: integer
+        - name: season
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of snapshots for this lift on the given date
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LiftSnapshot"
+        "404":
+          description: Lift not found
+
+  /lifts/sync:
+    post:
+      operationId: syncLifts
+      tags: [lifts]
+      summary: Push extraction data from on-site script
+      description: Receives a batch of lift snapshots from the scheduled extraction script
+      security:
+        - ApiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SyncInput"
+      responses:
+        "200":
+          description: Sync result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncResult"
+        "401":
+          description: Unauthorized
+
+  /seasons:
+    get:
+      operationId: getSeasons
+      tags: [lifts]
+      summary: List available seasons
+      responses:
+        "200":
+          description: List of season strings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+
 components:
+  securitySchemes:
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
   schemas:
     HealthStatus:
       type: object
@@ -34,3 +170,114 @@ components:
       required:
         - status
 
+    LiftSnapshot:
+      type: object
+      required: [id, ggnr, ggbz, nsoc, dtgg, dupd, eser]
+      properties:
+        id:
+          type: integer
+        idin:
+          type: ["string", "null"]
+        dupd:
+          type: string
+          description: Date and time of extraction
+        dtgg:
+          type: string
+          description: Date of the data (ISO 8601)
+        ggnr:
+          type: integer
+          description: Lift code
+        ggbz:
+          type: string
+          description: Lift description/name
+        nsoc:
+          type: ["integer", "null"]
+          description: Lift sort/group number
+        npin:
+          type: ["integer", "null"]
+          description: Guests with first passage of the day
+        npic:
+          type: ["integer", "null"]
+          description: Guests with second passage in different company
+        nuin:
+          type: ["integer", "null"]
+          description: Number of guests on lifts at extraction time
+        npas:
+          type: ["integer", "null"]
+          description: Total number of passages
+        eser:
+          type: string
+          description: Season (e.g. "2024-2025")
+
+    DashboardSummary:
+      type: object
+      required: [date, season, totalPassages, totalGuests, totalLifts, activeLifts, lastSyncAt]
+      properties:
+        date:
+          type: string
+        season:
+          type: string
+        totalPassages:
+          type: integer
+          description: Sum of npas across all lifts
+        totalGuests:
+          type: integer
+          description: Sum of nuin across all lifts
+        totalLifts:
+          type: integer
+          description: Total number of lifts
+        activeLifts:
+          type: integer
+          description: Lifts with at least one passage
+        lastSyncAt:
+          type: ["string", "null"]
+          description: ISO timestamp of last data sync
+
+    SyncInput:
+      type: object
+      required: [snapshots]
+      properties:
+        snapshots:
+          type: array
+          items:
+            $ref: "#/components/schemas/SnapshotInput"
+
+    SnapshotInput:
+      type: object
+      required: [idin, dupd, dtgg, ggnr, ggbz, nsoc, eser]
+      properties:
+        idin:
+          type: string
+        dupd:
+          type: string
+        dtgg:
+          type: string
+        ggnr:
+          type: integer
+        ggbz:
+          type: string
+        nsoc:
+          type: ["integer", "null"]
+        npin:
+          type: ["integer", "null"]
+        npic:
+          type: ["integer", "null"]
+        nuin:
+          type: ["integer", "null"]
+        npas:
+          type: ["integer", "null"]
+        eser:
+          type: string
+
+    SyncResult:
+      type: object
+      required: [inserted, updated, total]
+      properties:
+        inserted:
+          type: integer
+        updated:
+          type: integer
+        total:
+          type: integer
+        message:
+          type: ["string", "null"]

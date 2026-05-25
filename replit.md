@@ -1,6 +1,6 @@
-# [Project name]
+# Ski Area Dashboard
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A mobile app (Expo) that shows a real-time dashboard of ski lift passages and guest counts for a ski area, with data pushed from an on-site MSSQL extraction script.
 
 ## Run & Operate
 
@@ -9,11 +9,13 @@ _Replace the heading above with the project's name, and this line with one sente
 - `pnpm run build` — typecheck + build all packages
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
+- Required env: `DATABASE_URL` — Postgres connection string (auto-provisioned)
+- Optional env: `SYNC_API_KEY` — if set, the POST /api/lifts/sync endpoint requires X-API-Key header
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
+- Mobile: Expo (React Native) with Expo Router
 - API: Express 5
 - DB: PostgreSQL + Drizzle ORM
 - Validation: Zod (`zod/v4`), `drizzle-zod`
@@ -22,15 +24,29 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- DB schema: `lib/db/src/schema/lift-snapshots.ts`
+- API spec: `lib/api-spec/openapi.yaml`
+- API routes: `artifacts/api-server/src/routes/lifts.ts`
+- Mobile app: `artifacts/skiarea-dashboard/`
+  - Screens: `app/(tabs)/index.tsx` (Dashboard), `app/(tabs)/lifts.tsx` (All Lifts), `app/(tabs)/info.tsx` (Integration guide)
+  - Lift detail: `app/lift/[ggnr].tsx`
+  - Components: `components/StatCard.tsx`, `components/LiftRow.tsx`, `components/SkeletonLoader.tsx`
+  - Colors: `constants/colors.ts` (navy/ice blue ski theme)
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Data flows from on-site MSSQL → extraction script → POST /api/lifts/sync → PostgreSQL → mobile app
+- Snapshots are upserted by `idin` (original row ID) so re-pushing extraction data is safe
+- `/api/lifts/latest` uses `SELECT DISTINCT ON (ggnr)` ordered by `dupd DESC` to get the most recent snapshot per lift
+- The sync endpoint is optionally protected by `SYNC_API_KEY` env var (X-API-Key header)
+- `/lifts/history` uses query param `?ggnr=` (not path param) to avoid Orval TS2308 collision between path params Zod schema and query params TypeScript type
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Dashboard tab: today's total passages, guests on lifts, active lifts, season, last sync time, top 5 lifts by passages
+- Lifts tab: searchable list of all lifts with passage counts, sorted by `nsoc` (group number)
+- Lift detail: current stats + all extraction snapshots for today
+- Integration tab: step-by-step guide with copy buttons for the sync endpoint URL and example payloads
 
 ## User preferences
 
@@ -38,7 +54,10 @@ _Populate as you build — explicit user instructions worth remembering across s
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Always run `pnpm run typecheck:libs` after changing `lib/db/src/schema/` before typechecking api-server
+- After OpenAPI spec changes: run codegen, then `typecheck:libs`, then test api-server typecheck
+- expo-clipboard must stay at `~8.0.8` to match the Expo SDK version
+- The `getLiftHistory` endpoint uses query params (not path params) to avoid Orval collision
 
 ## Pointers
 

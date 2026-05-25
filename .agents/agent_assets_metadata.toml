@@ -1,0 +1,8 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "f4DCPEEq7evcNFJOqiNrL"
+uri = "file://artifacts/skiarea-dashboard/assets/images/icon.png"
+type = "image"
+title = "generated_image"
