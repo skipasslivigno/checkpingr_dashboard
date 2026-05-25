@@ -46,33 +46,45 @@ DECLARE @http       INT
 DECLARE @status     INT
 DECLARE @resp       NVARCHAR(MAX)
 
--- Stage rows — remove the WHERE to load full history across all seasons
-SELECT
-    CAST(p.idin AS NVARCHAR(50))        AS idin,
-    CAST(p.dupd AS NVARCHAR(20))        AS dupd,
-    CONVERT(NVARCHAR(20), p.dtgg, 120)  AS dtgg,
-    p.ggnr,
-    p.ggbz,
-    p.nsoc,
-    p.npin,
-    p.npic,
-    p.nuin,
-    p.npas,
-    p.eser,
-    s.nome      AS nome_societa,
-    s.descr_grp AS descr_grp,
-    s.id        AS id_societa,
-    s.codgrp    AS codgrp
+-- Stage rows — deduplicate by (dupd, ggnr) in case LEFT JOIN produces
+-- multiple rows per lift snapshot (one per company relation).
+-- Remove the WHERE date filter to load full history across all seasons.
+;WITH src AS (
+    SELECT
+        RTRIM(CAST(p.idin AS NVARCHAR(50)))       AS idin,
+        RTRIM(CAST(p.dupd AS NVARCHAR(20)))       AS dupd,
+        CONVERT(NVARCHAR(20), p.dtgg, 120)        AS dtgg,
+        p.ggnr,
+        p.ggbz,
+        p.nsoc,
+        p.npin,
+        p.npic,
+        p.nuin,
+        p.npas,
+        p.eser,
+        s.nome      AS nome_societa,
+        s.descr_grp AS descr_grp,
+        s.id        AS id_societa,
+        s.codgrp    AS codgrp,
+        ROW_NUMBER() OVER (
+            PARTITION BY RTRIM(CAST(p.dupd AS NVARCHAR(20))), p.ggnr
+            ORDER BY s.id
+        ) AS rn
+    FROM ACCESSI_IMPIANTI p
+    JOIN SKP_IMPIANTI i     ON p.ggnr    = i.ggnr
+    LEFT JOIN SKP_SOCIETA s ON i.id_soc  = s.id
+    WHERE p.dupd IS NOT NULL
+      AND p.dtgg IS NOT NULL
+      AND p.ggnr IS NOT NULL
+      AND p.ggbz IS NOT NULL
+      AND p.eser IS NOT NULL
+    -- AND CAST(p.dtgg AS DATE) = CAST(GETDATE() AS DATE)  -- today only
+)
+SELECT idin, dupd, dtgg, ggnr, ggbz, nsoc, npin, npic, nuin, npas,
+       eser, nome_societa, descr_grp, id_societa, codgrp
 INTO #rows
-FROM ACCESSI_IMPIANTI p
-JOIN SKP_IMPIANTI i   ON p.ggnr  = i.ggnr
-LEFT JOIN SKP_SOCIETA s ON i.id_soc = s.id
-WHERE p.dupd IS NOT NULL   -- required fields must not be NULL
-  AND p.dtgg IS NOT NULL
-  AND p.ggnr IS NOT NULL
-  AND p.ggbz IS NOT NULL
-  AND p.eser IS NOT NULL
--- AND CAST(p.dtgg AS DATE) = CAST(GETDATE() AS DATE)  -- today only
+FROM src
+WHERE rn = 1
 
 SELECT @total = COUNT(*) FROM #rows
 PRINT CONCAT('Rows to sync: ', @total)

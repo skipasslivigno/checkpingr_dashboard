@@ -241,17 +241,31 @@ router.post("/lifts/sync", async (req, res): Promise<void> => {
     return;
   }
 
+  // Trim trailing spaces from CHAR-padded SQL Server columns and deduplicate
+  // by (dupd, ggnr) across the whole payload before chunking.
+  // SQL Server's LEFT JOIN on SKP_SOCIETA can produce duplicate (dupd, ggnr)
+  // pairs; PostgreSQL's ON CONFLICT DO UPDATE rejects duplicates within a
+  // single INSERT statement, so we must collapse them first.
+  type Snap = z.infer<typeof CoercedSyncBody>["snapshots"][number];
+  const deduped = Array.from(
+    snapshots.reduce((map, snap) => {
+      const key = `${(snap.dupd ?? "").trim()}|${snap.ggnr}`;
+      map.set(key, snap);
+      return map;
+    }, new Map<string, Snap>()).values()
+  );
+
   // Batch upsert: unique key is (dupd, ggnr) — one lift per extraction time.
   // Inserting the same (dupd, ggnr) again updates all other fields in place.
   const CHUNK = 500;
-  for (let i = 0; i < snapshots.length; i += CHUNK) {
-    const chunk = snapshots.slice(i, i + CHUNK);
+  for (let i = 0; i < deduped.length; i += CHUNK) {
+    const chunk = deduped.slice(i, i + CHUNK);
     await db
       .insert(liftSnapshotsTable)
       .values(
-        chunk.map((snap: z.infer<typeof CoercedSyncBody>["snapshots"][number]) => ({
-          idin: snap.idin ?? null,
-          dupd: snap.dupd,
+        chunk.map((snap: Snap) => ({
+          idin: snap.idin != null ? snap.idin.trim() : null,
+          dupd: (snap.dupd ?? "").trim(),
           dtgg: snap.dtgg,
           ggnr: snap.ggnr,
           ggbz: snap.ggbz,
