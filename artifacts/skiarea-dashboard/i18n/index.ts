@@ -74,6 +74,12 @@ export interface Translations {
   periodNoDataSub: string;
   periodDays: string;
   periodExportCsv: string;
+  periodCompareSeasons: string;
+  periodComparing: string;
+  periodCurrent: string;
+  periodPrior: string;
+  periodVs: string;
+  periodNoPriorSeason: string;
 
   groups: string;
   noGroupData: string;
@@ -186,6 +192,12 @@ const it: Translations = {
   periodNoDataSub: "Prova un intervallo di date diverso",
   periodDays: "giorni",
   periodExportCsv: "Esporta CSV",
+  periodCompareSeasons: "Confronta stagioni",
+  periodComparing: "Confronto stagioni",
+  periodCurrent: "Corrente",
+  periodPrior: "Precedente",
+  periodVs: "vs",
+  periodNoPriorSeason: "Nessuna stagione precedente disponibile",
 
   groups: "Gruppi",
   noGroupData: "Nessun dato per questo gruppo",
@@ -298,6 +310,12 @@ const en: Translations = {
   periodNoDataSub: "Try a different date range",
   periodDays: "days",
   periodExportCsv: "Export CSV",
+  periodCompareSeasons: "Compare seasons",
+  periodComparing: "Season comparison",
+  periodCurrent: "Current",
+  periodPrior: "Prior",
+  periodVs: "vs",
+  periodNoPriorSeason: "No prior season available",
 
   groups: "Groups",
   noGroupData: "No data for this group",

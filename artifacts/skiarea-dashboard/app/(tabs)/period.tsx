@@ -1,5 +1,5 @@
 import { Feather } from "@expo/vector-icons";
-import { useQueryClient } from "@tanstack/react-query";
+import { useQuery, useQueryClient, skipToken } from "@tanstack/react-query";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import React, { useState } from "react";
@@ -17,6 +17,7 @@ import {
   useGetLiftsPeriod,
   useGetSeasons,
   getGetLiftsPeriodQueryKey,
+  getLiftsPeriod,
 } from "@workspace/api-client-react";
 import type { PeriodResult } from "@workspace/api-client-react";
 import { StatCard } from "@/components/StatCard";
@@ -88,6 +89,30 @@ async function exportCsv(data: PeriodResult, from: string, to: string): Promise<
   }
 }
 
+function formatDelta(current: number, prior: number): { text: string; positive: boolean } {
+  const diff = current - prior;
+  const sign = diff >= 0 ? "+" : "";
+  return { text: `${sign}${diff.toLocaleString()}`, positive: diff >= 0 };
+}
+
+/**
+ * Shift a YYYY-MM-DD date string by `years` years.
+ * Used to map the current-season date range onto the prior season's
+ * equivalent calendar period (e.g. 2025-01-10 → 2024-01-10).
+ */
+function shiftDateByYears(dateStr: string, years: number): string {
+  const d = new Date(dateStr + "T12:00:00Z");
+  d.setFullYear(d.getFullYear() + years);
+  return d.toISOString().slice(0, 10);
+}
+
+/**
+ * Extract the start year from a season string like "2024-2025" → 2024.
+ */
+function seasonStartYear(season: string): number {
+  return parseInt(season.split("-")[0], 10);
+}
+
 export default function PeriodScreen() {
   const colors = useColors();
   const { t, language } = useTranslation();
@@ -99,8 +124,26 @@ export default function PeriodScreen() {
   const [appliedFrom, setAppliedFrom] = useState(offsetDays(-7));
   const [appliedTo, setAppliedTo] = useState(todayIso());
   const [selectedSeason, setSelectedSeason] = useState<string | undefined>(undefined);
+  const [compareEnabled, setCompareEnabled] = useState(false);
 
   const { data: seasons } = useGetSeasons();
+
+  const currentSeasonStr = selectedSeason ?? seasons?.[0];
+  const currentSeasonIndex = seasons && currentSeasonStr ? seasons.indexOf(currentSeasonStr) : -1;
+  const priorSeason =
+    seasons && currentSeasonIndex >= 0 && currentSeasonIndex + 1 < seasons.length
+      ? seasons[currentSeasonIndex + 1]
+      : undefined;
+
+  // Year offset between current and prior season (e.g. 2024-2025 vs 2023-2024 → 1)
+  const yearOffset =
+    currentSeasonStr && priorSeason
+      ? seasonStartYear(currentSeasonStr) - seasonStartYear(priorSeason)
+      : 1;
+
+  // Dates shifted back by yearOffset to align the same calendar period in the prior season
+  const priorFrom = shiftDateByYears(appliedFrom, -yearOffset);
+  const priorTo = shiftDateByYears(appliedTo, -yearOffset);
 
   const queryParams = {
     from: appliedFrom,
@@ -108,7 +151,20 @@ export default function PeriodScreen() {
     ...(selectedSeason ? { season: selectedSeason } : {}),
   };
 
+  const comparing = compareEnabled && !!priorSeason;
+
   const { data, isLoading } = useGetLiftsPeriod(queryParams);
+
+  // Second parallel query for the prior season — uses skipToken when compare is off
+  // so no network request is made. Dates are shifted to the equivalent period in the
+  // prior season (e.g. "Jan 10–17, 2025" → "Jan 10–17, 2024").
+  const priorParams = { from: priorFrom, to: priorTo, season: priorSeason ?? "" };
+  const { data: priorData, isLoading: priorLoading } = useQuery({
+    queryKey: getGetLiftsPeriodQueryKey(priorParams),
+    queryFn: comparing ? () => getLiftsPeriod(priorParams) : skipToken,
+  });
+
+  const anyLoading = isLoading || (comparing && priorLoading);
 
   const topPadding = Platform.OS === "web" ? 67 : 0;
 
@@ -190,6 +246,45 @@ export default function PeriodScreen() {
             );
           })}
         </ScrollView>
+      )}
+
+      {/* Compare seasons toggle — only when a prior season exists */}
+      {priorSeason && (
+        <TouchableOpacity
+          style={[
+            styles.compareToggle,
+            {
+              backgroundColor: compareEnabled ? colors.primary : colors.secondary,
+              borderColor: compareEnabled ? colors.primary : colors.border,
+            },
+          ]}
+          onPress={() => setCompareEnabled((v) => !v)}
+          activeOpacity={0.7}
+        >
+          <Feather
+            name="layers"
+            size={14}
+            color={compareEnabled ? colors.primaryForeground : colors.primary}
+          />
+          <Text
+            style={[
+              styles.compareToggleText,
+              { color: compareEnabled ? colors.primaryForeground : colors.primary },
+            ]}
+          >
+            {t.periodCompareSeasons}
+          </Text>
+          {compareEnabled && (
+            <Text
+              style={[
+                styles.compareToggleSub,
+                { color: colors.primaryForeground },
+              ]}
+            >
+              {currentSeasonStr} {t.periodVs} {priorSeason}
+            </Text>
+          )}
+        </TouchableOpacity>
       )}
 
       {/* Date range picker */}
@@ -279,11 +374,21 @@ export default function PeriodScreen() {
             </Text>
           </TouchableOpacity>
         </View>
+
+        {/* Prior-season aligned date range hint */}
+        {comparing && (
+          <View style={styles.compareHintRow}>
+            <Feather name="info" size={11} color={colors.mutedForeground} />
+            <Text style={[styles.compareHint, { color: colors.mutedForeground }]}>
+              {priorSeason}: {formatDate(priorFrom, language)} — {formatDate(priorTo, language)}
+            </Text>
+          </View>
+        )}
       </View>
 
       {/* Summary stats */}
       <View style={styles.statsRow}>
-        {isLoading ? (
+        {anyLoading ? (
           <>
             <StatCardSkeleton />
             <StatCardSkeleton />
@@ -293,18 +398,34 @@ export default function PeriodScreen() {
             <StatCard
               label={t.periodTotalPassages}
               value={(data?.totalPassages ?? 0).toLocaleString()}
+              sub={
+                comparing && priorData
+                  ? (() => {
+                      const d = formatDelta(data?.totalPassages ?? 0, priorData.totalPassages);
+                      return `${d.text} ${t.periodVs} ${priorSeason}`;
+                    })()
+                  : undefined
+              }
               accent
             />
             <StatCard
               label={t.periodTotalGuests}
               value={(data?.totalGuests ?? 0).toLocaleString()}
+              sub={
+                comparing && priorData
+                  ? (() => {
+                      const d = formatDelta(data?.totalGuests ?? 0, priorData.totalGuests);
+                      return `${d.text} ${t.periodVs} ${priorSeason}`;
+                    })()
+                  : undefined
+              }
             />
           </>
         )}
       </View>
 
       <View style={styles.statsRow}>
-        {isLoading ? (
+        {anyLoading ? (
           <>
             <StatCardSkeleton />
             <StatCardSkeleton />
@@ -314,16 +435,26 @@ export default function PeriodScreen() {
             <StatCard
               label={t.periodActiveDays}
               value={`${data?.activeDays ?? 0} ${t.periodDays}`}
+              sub={
+                comparing && priorData
+                  ? `${priorData.activeDays} ${t.periodDays} ${t.periodVs} ${priorSeason}`
+                  : undefined
+              }
             />
             <StatCard
               label={t.periodBusiestDay}
               value={data?.busiestDay ? formatDate(data.busiestDay, language) : "—"}
+              sub={
+                comparing && priorData?.busiestDay
+                  ? `${priorSeason}: ${formatDate(priorData.busiestDay, language)}`
+                  : undefined
+              }
             />
           </>
         )}
       </View>
 
-      {data?.busiestLift && !isLoading && (
+      {data?.busiestLift && !anyLoading && (
         <View
           style={[
             styles.busiestLiftCard,
@@ -345,7 +476,22 @@ export default function PeriodScreen() {
         {t.periodRankedLifts}
       </Text>
 
-      {isLoading ? (
+      {/* Column headers when comparing */}
+      {comparing && hasData && !anyLoading && (
+        <View style={[styles.compareHeader, { borderColor: colors.border }]}>
+          <View style={{ flex: 1 }} />
+          <View style={styles.compareHeaderCols}>
+            <Text style={[styles.compareHeaderLabel, { color: colors.primary }]}>
+              {currentSeasonStr}
+            </Text>
+            <Text style={[styles.compareHeaderLabel, { color: colors.mutedForeground }]}>
+              {priorSeason}
+            </Text>
+          </View>
+        </View>
+      )}
+
+      {anyLoading ? (
         Array.from({ length: 6 }).map((_, i) => (
           <View
             key={i}
@@ -365,46 +511,80 @@ export default function PeriodScreen() {
           </Text>
         </View>
       ) : (
-        data.lifts.map((lift, index) => (
-          <View
-            key={lift.ggnr}
-            style={[styles.liftRow, { backgroundColor: colors.card, borderColor: colors.border }]}
-          >
-            <View style={[styles.rankBadge, { backgroundColor: index < 3 ? colors.primary : colors.secondary }]}>
-              <Text style={[styles.rankText, { color: index < 3 ? colors.primaryForeground : colors.mutedForeground }]}>
-                {index + 1}
-              </Text>
-            </View>
+        data.lifts.map((lift, index) => {
+          const prior = comparing
+            ? priorData?.lifts.find((l) => l.ggnr === lift.ggnr)
+            : undefined;
+          const delta = prior ? formatDelta(lift.totalPassages, prior.totalPassages) : null;
 
-            <View style={styles.liftInfo}>
-              <Text style={[styles.liftName, { color: colors.foreground }]} numberOfLines={1}>
-                {lift.ggbz}
-              </Text>
-              <Text style={[styles.liftMeta, { color: colors.mutedForeground }]}>
-                {lift.activeDays} {t.periodDays}
-              </Text>
-            </View>
-
-            <View style={styles.liftStats}>
-              <View style={styles.liftStatRow}>
-                <Text style={[styles.liftPassages, { color: colors.primary }]}>
-                  {lift.totalPassages.toLocaleString()}
-                </Text>
-                <Text style={[styles.liftPassagesLabel, { color: colors.mutedForeground }]}>
-                  {t.passagesRowLabel}
+          return (
+            <View
+              key={lift.ggnr}
+              style={[styles.liftRow, { backgroundColor: colors.card, borderColor: colors.border }]}
+            >
+              <View style={[styles.rankBadge, { backgroundColor: index < 3 ? colors.primary : colors.secondary }]}>
+                <Text style={[styles.rankText, { color: index < 3 ? colors.primaryForeground : colors.mutedForeground }]}>
+                  {index + 1}
                 </Text>
               </View>
-              <View style={styles.liftStatRow}>
-                <Text style={[styles.liftGuests, { color: colors.mutedForeground }]}>
-                  {lift.totalGuests.toLocaleString()}
+
+              <View style={styles.liftInfo}>
+                <Text style={[styles.liftName, { color: colors.foreground }]} numberOfLines={1}>
+                  {lift.ggbz}
                 </Text>
-                <Text style={[styles.liftGuestsLabel, { color: colors.mutedForeground }]}>
-                  {t.guestsOnLifts}
+                <Text style={[styles.liftMeta, { color: colors.mutedForeground }]}>
+                  {lift.activeDays} {t.periodDays}
                 </Text>
               </View>
+
+              {comparing ? (
+                <View style={styles.compareStats}>
+                  {/* Current season */}
+                  <View style={styles.compareCol}>
+                    <Text style={[styles.liftPassages, { color: colors.primary }]}>
+                      {lift.totalPassages.toLocaleString()}
+                    </Text>
+                    {delta && (
+                      <Text
+                        style={[
+                          styles.deltaText,
+                          { color: delta.positive ? colors.success : colors.destructive },
+                        ]}
+                      >
+                        {delta.text}
+                      </Text>
+                    )}
+                  </View>
+                  {/* Prior season */}
+                  <View style={styles.compareCol}>
+                    <Text style={[styles.liftPassagesPrior, { color: colors.mutedForeground }]}>
+                      {prior ? prior.totalPassages.toLocaleString() : "—"}
+                    </Text>
+                  </View>
+                </View>
+              ) : (
+                <View style={styles.liftStats}>
+                  <View style={styles.liftStatRow}>
+                    <Text style={[styles.liftPassages, { color: colors.primary }]}>
+                      {lift.totalPassages.toLocaleString()}
+                    </Text>
+                    <Text style={[styles.liftPassagesLabel, { color: colors.mutedForeground }]}>
+                      {t.passagesRowLabel}
+                    </Text>
+                  </View>
+                  <View style={styles.liftStatRow}>
+                    <Text style={[styles.liftGuests, { color: colors.mutedForeground }]}>
+                      {lift.totalGuests.toLocaleString()}
+                    </Text>
+                    <Text style={[styles.liftGuestsLabel, { color: colors.mutedForeground }]}>
+                      {t.guestsOnLifts}
+                    </Text>
+                  </View>
+                </View>
+              )}
             </View>
-          </View>
-        ))
+          );
+        })
       )}
 
       <View style={{ height: Platform.OS === "web" ? 34 : 100 }} />
@@ -456,6 +636,27 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   seasonText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
+  compareToggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginHorizontal: 16,
+    marginBottom: 14,
+    borderRadius: 20,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    alignSelf: "flex-start",
+  },
+  compareToggleText: {
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+  },
+  compareToggleSub: {
+    fontSize: 11,
+    fontFamily: "Inter_400Regular",
+    marginLeft: 2,
+  },
   rangeCard: {
     marginHorizontal: 16,
     marginBottom: 16,
@@ -499,6 +700,15 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   applyText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
+  compareHintRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 5,
+  },
+  compareHint: {
+    fontSize: 11,
+    fontFamily: "Inter_400Regular",
+  },
   statsRow: { flexDirection: "row", gap: 10, marginBottom: 10, paddingHorizontal: 16 },
   busiestLiftCard: {
     flexDirection: "row",
@@ -519,6 +729,29 @@ const styles = StyleSheet.create({
     marginTop: 8,
     marginBottom: 12,
     paddingHorizontal: 16,
+  },
+  compareHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 16,
+    marginBottom: 4,
+    paddingHorizontal: 12,
+    paddingBottom: 6,
+    borderBottomWidth: 1,
+  },
+  compareHeaderCols: {
+    flexDirection: "row",
+    gap: 16,
+    minWidth: 130,
+    justifyContent: "flex-end",
+  },
+  compareHeaderLabel: {
+    fontSize: 11,
+    fontFamily: "Inter_600SemiBold",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+    minWidth: 55,
+    textAlign: "right",
   },
   liftRowSkeleton: {
     marginHorizontal: 16,
@@ -555,6 +788,24 @@ const styles = StyleSheet.create({
   liftPassagesLabel: { fontSize: 10, fontFamily: "Inter_400Regular" },
   liftGuests: { fontSize: 12, fontFamily: "Inter_500Medium" },
   liftGuestsLabel: { fontSize: 10, fontFamily: "Inter_400Regular" },
+  compareStats: {
+    flexDirection: "row",
+    gap: 16,
+    alignItems: "center",
+  },
+  compareCol: {
+    alignItems: "flex-end",
+    gap: 2,
+    minWidth: 55,
+  },
+  liftPassagesPrior: {
+    fontSize: 13,
+    fontFamily: "Inter_500Medium",
+  },
+  deltaText: {
+    fontSize: 10,
+    fontFamily: "Inter_600SemiBold",
+  },
   emptyState: {
     alignItems: "center",
     justifyContent: "center",
