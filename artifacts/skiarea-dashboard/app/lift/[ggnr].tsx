@@ -47,6 +47,18 @@ export default function LiftDetailScreen() {
           {name ?? `Lift #${ggnr}`}
         </Text>
         <Text style={[styles.code, { color: colors.mutedForeground }]}>Code: {ggnr}</Text>
+        {latest?.nomeSocieta && (
+          <View style={[styles.companyBadge, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+            <Text style={[styles.companyText, { color: colors.foreground }]} numberOfLines={1}>
+              {latest.nomeSocieta}
+            </Text>
+            {latest.descrGrp && latest.descrGrp !== latest.nomeSocieta && (
+              <Text style={[styles.groupText, { color: colors.mutedForeground }]} numberOfLines={1}>
+                {latest.descrGrp}
+              </Text>
+            )}
+          </View>
+        )}
         {latest?.eser && (
           <Text style={[styles.season, { color: colors.mutedForeground }]}>Season: {latest.eser}</Text>
         )}
@@ -131,6 +143,19 @@ const styles = StyleSheet.create({
   title: { fontSize: 22, fontFamily: "Inter_700Bold", letterSpacing: -0.3, marginBottom: 4 },
   code: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 2 },
   season: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 16 },
+  companyBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    marginVertical: 8,
+    alignSelf: "flex-start",
+  },
+  companyText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
+  groupText: { fontSize: 12, fontFamily: "Inter_400Regular" },
   statsRow: { flexDirection: "row", gap: 10, marginBottom: 10 },
   sectionTitle: { fontSize: 17, fontFamily: "Inter_600SemiBold", marginTop: 20, marginBottom: 4 },
   sectionSub: { fontSize: 12, fontFamily: "Inter_400Regular", marginBottom: 12 },

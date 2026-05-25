@@ -17,6 +17,10 @@ export const liftSnapshotsTable = pgTable(
     nuin: integer("nuin"),
     npas: integer("npas"),
     eser: text("eser").notNull(),
+    nomeSocieta: text("nome_societa"),
+    descrGrp: text("descr_grp"),
+    idSocieta: integer("id_societa"),
+    codgrp: text("codgrp"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [uniqueIndex("lift_snapshots_dupd_ggnr_idx").on(t.dupd, t.ggnr)]

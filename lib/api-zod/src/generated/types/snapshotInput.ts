@@ -7,13 +7,14 @@
  */
 
 export interface SnapshotInput {
-  idin: string;
+  /** @nullable */
+  idin?: string | null;
   dupd: string;
   dtgg: string;
   ggnr: number;
   ggbz: string;
   /** @nullable */
-  nsoc: number | null;
+  nsoc?: number | null;
   /** @nullable */
   npin?: number | null;
   /** @nullable */
@@ -23,4 +24,24 @@ export interface SnapshotInput {
   /** @nullable */
   npas?: number | null;
   eser: string;
+  /**
+     * Company name
+     * @nullable
+     */
+  nome_societa?: string | null;
+  /**
+     * Company group description
+     * @nullable
+     */
+  descr_grp?: string | null;
+  /**
+     * Company ID
+     * @nullable
+     */
+  id_societa?: number | null;
+  /**
+     * Company group code
+     * @nullable
+     */
+  codgrp?: string | null;
 }

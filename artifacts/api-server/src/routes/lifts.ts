@@ -22,22 +22,28 @@ router.get("/lifts/latest", async (req, res): Promise<void> => {
 
   const datePattern = `${date}%`;
 
+  const liftSelect = {
+    id: liftSnapshotsTable.id,
+    idin: liftSnapshotsTable.idin,
+    dupd: liftSnapshotsTable.dupd,
+    dtgg: liftSnapshotsTable.dtgg,
+    ggnr: liftSnapshotsTable.ggnr,
+    ggbz: liftSnapshotsTable.ggbz,
+    nsoc: liftSnapshotsTable.nsoc,
+    npin: liftSnapshotsTable.npin,
+    npic: liftSnapshotsTable.npic,
+    nuin: liftSnapshotsTable.nuin,
+    npas: liftSnapshotsTable.npas,
+    eser: liftSnapshotsTable.eser,
+    nomeSocieta: liftSnapshotsTable.nomeSocieta,
+    descrGrp: liftSnapshotsTable.descrGrp,
+    idSocieta: liftSnapshotsTable.idSocieta,
+    codgrp: liftSnapshotsTable.codgrp,
+  } as const;
+
   if (extraction) {
     const rows = await db
-      .selectDistinctOn([liftSnapshotsTable.ggnr], {
-        id: liftSnapshotsTable.id,
-        idin: liftSnapshotsTable.idin,
-        dupd: liftSnapshotsTable.dupd,
-        dtgg: liftSnapshotsTable.dtgg,
-        ggnr: liftSnapshotsTable.ggnr,
-        ggbz: liftSnapshotsTable.ggbz,
-        nsoc: liftSnapshotsTable.nsoc,
-        npin: liftSnapshotsTable.npin,
-        npic: liftSnapshotsTable.npic,
-        nuin: liftSnapshotsTable.nuin,
-        npas: liftSnapshotsTable.npas,
-        eser: liftSnapshotsTable.eser,
-      })
+      .selectDistinctOn([liftSnapshotsTable.ggnr], liftSelect)
       .from(liftSnapshotsTable)
       .where(
         and(
@@ -53,20 +59,7 @@ router.get("/lifts/latest", async (req, res): Promise<void> => {
   }
 
   const latestPerLift = await db
-    .selectDistinctOn([liftSnapshotsTable.ggnr], {
-      id: liftSnapshotsTable.id,
-      idin: liftSnapshotsTable.idin,
-      dupd: liftSnapshotsTable.dupd,
-      dtgg: liftSnapshotsTable.dtgg,
-      ggnr: liftSnapshotsTable.ggnr,
-      ggbz: liftSnapshotsTable.ggbz,
-      nsoc: liftSnapshotsTable.nsoc,
-      npin: liftSnapshotsTable.npin,
-      npic: liftSnapshotsTable.npic,
-      nuin: liftSnapshotsTable.nuin,
-      npas: liftSnapshotsTable.npas,
-      eser: liftSnapshotsTable.eser,
-    })
+    .selectDistinctOn([liftSnapshotsTable.ggnr], liftSelect)
     .from(liftSnapshotsTable)
     .where(
       and(
@@ -243,6 +236,10 @@ router.post("/lifts/sync", async (req, res): Promise<void> => {
           nuin: snap.nuin ?? null,
           npas: snap.npas ?? null,
           eser: snap.eser,
+          nomeSocieta: snap.nome_societa ?? null,
+          descrGrp: snap.descr_grp ?? null,
+          idSocieta: snap.id_societa ?? null,
+          codgrp: snap.codgrp ?? null,
         }))
       )
       .onConflictDoUpdate({
@@ -257,6 +254,10 @@ router.post("/lifts/sync", async (req, res): Promise<void> => {
           nuin: sql`excluded.nuin`,
           npas: sql`excluded.npas`,
           eser: sql`excluded.eser`,
+          nomeSocieta: sql`excluded.nome_societa`,
+          descrGrp: sql`excluded.descr_grp`,
+          idSocieta: sql`excluded.id_societa`,
+          codgrp: sql`excluded.codgrp`,
         },
       });
   }

@@ -45,4 +45,24 @@ export interface LiftSnapshot {
   npas?: number | null;
   /** Season (e.g. "2024-2025") */
   eser: string;
+  /**
+     * Company name
+     * @nullable
+     */
+  nomeSocieta?: string | null;
+  /**
+     * Company group description
+     * @nullable
+     */
+  descrGrp?: string | null;
+  /**
+     * Company ID
+     * @nullable
+     */
+  idSocieta?: number | null;
+  /**
+     * Company group code
+     * @nullable
+     */
+  codgrp?: string | null;
 }

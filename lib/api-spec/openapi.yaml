@@ -270,6 +270,18 @@ components:
         eser:
           type: string
           description: Season (e.g. "2024-2025")
+        nomeSocieta:
+          type: ["string", "null"]
+          description: Company name
+        descrGrp:
+          type: ["string", "null"]
+          description: Company group description
+        idSocieta:
+          type: ["integer", "null"]
+          description: Company ID
+        codgrp:
+          type: ["string", "null"]
+          description: Company group code
 
     DashboardSummary:
       type: object
@@ -306,10 +318,10 @@ components:
 
     SnapshotInput:
       type: object
-      required: [idin, dupd, dtgg, ggnr, ggbz, nsoc, eser]
+      required: [dupd, dtgg, ggnr, ggbz, eser]
       properties:
         idin:
-          type: string
+          type: ["string", "null"]
         dupd:
           type: string
         dtgg:
@@ -330,6 +342,18 @@ components:
           type: ["integer", "null"]
         eser:
           type: string
+        nome_societa:
+          type: ["string", "null"]
+          description: Company name
+        descr_grp:
+          type: ["string", "null"]
+          description: Company group description
+        id_societa:
+          type: ["integer", "null"]
+          description: Company ID
+        codgrp:
+          type: ["string", "null"]
+          description: Company group code
 
     SyncResult:
       type: object

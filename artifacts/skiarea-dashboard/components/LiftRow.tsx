@@ -8,13 +8,16 @@ interface LiftRowProps {
   passages: number | null;
   guests: number | null;
   firstPassage: number | null;
+  company?: string | null;
+  group?: string | null;
   onPress?: () => void;
 }
 
-export function LiftRow({ name, passages, guests, firstPassage, onPress }: LiftRowProps) {
+export function LiftRow({ name, passages, guests, firstPassage, company, group, onPress }: LiftRowProps) {
   const colors = useColors();
 
   const isActive = (passages ?? 0) > 0;
+  const subtitle = company ?? group ?? `${firstPassage ?? 0} guests today`;
 
   return (
     <TouchableOpacity
@@ -25,17 +28,15 @@ export function LiftRow({ name, passages, guests, firstPassage, onPress }: LiftR
       <View style={[styles.statusDot, { backgroundColor: isActive ? colors.success : colors.mutedForeground }]} />
       <View style={styles.info}>
         <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1}>{name}</Text>
-        <Text style={[styles.sub, { color: colors.mutedForeground }]}>
-          {firstPassage ?? 0} guests today
-        </Text>
+        <Text style={[styles.sub, { color: colors.mutedForeground }]} numberOfLines={1}>{subtitle}</Text>
       </View>
       <View style={styles.stats}>
         <Text style={[styles.passageCount, { color: colors.primary }]}>{(passages ?? 0).toLocaleString()}</Text>
-        <Text style={[styles.passageLabel, { color: colors.mutedForeground }]}>passages</Text>
+        <Text style={[styles.passageLabel, { color: colors.mutedForeground }]}>PASSAGES</Text>
       </View>
       <View style={styles.guestBlock}>
         <Text style={[styles.guestCount, { color: colors.foreground }]}>{guests ?? 0}</Text>
-        <Text style={[styles.guestLabel, { color: colors.mutedForeground }]}>on lift</Text>
+        <Text style={[styles.guestLabel, { color: colors.mutedForeground }]}>ON LIFT</Text>
       </View>
       {onPress ? <Feather name="chevron-right" size={16} color={colors.mutedForeground} /> : null}
     </TouchableOpacity>
@@ -81,7 +82,6 @@ const styles = StyleSheet.create({
   passageLabel: {
     fontSize: 10,
     fontFamily: "Inter_400Regular",
-    textTransform: "uppercase",
     letterSpacing: 0.3,
   },
   guestBlock: {
@@ -95,7 +95,6 @@ const styles = StyleSheet.create({
   guestLabel: {
     fontSize: 10,
     fontFamily: "Inter_400Regular",
-    textTransform: "uppercase",
     letterSpacing: 0.3,
   },
 });

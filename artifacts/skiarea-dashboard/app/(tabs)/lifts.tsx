@@ -105,6 +105,8 @@ export default function LiftsScreen() {
               passages={item.npas ?? null}
               guests={item.nuin ?? null}
               firstPassage={item.npin ?? null}
+              company={item.nomeSocieta}
+              group={item.descrGrp}
               onPress={() =>
                 router.push({ pathname: "/lift/[ggnr]", params: { ggnr: item.ggnr, name: item.ggbz } })
               }

@@ -48,6 +48,26 @@ export interface LiftSnapshot {
   npas?: number | null;
   /** Season (e.g. "2024-2025") */
   eser: string;
+  /**
+     * Company name
+     * @nullable
+     */
+  nomeSocieta?: string | null;
+  /**
+     * Company group description
+     * @nullable
+     */
+  descrGrp?: string | null;
+  /**
+     * Company ID
+     * @nullable
+     */
+  idSocieta?: number | null;
+  /**
+     * Company group code
+     * @nullable
+     */
+  codgrp?: string | null;
 }
 
 export interface DashboardSummary {
@@ -69,13 +89,14 @@ export interface DashboardSummary {
 }
 
 export interface SnapshotInput {
-  idin: string;
+  /** @nullable */
+  idin?: string | null;
   dupd: string;
   dtgg: string;
   ggnr: number;
   ggbz: string;
   /** @nullable */
-  nsoc: number | null;
+  nsoc?: number | null;
   /** @nullable */
   npin?: number | null;
   /** @nullable */
@@ -85,6 +106,26 @@ export interface SnapshotInput {
   /** @nullable */
   npas?: number | null;
   eser: string;
+  /**
+     * Company name
+     * @nullable
+     */
+  nome_societa?: string | null;
+  /**
+     * Company group description
+     * @nullable
+     */
+  descr_grp?: string | null;
+  /**
+     * Company ID
+     * @nullable
+     */
+  id_societa?: number | null;
+  /**
+     * Company group code
+     * @nullable
+     */
+  codgrp?: string | null;
 }
 
 export interface SyncInput {

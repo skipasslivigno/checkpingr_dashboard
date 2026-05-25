@@ -199,6 +199,8 @@ export default function DashboardScreen() {
             passages={lift.npas ?? null}
             guests={lift.nuin ?? null}
             firstPassage={lift.npin ?? null}
+            company={lift.nomeSocieta}
+            group={lift.descrGrp}
             onPress={() =>
               router.push({
                 pathname: "/lift/[ggnr]",

@@ -39,7 +39,11 @@ export const GetLatestLiftsResponseItem = zod.object({
   "npic": zod.number().nullish().describe('Guests with second passage in different company'),
   "nuin": zod.number().nullish().describe('Number of guests on lifts at extraction time'),
   "npas": zod.number().nullish().describe('Total number of passages'),
-  "eser": zod.string().describe('Season (e.g. \"2024-2025\")')
+  "eser": zod.string().describe('Season (e.g. \"2024-2025\")'),
+  "nomeSocieta": zod.string().nullish().describe('Company name'),
+  "descrGrp": zod.string().nullish().describe('Company group description'),
+  "idSocieta": zod.number().nullish().describe('Company ID'),
+  "codgrp": zod.string().nullish().describe('Company group code')
 })
 export const GetLatestLiftsResponse = zod.array(GetLatestLiftsResponseItem)
 
@@ -111,7 +115,11 @@ export const GetLiftHistoryResponseItem = zod.object({
   "npic": zod.number().nullish().describe('Guests with second passage in different company'),
   "nuin": zod.number().nullish().describe('Number of guests on lifts at extraction time'),
   "npas": zod.number().nullish().describe('Total number of passages'),
-  "eser": zod.string().describe('Season (e.g. \"2024-2025\")')
+  "eser": zod.string().describe('Season (e.g. \"2024-2025\")'),
+  "nomeSocieta": zod.string().nullish().describe('Company name'),
+  "descrGrp": zod.string().nullish().describe('Company group description'),
+  "idSocieta": zod.number().nullish().describe('Company ID'),
+  "codgrp": zod.string().nullish().describe('Company group code')
 })
 export const GetLiftHistoryResponse = zod.array(GetLiftHistoryResponseItem)
 
@@ -122,17 +130,21 @@ export const GetLiftHistoryResponse = zod.array(GetLiftHistoryResponseItem)
  */
 export const SyncLiftsBody = zod.object({
   "snapshots": zod.array(zod.object({
-  "idin": zod.string(),
+  "idin": zod.string().nullish(),
   "dupd": zod.string(),
   "dtgg": zod.string(),
   "ggnr": zod.number(),
   "ggbz": zod.string(),
-  "nsoc": zod.number().nullable(),
+  "nsoc": zod.number().nullish(),
   "npin": zod.number().nullish(),
   "npic": zod.number().nullish(),
   "nuin": zod.number().nullish(),
   "npas": zod.number().nullish(),
-  "eser": zod.string()
+  "eser": zod.string(),
+  "nome_societa": zod.string().nullish().describe('Company name'),
+  "descr_grp": zod.string().nullish().describe('Company group description'),
+  "id_societa": zod.number().nullish().describe('Company ID'),
+  "codgrp": zod.string().nullish().describe('Company group code')
 }))
 })
 
