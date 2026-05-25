@@ -18,6 +18,7 @@ export interface Translations {
 
   allLifts: string;
   searchLift: string;
+  searchGroup: string;
   all: string;
   noLiftsMatchFilters: string;
   noLiftDataAvailable: string;
@@ -128,6 +129,7 @@ const it: Translations = {
 
   allLifts: "Tutti gli impianti",
   searchLift: "Cerca impianto...",
+  searchGroup: "Cerca gruppo o impianto...",
   all: "Tutti",
   noLiftsMatchFilters: "Nessun impianto corrisponde ai filtri",
   noLiftDataAvailable: "Nessun dato disponibile",
@@ -238,6 +240,7 @@ const en: Translations = {
 
   allLifts: "All Lifts",
   searchLift: "Search lift...",
+  searchGroup: "Search group or lift...",
   all: "All",
   noLiftsMatchFilters: "No lifts match your filters",
   noLiftDataAvailable: "No lift data available",

@@ -8,6 +8,7 @@ import {
   RefreshControl,
   StyleSheet,
   Text,
+  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -44,10 +45,12 @@ interface GroupData {
 
 function GroupSection({
   group,
+  visibleLifts,
   expanded,
   onToggle,
 }: {
   group: GroupData;
+  visibleLifts: GroupData["lifts"];
   expanded: boolean;
   onToggle: () => void;
 }) {
@@ -123,7 +126,7 @@ function GroupSection({
 
       {expanded && (
         <View style={[styles.liftList, { borderTopColor: colors.border }]}>
-          {group.lifts.map((lift) => (
+          {visibleLifts.map((lift) => (
             <LiftRow
               key={lift.ggnr}
               name={lift.ggbz}
@@ -149,6 +152,7 @@ export default function GroupsScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const { selectedDate, setSelectedDate, selectedExtraction, setSelectedExtraction } = useSelectedDate();
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  const [searchQuery, setSearchQuery] = useState("");
 
   const queryParams = {
     date: selectedDate,
@@ -222,25 +226,53 @@ export default function GroupsScreen() {
       .sort((a, b) => a.minNsoc - b.minNsoc);
   }, [lifts]);
 
+  const isSearching = searchQuery.trim().length > 0;
+
+  const filteredGroups = useMemo<Array<GroupData & { visibleLifts: GroupData["lifts"] }>>(() => {
+    if (!isSearching) {
+      return groups.map((g) => ({ ...g, visibleLifts: g.lifts }));
+    }
+    const q = searchQuery.trim().toLowerCase();
+    const result: Array<GroupData & { visibleLifts: GroupData["lifts"] }> = [];
+    for (const g of groups) {
+      const groupNameMatches = g.name.toLowerCase().includes(q);
+      const matchingLifts = g.lifts.filter((l) => l.ggbz.toLowerCase().includes(q));
+      if (groupNameMatches) {
+        result.push({ ...g, visibleLifts: g.lifts });
+      } else if (matchingLifts.length > 0) {
+        result.push({ ...g, visibleLifts: matchingLifts });
+      }
+    }
+    return result;
+  }, [groups, searchQuery, isSearching]);
+
+  const isGroupExpanded = (name: string) => {
+    if (isSearching) return true;
+    return expandedGroups.has(name);
+  };
+
   const topPadding = Platform.OS === "web" ? 67 : 0;
 
   type ListItem =
     | { type: "picker" }
-    | { type: "group"; group: GroupData }
+    | { type: "search" }
+    | { type: "group"; group: GroupData & { visibleLifts: GroupData["lifts"] } }
     | { type: "skeleton"; key: string };
 
   const listData: ListItem[] = useMemo(() => {
     if (isLoading) {
       return [
         { type: "picker" },
+        { type: "search" },
         ...Array.from({ length: 5 }, (_, i) => ({ type: "skeleton" as const, key: String(i) })),
       ];
     }
     return [
       { type: "picker" },
-      ...groups.map((g) => ({ type: "group" as const, group: g })),
+      { type: "search" },
+      ...filteredGroups.map((g) => ({ type: "group" as const, group: g })),
     ];
-  }, [isLoading, groups]);
+  }, [isLoading, filteredGroups]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -252,6 +284,7 @@ export default function GroupsScreen() {
         data={listData}
         keyExtractor={(item) => {
           if (item.type === "picker") return "picker";
+          if (item.type === "search") return "search";
           if (item.type === "skeleton") return `skeleton-${item.key}`;
           return `group-${item.group.name}`;
         }}
@@ -283,14 +316,35 @@ export default function GroupsScreen() {
               />
             );
           }
+          if (item.type === "search") {
+            return (
+              <View style={[styles.searchBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                <Feather name="search" size={16} color={colors.mutedForeground} />
+                <TextInput
+                  style={[styles.searchInput, { color: colors.foreground }]}
+                  placeholder={t.searchGroup}
+                  placeholderTextColor={colors.mutedForeground}
+                  value={searchQuery}
+                  onChangeText={setSearchQuery}
+                  clearButtonMode="while-editing"
+                />
+                {searchQuery.length > 0 && Platform.OS !== "ios" && (
+                  <TouchableOpacity onPress={() => setSearchQuery("")} hitSlop={8}>
+                    <Feather name="x" size={15} color={colors.mutedForeground} />
+                  </TouchableOpacity>
+                )}
+              </View>
+            );
+          }
           if (item.type === "skeleton") {
             return <LiftRowSkeleton />;
           }
           return (
             <GroupSection
               group={item.group}
-              expanded={expandedGroups.has(item.group.name)}
-              onToggle={() => toggleGroup(item.group.name)}
+              visibleLifts={item.group.visibleLifts}
+              expanded={isGroupExpanded(item.group.name)}
+              onToggle={isSearching ? () => undefined : () => toggleGroup(item.group.name)}
             />
           );
         }}
@@ -315,6 +369,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 8,
     gap: 10,
+  },
+  searchBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    gap: 8,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 15,
+    fontFamily: "Inter_400Regular",
+    paddingVertical: 0,
   },
   groupCard: {
     borderRadius: 14,
