@@ -26,8 +26,10 @@ import type {
   GetLiftDatesParams,
   GetLiftExtractionsParams,
   GetLiftHistoryParams,
+  GetLiftsPeriodParams,
   HealthStatus,
   LiftSnapshot,
+  PeriodResult,
   SyncInput,
   SyncResult
 } from './api.schemas';
@@ -617,6 +619,91 @@ export const useSyncLifts = <TError = ErrorType<void>,
       > => {
       return useMutation(getSyncLiftsMutationOptions(options));
     }
+
+export const getGetLiftsPeriodUrl = (params: GetLiftsPeriodParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/lifts/period?${stringifiedParams}` : `/api/lifts/period`
+}
+
+/**
+ * Returns per-lift cumulative totals and an overall summary for the given date range. Each lift's daily latest snapshot is summed across the period.
+ * @summary Get aggregated lift stats for a date range
+ */
+export const getLiftsPeriod = async (params: GetLiftsPeriodParams, options?: RequestInit): Promise<PeriodResult> => {
+
+  return customFetch<PeriodResult>(getGetLiftsPeriodUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLiftsPeriodQueryKey = (params?: GetLiftsPeriodParams,) => {
+    return [
+    `/api/lifts/period`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetLiftsPeriodQueryOptions = <TData = Awaited<ReturnType<typeof getLiftsPeriod>>, TError = ErrorType<void>>(params: GetLiftsPeriodParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLiftsPeriod>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLiftsPeriodQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLiftsPeriod>>> = ({ signal }) => getLiftsPeriod(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLiftsPeriod>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLiftsPeriodQueryResult = NonNullable<Awaited<ReturnType<typeof getLiftsPeriod>>>
+export type GetLiftsPeriodQueryError = ErrorType<void>
+
+
+/**
+ * @summary Get aggregated lift stats for a date range
+ */
+
+export function useGetLiftsPeriod<TData = Awaited<ReturnType<typeof getLiftsPeriod>>, TError = ErrorType<void>>(
+ params: GetLiftsPeriodParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLiftsPeriod>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLiftsPeriodQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getGetSeasonsUrl = () => {
 

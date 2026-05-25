@@ -140,6 +140,48 @@ export interface SyncResult {
   message?: string | null;
 }
 
+export interface PeriodLiftRow {
+  /** Lift code */
+  ggnr: number;
+  /** Lift name */
+  ggbz: string;
+  /** Sum of daily-latest npas across the period */
+  totalPassages: number;
+  /** Sum of daily-latest nuin across the period */
+  totalGuests: number;
+  /** Sum of daily-latest npin across the period */
+  totalFirstPassages: number;
+  /** Number of days the lift had at least one passage */
+  activeDays: number;
+}
+
+export interface PeriodResult {
+  /** Start date YYYY-MM-DD */
+  from: string;
+  /** End date YYYY-MM-DD */
+  to: string;
+  /** @nullable */
+  season?: string | null;
+  /** Sum of all lift passages in the period */
+  totalPassages: number;
+  /** Sum of all guest counts in the period */
+  totalGuests: number;
+  /** Number of distinct days that had any data */
+  activeDays: number;
+  /**
+     * YYYY-MM-DD date with the most passages
+     * @nullable
+     */
+  busiestDay?: string | null;
+  /**
+     * Name of the lift with the most passages
+     * @nullable
+     */
+  busiestLift?: string | null;
+  /** Per-lift aggregated totals, sorted by total passages descending */
+  lifts: PeriodLiftRow[];
+}
+
 export type GetLatestLiftsParams = {
 /**
  * Season filter e.g. "2024-2025"
@@ -180,5 +222,20 @@ export type GetLiftHistoryParams = {
 ggnr: number;
 season?: string;
 date?: string;
+};
+
+export type GetLiftsPeriodParams = {
+/**
+ * Start date in YYYY-MM-DD format
+ */
+from: string;
+/**
+ * End date in YYYY-MM-DD format (inclusive)
+ */
+to: string;
+/**
+ * Season filter e.g. "2024-2025"
+ */
+season?: string;
 };
 

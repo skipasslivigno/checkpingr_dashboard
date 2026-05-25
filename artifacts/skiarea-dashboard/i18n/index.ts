@@ -55,7 +55,22 @@ export interface Translations {
   tabDashboard: string;
   tabLifts: string;
   tabGroups: string;
+  tabPeriod: string;
   tabIntegration: string;
+
+  period: string;
+  periodFrom: string;
+  periodTo: string;
+  periodApply: string;
+  periodTotalPassages: string;
+  periodTotalGuests: string;
+  periodActiveDays: string;
+  periodBusiestDay: string;
+  periodBusiestLift: string;
+  periodRankedLifts: string;
+  periodNoData: string;
+  periodNoDataSub: string;
+  periodDays: string;
 
   groups: string;
   noGroupData: string;
@@ -136,7 +151,22 @@ const it: Translations = {
   tabDashboard: "Dashboard",
   tabLifts: "Impianti",
   tabGroups: "Gruppi",
+  tabPeriod: "Periodo",
   tabIntegration: "Integrazione",
+
+  period: "Periodo",
+  periodFrom: "Da",
+  periodTo: "A",
+  periodApply: "Applica",
+  periodTotalPassages: "Passaggi totali",
+  periodTotalGuests: "Ospiti totali",
+  periodActiveDays: "Giorni attivi",
+  periodBusiestDay: "Giorno più affollato",
+  periodBusiestLift: "Impianto più usato",
+  periodRankedLifts: "Impianti per passaggi",
+  periodNoData: "Nessun dato per questo periodo",
+  periodNoDataSub: "Prova un intervallo di date diverso",
+  periodDays: "giorni",
 
   groups: "Gruppi",
   noGroupData: "Nessun dato per questo gruppo",
@@ -217,7 +247,22 @@ const en: Translations = {
   tabDashboard: "Dashboard",
   tabLifts: "Lifts",
   tabGroups: "Groups",
+  tabPeriod: "Period",
   tabIntegration: "Integration",
+
+  period: "Period",
+  periodFrom: "From",
+  periodTo: "To",
+  periodApply: "Apply",
+  periodTotalPassages: "Total passages",
+  periodTotalGuests: "Total guests",
+  periodActiveDays: "Active days",
+  periodBusiestDay: "Busiest day",
+  periodBusiestLift: "Busiest lift",
+  periodRankedLifts: "Lifts by passages",
+  periodNoData: "No data for this period",
+  periodNoDataSub: "Try a different date range",
+  periodDays: "days",
 
   groups: "Groups",
   noGroupData: "No data for this group",

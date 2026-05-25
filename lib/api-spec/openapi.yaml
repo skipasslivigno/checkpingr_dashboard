@@ -202,6 +202,41 @@ paths:
         "401":
           description: Unauthorized
 
+  /lifts/period:
+    get:
+      operationId: getLiftsPeriod
+      tags: [lifts]
+      summary: Get aggregated lift stats for a date range
+      description: Returns per-lift cumulative totals and an overall summary for the given date range. Each lift's daily latest snapshot is summed across the period.
+      parameters:
+        - name: from
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Start date in YYYY-MM-DD format
+        - name: to
+          in: query
+          required: true
+          schema:
+            type: string
+          description: End date in YYYY-MM-DD format (inclusive)
+        - name: season
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Season filter e.g. "2024-2025"
+      responses:
+        "200":
+          description: Period aggregated data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PeriodResult"
+        "400":
+          description: Invalid parameters
+
   /seasons:
     get:
       operationId: getSeasons
@@ -367,3 +402,59 @@ components:
           type: integer
         message:
           type: ["string", "null"]
+
+    PeriodLiftRow:
+      type: object
+      required: [ggnr, ggbz, totalPassages, totalGuests, totalFirstPassages, activeDays]
+      properties:
+        ggnr:
+          type: integer
+          description: Lift code
+        ggbz:
+          type: string
+          description: Lift name
+        totalPassages:
+          type: integer
+          description: Sum of daily-latest npas across the period
+        totalGuests:
+          type: integer
+          description: Sum of daily-latest nuin across the period
+        totalFirstPassages:
+          type: integer
+          description: Sum of daily-latest npin across the period
+        activeDays:
+          type: integer
+          description: Number of days the lift had at least one passage
+
+    PeriodResult:
+      type: object
+      required: [from, to, totalPassages, totalGuests, activeDays, lifts]
+      properties:
+        from:
+          type: string
+          description: Start date YYYY-MM-DD
+        to:
+          type: string
+          description: End date YYYY-MM-DD
+        season:
+          type: ["string", "null"]
+        totalPassages:
+          type: integer
+          description: Sum of all lift passages in the period
+        totalGuests:
+          type: integer
+          description: Sum of all guest counts in the period
+        activeDays:
+          type: integer
+          description: Number of distinct days that had any data
+        busiestDay:
+          type: ["string", "null"]
+          description: YYYY-MM-DD date with the most passages
+        busiestLift:
+          type: ["string", "null"]
+          description: Name of the lift with the most passages
+        lifts:
+          type: array
+          items:
+            $ref: "#/components/schemas/PeriodLiftRow"
+          description: Per-lift aggregated totals, sorted by total passages descending

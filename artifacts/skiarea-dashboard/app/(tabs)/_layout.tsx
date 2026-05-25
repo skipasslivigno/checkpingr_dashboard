@@ -26,6 +26,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: "rectangle.3.group", selected: "rectangle.3.group.fill" }} />
         <Label>{t.tabGroups}</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="period">
+        <Icon sf={{ default: "calendar", selected: "calendar.badge.checkmark" }} />
+        <Label>{t.tabPeriod}</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="info">
         <Icon sf={{ default: "link", selected: "link" }} />
         <Label>{t.tabIntegration}</Label>
@@ -106,6 +110,18 @@ function ClassicTabLayout() {
               <SymbolView name="rectangle.3.group.fill" tintColor={color} size={22} />
             ) : (
               <Feather name="layers" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="period"
+        options={{
+          title: t.tabPeriod,
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="calendar" tintColor={color} size={22} />
+            ) : (
+              <Feather name="calendar" size={22} color={color} />
             ),
         }}
       />

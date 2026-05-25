@@ -157,6 +157,36 @@ export const SyncLiftsResponse = zod.object({
 
 
 /**
+ * Returns per-lift cumulative totals and an overall summary for the given date range. Each lift's daily latest snapshot is summed across the period.
+ * @summary Get aggregated lift stats for a date range
+ */
+export const GetLiftsPeriodQueryParams = zod.object({
+  "from": zod.coerce.string().describe('Start date in YYYY-MM-DD format'),
+  "to": zod.coerce.string().describe('End date in YYYY-MM-DD format (inclusive)'),
+  "season": zod.coerce.string().optional().describe('Season filter e.g. \"2024-2025\"')
+})
+
+export const GetLiftsPeriodResponse = zod.object({
+  "from": zod.string().describe('Start date YYYY-MM-DD'),
+  "to": zod.string().describe('End date YYYY-MM-DD'),
+  "season": zod.string().nullish(),
+  "totalPassages": zod.number().describe('Sum of all lift passages in the period'),
+  "totalGuests": zod.number().describe('Sum of all guest counts in the period'),
+  "activeDays": zod.number().describe('Number of distinct days that had any data'),
+  "busiestDay": zod.string().nullish().describe('YYYY-MM-DD date with the most passages'),
+  "busiestLift": zod.string().nullish().describe('Name of the lift with the most passages'),
+  "lifts": zod.array(zod.object({
+  "ggnr": zod.number().describe('Lift code'),
+  "ggbz": zod.string().describe('Lift name'),
+  "totalPassages": zod.number().describe('Sum of daily-latest npas across the period'),
+  "totalGuests": zod.number().describe('Sum of daily-latest nuin across the period'),
+  "totalFirstPassages": zod.number().describe('Sum of daily-latest npin across the period'),
+  "activeDays": zod.number().describe('Number of days the lift had at least one passage')
+})).describe('Per-lift aggregated totals, sorted by total passages descending')
+})
+
+
+/**
  * @summary List available seasons
  */
 export const GetSeasonsResponseItem = zod.string()

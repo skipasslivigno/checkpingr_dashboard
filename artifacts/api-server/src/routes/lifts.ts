@@ -304,6 +304,106 @@ router.post("/lifts/sync", async (req, res): Promise<void> => {
   res.json({ inserted: snapshots.length, updated: 0, total: snapshots.length });
 });
 
+router.get("/lifts/period", async (req, res): Promise<void> => {
+  const from = req.query["from"] as string | undefined;
+  const to = req.query["to"] as string | undefined;
+  const season = req.query["season"] as string | undefined;
+
+  if (!from || !to) {
+    res.status(400).json({ error: "from and to query params are required (YYYY-MM-DD)" });
+    return;
+  }
+
+  // For each (date, lift) pair take the latest extraction snapshot (MAX dupd),
+  // then aggregate those daily-latest values across the period.
+  const liftRows = await db.execute<{
+    ggnr: number;
+    ggbz: string;
+    total_passages: string;
+    total_guests: string;
+    total_first_passages: string;
+    active_days: string;
+  }>(sql`
+    WITH latest_per_lift_per_day AS (
+      SELECT DISTINCT ON (LEFT(${liftSnapshotsTable.dtgg}, 10), ${liftSnapshotsTable.ggnr})
+        LEFT(${liftSnapshotsTable.dtgg}, 10) AS dtgg_date,
+        ${liftSnapshotsTable.ggnr},
+        ${liftSnapshotsTable.ggbz},
+        ${liftSnapshotsTable.npas},
+        ${liftSnapshotsTable.nuin},
+        ${liftSnapshotsTable.npin}
+      FROM ${liftSnapshotsTable}
+      WHERE LEFT(${liftSnapshotsTable.dtgg}, 10) BETWEEN ${from} AND ${to}
+        ${season ? sql`AND ${liftSnapshotsTable.eser} = ${season}` : sql``}
+      ORDER BY LEFT(${liftSnapshotsTable.dtgg}, 10), ${liftSnapshotsTable.ggnr}, ${liftSnapshotsTable.dupd} DESC
+    )
+    SELECT
+      ggnr,
+      MAX(ggbz) AS ggbz,
+      COALESCE(SUM(npas), 0)::int AS total_passages,
+      COALESCE(SUM(nuin), 0)::int AS total_guests,
+      COALESCE(SUM(npin), 0)::int AS total_first_passages,
+      COUNT(DISTINCT CASE WHEN npas > 0 THEN dtgg_date END)::int AS active_days
+    FROM latest_per_lift_per_day
+    GROUP BY ggnr
+    ORDER BY total_passages DESC
+  `);
+
+  const rows = liftRows.rows;
+
+  // Overall summary
+  const totalPassages = rows.reduce((s, r) => s + Number(r.total_passages), 0);
+  const totalGuests = rows.reduce((s, r) => s + Number(r.total_guests), 0);
+
+  // Count distinct days that have any data
+  const activeDaysRow = await db.execute<{ active_days: string }>(sql`
+    SELECT COUNT(DISTINCT LEFT(${liftSnapshotsTable.dtgg}, 10))::int AS active_days
+    FROM ${liftSnapshotsTable}
+    WHERE LEFT(${liftSnapshotsTable.dtgg}, 10) BETWEEN ${from} AND ${to}
+      ${season ? sql`AND ${liftSnapshotsTable.eser} = ${season}` : sql``}
+  `);
+  const activeDays = Number(activeDaysRow.rows[0]?.active_days ?? 0);
+
+  // Busiest day — day with highest total passages (using daily-latest per lift)
+  const busiestDayRow = await db.execute<{ dtgg_date: string; day_total: string }>(sql`
+    WITH latest_per_lift_per_day AS (
+      SELECT DISTINCT ON (LEFT(${liftSnapshotsTable.dtgg}, 10), ${liftSnapshotsTable.ggnr})
+        LEFT(${liftSnapshotsTable.dtgg}, 10) AS dtgg_date,
+        ${liftSnapshotsTable.npas}
+      FROM ${liftSnapshotsTable}
+      WHERE LEFT(${liftSnapshotsTable.dtgg}, 10) BETWEEN ${from} AND ${to}
+        ${season ? sql`AND ${liftSnapshotsTable.eser} = ${season}` : sql``}
+      ORDER BY LEFT(${liftSnapshotsTable.dtgg}, 10), ${liftSnapshotsTable.ggnr}, ${liftSnapshotsTable.dupd} DESC
+    )
+    SELECT dtgg_date, COALESCE(SUM(npas), 0)::int AS day_total
+    FROM latest_per_lift_per_day
+    GROUP BY dtgg_date
+    ORDER BY day_total DESC
+    LIMIT 1
+  `);
+  const busiestDay = busiestDayRow.rows[0]?.dtgg_date ?? null;
+  const busiestLift = rows[0]?.ggbz ?? null;
+
+  res.json({
+    from,
+    to,
+    season: season ?? null,
+    totalPassages,
+    totalGuests,
+    activeDays,
+    busiestDay,
+    busiestLift,
+    lifts: rows.map((r) => ({
+      ggnr: r.ggnr,
+      ggbz: r.ggbz,
+      totalPassages: Number(r.total_passages),
+      totalGuests: Number(r.total_guests),
+      totalFirstPassages: Number(r.total_first_passages),
+      activeDays: Number(r.active_days),
+    })),
+  });
+});
+
 router.get("/seasons", async (_req, res): Promise<void> => {
   const rows = await db
     .selectDistinct({ eser: liftSnapshotsTable.eser })
