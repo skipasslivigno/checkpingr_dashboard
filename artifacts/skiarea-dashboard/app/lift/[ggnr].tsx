@@ -23,7 +23,8 @@ export default function LiftDetailScreen() {
   const ggnrNum = parseInt(ggnr ?? "0", 10);
   const { data: history, isLoading } = useGetLiftHistory(
     { ggnr: ggnrNum },
-    { query: { enabled: !!ggnrNum } }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    { query: { enabled: !!ggnrNum } as any }
   );
 
   const latest = history?.[0];

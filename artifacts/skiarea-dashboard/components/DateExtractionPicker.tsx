@@ -57,26 +57,27 @@ export function DateExtractionPicker({
 }: DateExtractionPickerProps) {
   const colors = useColors();
   const scrollRef = useRef<ScrollView>(null);
-  const hasDefaulted = useRef(false);
+  const prevSeasonRef = useRef(season);
 
   const { data: dates } = useGetLiftDates(season ? { season } : {});
 
   const { data: extractions } = useGetLiftExtractions(
     selectedDate ? (season ? { date: selectedDate, season } : { date: selectedDate }) : undefined,
-    { query: { enabled: !!selectedDate } }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    { query: { enabled: !!selectedDate } as any }
   );
 
-  // Auto-select the most recent date with data on first load
+  // Auto-select the most recent date when dates load or the season changes.
+  // API returns dates DESC so dates[0] is always the most recent.
   useEffect(() => {
-    if (!dates || dates.length === 0 || hasDefaulted.current) return;
-    if (!selectedDate || !dates.includes(selectedDate)) {
-      hasDefaulted.current = true;
+    if (!dates || dates.length === 0) return;
+    const seasonChanged = prevSeasonRef.current !== season;
+    prevSeasonRef.current = season;
+    if (seasonChanged || !dates.includes(selectedDate)) {
       onDateChange(dates[0]);
       onExtractionChange(undefined);
-    } else {
-      hasDefaulted.current = true;
     }
-  }, [dates]);
+  }, [dates, season]);
 
   // Auto-select last extraction when date changes
   useEffect(() => {
@@ -91,7 +92,8 @@ export function DateExtractionPicker({
     }
   }, [extractions, selectedDate]);
 
-  // Scroll selected date chip into view
+  // Scroll selected date chip into view.
+  // dates is DESC so index 0 = most recent = leftmost chip.
   useEffect(() => {
     if (!dates || !selectedDate) return;
     const idx = dates.indexOf(selectedDate);
@@ -111,7 +113,7 @@ export function DateExtractionPicker({
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.row}
       >
-        {[...dates].reverse().map((d) => {
+        {dates.map((d) => {
           const active = d === selectedDate;
           return (
             <TouchableOpacity

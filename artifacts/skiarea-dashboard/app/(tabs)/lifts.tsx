@@ -175,7 +175,7 @@ export default function LiftsScreen() {
       </View>
 
       <FlatList
-        data={isLoading ? Array.from({ length: 10 }) : filtered}
+        data={isLoading ? Array.from<(typeof filtered)[number] | undefined>({ length: 10 }) : filtered}
         keyExtractor={(item, i) => (item ? String(item.ggnr) : String(i))}
         contentContainerStyle={[styles.list, { paddingBottom: Platform.OS === "web" ? 34 : 100 }]}
         refreshControl={
