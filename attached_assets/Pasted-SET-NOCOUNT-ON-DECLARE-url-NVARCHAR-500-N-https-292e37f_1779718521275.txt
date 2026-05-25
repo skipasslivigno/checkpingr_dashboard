@@ -1,0 +1,84 @@
+SET NOCOUNT ON;
+
+DECLARE @url     NVARCHAR(500) = N'https://292e37f8-2dcf-45c1-a5fb-c2522672089d-00-3s1rtj1w8v3ja.worf.replit.dev/api/lifts/sync';
+DECLARE @apiKey  NVARCHAR(200) = N'';          -- leave empty if SYNC_API_KEY not set
+DECLARE @json    NVARCHAR(MAX);
+DECLARE @body    NVARCHAR(MAX);
+
+-- ── 1. Build JSON payload from your table ───────────────────
+-- Adjust the table/column names to match your actual schema
+SELECT @json = (
+    SELECT
+        CAST(idin  AS NVARCHAR(50))                         AS idin,
+        -- dupd: format datetime as YYYYMMDDHHmmss
+        dupd                       AS dupd,
+        -- dtgg: ISO date string
+        CONVERT(NVARCHAR(23), dtgg, 120)                    AS dtgg,
+        CAST(ggnr  AS INT)                                  AS ggnr,
+        ggbz                                                AS ggbz,
+        nsoc,
+        npin,
+        npic,
+        nuin,
+        npas,
+        eser
+    FROM dbo.ACCESSI_IMPIANTI          -- <-- your table name
+    WHERE dtgg  >= '2025-11-01'
+    FOR JSON PATH, ROOT('snapshots')
+);
+
+-- Verify we got data
+IF @json IS NULL OR @json = N'{"snapshots":[]}'
+BEGIN
+    RAISERROR('No rows to sync for today — skipping.', 10, 1) WITH NOWAIT;
+    RETURN;
+END
+
+-- ── 2. POST via OLE Automation ───────────────────────────────
+DECLARE
+    @obj     INT,
+    @status  INT,
+    @resp    NVARCHAR(MAX),
+    @hresult INT;
+
+EXEC @hresult = sp_OACreate 'MSXML2.ServerXMLHTTP.6.0', @obj OUT;
+IF @hresult <> 0 RAISERROR('sp_OACreate failed', 16, 1);
+
+-- Open request
+EXEC @hresult = sp_OAMethod @obj, 'open', NULL,
+    'POST',                 -- method
+    @url,                   -- url
+    false;                  -- async = false
+IF @hresult <> 0 RAISERROR('OA open failed', 16, 1);
+
+-- Headers
+EXEC sp_OAMethod @obj, 'setRequestHeader', NULL,
+    'Content-Type', 'application/json';
+
+IF @apiKey <> N''
+    EXEC sp_OAMethod @obj, 'setRequestHeader', NULL,
+        'X-API-Key', @apiKey;
+
+-- Send
+EXEC @hresult = sp_OAMethod @obj, 'send', NULL, @json;
+IF @hresult <> 0 RAISERROR('OA send failed', 16, 1);
+
+-- Read HTTP status
+EXEC sp_OAGetProperty @obj, 'status', @status OUT;
+
+-- Read response body
+EXEC sp_OAGetProperty @obj, 'responseText', @resp OUT;
+
+-- Clean up
+EXEC sp_OADestroy @obj;
+
+-- ── 3. Check result ──────────────────────────────────────────
+IF @status = 200
+BEGIN
+    RAISERROR('Sync OK — %s', 10, 1, @resp) WITH NOWAIT;
+END
+ELSE
+BEGIN
+    DECLARE @msg NVARCHAR(500) = N'Sync failed HTTP ' + CAST(@status AS NVARCHAR(10)) + N': ' + LEFT(@resp, 300);
+    RAISERROR(@msg, 16, 1);   -- non-zero exit → Agent marks step as failed
+END
