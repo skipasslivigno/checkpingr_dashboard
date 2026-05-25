@@ -9,4 +9,8 @@
 export type GetDashboardSummaryParams = {
 season?: string;
 date?: string;
+/**
+ * Pin to a specific extraction time (dupd value)
+ */
+extraction?: string;
 };

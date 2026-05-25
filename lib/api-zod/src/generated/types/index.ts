@@ -9,6 +9,7 @@
 export * from './dashboardSummary';
 export * from './getDashboardSummaryParams';
 export * from './getLatestLiftsParams';
+export * from './getLiftExtractionsParams';
 export * from './getLiftHistoryParams';
 export * from './healthStatus';
 export * from './liftSnapshot';

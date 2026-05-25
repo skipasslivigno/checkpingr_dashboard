@@ -15,9 +15,14 @@ import {
   useGetLatestLifts,
   getGetLatestLiftsQueryKey,
 } from "@workspace/api-client-react";
+import { DateExtractionPicker } from "@/components/DateExtractionPicker";
 import { LiftRow } from "@/components/LiftRow";
 import { LiftRowSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
+
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 export default function LiftsScreen() {
   const colors = useColors();
@@ -25,8 +30,15 @@ export default function LiftsScreen() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [refreshing, setRefreshing] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(todayIso());
+  const [selectedExtraction, setSelectedExtraction] = useState<string | undefined>(undefined);
 
-  const { data: lifts, isLoading } = useGetLatestLifts({});
+  const queryParams = {
+    date: selectedDate,
+    ...(selectedExtraction ? { extraction: selectedExtraction } : {}),
+  };
+
+  const { data: lifts, isLoading } = useGetLatestLifts(queryParams);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -44,7 +56,18 @@ export default function LiftsScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: topPadding + 16, backgroundColor: colors.background }]}>
         <Text style={[styles.title, { color: colors.foreground }]}>All Lifts</Text>
-        <View style={[styles.searchBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+
+        <DateExtractionPicker
+          selectedDate={selectedDate}
+          selectedExtraction={selectedExtraction}
+          onDateChange={(d) => {
+            setSelectedDate(d);
+            setSelectedExtraction(undefined);
+          }}
+          onExtractionChange={setSelectedExtraction}
+        />
+
+        <View style={[styles.searchBox, { backgroundColor: colors.card, borderColor: colors.border, marginHorizontal: 16 }]}>
           <Feather name="search" size={16} color={colors.mutedForeground} />
           <TextInput
             style={[styles.searchInput, { color: colors.foreground }]}
@@ -98,7 +121,6 @@ export default function LiftsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   header: {
-    paddingHorizontal: 16,
     paddingBottom: 12,
   },
   title: {
@@ -106,6 +128,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     letterSpacing: -0.5,
     marginBottom: 12,
+    paddingHorizontal: 16,
   },
   searchBox: {
     flexDirection: "row",
@@ -115,6 +138,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingHorizontal: 12,
     paddingVertical: 10,
+    marginTop: 8,
   },
   searchInput: {
     flex: 1,

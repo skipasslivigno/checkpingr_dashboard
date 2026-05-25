@@ -18,12 +18,13 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
- * Returns the most recent extraction snapshot per lift for today or latest available date
+ * Returns the most recent extraction snapshot per lift for the given date. If extraction is provided, pins to that specific extraction time.
  * @summary Get latest snapshot for all lifts
  */
 export const GetLatestLiftsQueryParams = zod.object({
   "season": zod.coerce.string().optional().describe('Season filter e.g. \"2024-2025\"'),
-  "date": zod.coerce.string().optional().describe('Date filter in YYYY-MM-DD format, defaults to today')
+  "date": zod.coerce.string().optional().describe('Date filter in YYYY-MM-DD format, defaults to today'),
+  "extraction": zod.coerce.string().optional().describe('Specific extraction time (dupd value e.g. \'20211219230000\'). If omitted returns latest per lift.')
 })
 
 export const GetLatestLiftsResponseItem = zod.object({
@@ -49,7 +50,8 @@ export const GetLatestLiftsResponse = zod.array(GetLatestLiftsResponseItem)
  */
 export const GetDashboardSummaryQueryParams = zod.object({
   "season": zod.coerce.string().optional(),
-  "date": zod.coerce.string().optional()
+  "date": zod.coerce.string().optional(),
+  "extraction": zod.coerce.string().optional().describe('Pin to a specific extraction time (dupd value)')
 })
 
 export const GetDashboardSummaryResponse = zod.object({
@@ -61,6 +63,19 @@ export const GetDashboardSummaryResponse = zod.object({
   "activeLifts": zod.number().describe('Lifts with at least one passage'),
   "lastSyncAt": zod.string().nullable().describe('ISO timestamp of last data sync')
 })
+
+
+/**
+ * Returns distinct dupd values (extraction timestamps) for a given date, ordered ascending
+ * @summary List available extraction times for a date
+ */
+export const GetLiftExtractionsQueryParams = zod.object({
+  "date": zod.coerce.string().optional().describe('Date in YYYY-MM-DD format, defaults to today'),
+  "season": zod.coerce.string().optional()
+})
+
+export const GetLiftExtractionsResponseItem = zod.string()
+export const GetLiftExtractionsResponse = zod.array(GetLiftExtractionsResponseItem)
 
 
 /**

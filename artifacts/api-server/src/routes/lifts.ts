@@ -1,11 +1,12 @@
 import { Router, type IRouter } from "express";
-import { and, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, sql } from "drizzle-orm";
 import { db, liftSnapshotsTable } from "@workspace/db";
 import {
   SyncLiftsBody,
   GetLatestLiftsQueryParams,
   GetDashboardSummaryQueryParams,
   GetLiftHistoryQueryParams,
+  GetLiftExtractionsQueryParams,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -18,8 +19,39 @@ router.get("/lifts/latest", async (req, res): Promise<void> => {
   const parsed = GetLatestLiftsQueryParams.safeParse(req.query);
   const date = parsed.success && parsed.data.date ? parsed.data.date : todayIso();
   const season = parsed.success ? parsed.data.season : undefined;
+  const extraction = parsed.success ? parsed.data.extraction : undefined;
 
   const datePattern = `${date}%`;
+
+  if (extraction) {
+    const rows = await db
+      .selectDistinctOn([liftSnapshotsTable.ggnr], {
+        id: liftSnapshotsTable.id,
+        idin: liftSnapshotsTable.idin,
+        dupd: liftSnapshotsTable.dupd,
+        dtgg: liftSnapshotsTable.dtgg,
+        ggnr: liftSnapshotsTable.ggnr,
+        ggbz: liftSnapshotsTable.ggbz,
+        nsoc: liftSnapshotsTable.nsoc,
+        npin: liftSnapshotsTable.npin,
+        npic: liftSnapshotsTable.npic,
+        nuin: liftSnapshotsTable.nuin,
+        npas: liftSnapshotsTable.npas,
+        eser: liftSnapshotsTable.eser,
+      })
+      .from(liftSnapshotsTable)
+      .where(
+        and(
+          sql`${liftSnapshotsTable.dtgg} LIKE ${datePattern}`,
+          eq(liftSnapshotsTable.dupd, extraction),
+          season ? eq(liftSnapshotsTable.eser, season) : undefined
+        )
+      )
+      .orderBy(liftSnapshotsTable.ggnr);
+
+    res.json(rows);
+    return;
+  }
 
   const latestPerLift = await db
     .selectDistinctOn([liftSnapshotsTable.ggnr], {
@@ -52,8 +84,15 @@ router.get("/lifts/summary", async (req, res): Promise<void> => {
   const parsed = GetDashboardSummaryQueryParams.safeParse(req.query);
   const date = parsed.success && parsed.data.date ? parsed.data.date : todayIso();
   const season = parsed.success ? parsed.data.season : undefined;
+  const extraction = parsed.success ? parsed.data.extraction : undefined;
 
   const datePattern = `${date}%`;
+
+  const baseWhere = and(
+    sql`${liftSnapshotsTable.dtgg} LIKE ${datePattern}`,
+    extraction ? eq(liftSnapshotsTable.dupd, extraction) : undefined,
+    season ? eq(liftSnapshotsTable.eser, season) : undefined
+  );
 
   const latestPerLift = await db
     .selectDistinctOn([liftSnapshotsTable.ggnr], {
@@ -62,15 +101,14 @@ router.get("/lifts/summary", async (req, res): Promise<void> => {
       nuin: liftSnapshotsTable.nuin,
       ggnr: liftSnapshotsTable.ggnr,
       dupd: liftSnapshotsTable.dupd,
+      eser: liftSnapshotsTable.eser,
     })
     .from(liftSnapshotsTable)
-    .where(
-      and(
-        sql`${liftSnapshotsTable.dtgg} LIKE ${datePattern}`,
-        season ? eq(liftSnapshotsTable.eser, season) : undefined
-      )
-    )
-    .orderBy(liftSnapshotsTable.ggnr, desc(liftSnapshotsTable.dupd));
+    .where(baseWhere)
+    .orderBy(
+      liftSnapshotsTable.ggnr,
+      extraction ? liftSnapshotsTable.ggnr : desc(liftSnapshotsTable.dupd)
+    );
 
   const totalPassages = latestPerLift.reduce((sum, r) => sum + (r.npas ?? 0), 0);
   const totalGuests = latestPerLift.reduce((sum, r) => sum + (r.nuin ?? 0), 0);
@@ -85,22 +123,44 @@ router.get("/lifts/summary", async (req, res): Promise<void> => {
 
   const lastSyncAt = lastSyncRow[0]?.dupd ?? null;
 
-  const currentSeason = season ?? (latestPerLift[0]?.dupd
-    ? (() => {
-        const y = new Date().getFullYear();
-        return `${y - 1}-${y}`;
-      })()
-    : "");
+  const detectedSeason =
+    season ??
+    latestPerLift[0]?.eser ??
+    (() => {
+      const y = new Date().getFullYear();
+      return `${y - 1}-${y}`;
+    })();
 
   res.json({
     date,
-    season: currentSeason,
+    season: detectedSeason,
     totalPassages,
     totalGuests,
     totalLifts,
     activeLifts,
     lastSyncAt,
   });
+});
+
+router.get("/lifts/extractions", async (req, res): Promise<void> => {
+  const parsed = GetLiftExtractionsQueryParams.safeParse(req.query);
+  const date = parsed.success && parsed.data.date ? parsed.data.date : todayIso();
+  const season = parsed.success ? parsed.data.season : undefined;
+
+  const datePattern = `${date}%`;
+
+  const rows = await db
+    .selectDistinct({ dupd: liftSnapshotsTable.dupd })
+    .from(liftSnapshotsTable)
+    .where(
+      and(
+        sql`${liftSnapshotsTable.dtgg} LIKE ${datePattern}`,
+        season ? eq(liftSnapshotsTable.eser, season) : undefined
+      )
+    )
+    .orderBy(asc(liftSnapshotsTable.dupd));
+
+  res.json(rows.map((r) => r.dupd));
 });
 
 router.get("/lifts/history", async (req, res): Promise<void> => {

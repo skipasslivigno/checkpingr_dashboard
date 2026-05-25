@@ -34,7 +34,7 @@ paths:
       operationId: getLatestLifts
       tags: [lifts]
       summary: Get latest snapshot for all lifts
-      description: Returns the most recent extraction snapshot per lift for today or latest available date
+      description: Returns the most recent extraction snapshot per lift for the given date. If extraction is provided, pins to that specific extraction time.
       parameters:
         - name: season
           in: query
@@ -48,6 +48,12 @@ paths:
           schema:
             type: string
           description: Date filter in YYYY-MM-DD format, defaults to today
+        - name: extraction
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Specific extraction time (dupd value e.g. '20211219230000'). If omitted returns latest per lift.
       responses:
         "200":
           description: List of latest lift snapshots
@@ -75,6 +81,12 @@ paths:
           required: false
           schema:
             type: string
+        - name: extraction
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Pin to a specific extraction time (dupd value)
       responses:
         "200":
           description: Dashboard summary
@@ -82,6 +94,34 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DashboardSummary"
+
+  /lifts/extractions:
+    get:
+      operationId: getLiftExtractions
+      tags: [lifts]
+      summary: List available extraction times for a date
+      description: Returns distinct dupd values (extraction timestamps) for a given date, ordered ascending
+      parameters:
+        - name: date
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Date in YYYY-MM-DD format, defaults to today
+        - name: season
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of extraction time strings (dupd values)
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
 
   /lifts/history:
     get:

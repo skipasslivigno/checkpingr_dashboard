@@ -23,6 +23,7 @@ import type {
   DashboardSummary,
   GetDashboardSummaryParams,
   GetLatestLiftsParams,
+  GetLiftExtractionsParams,
   GetLiftHistoryParams,
   HealthStatus,
   LiftSnapshot,
@@ -136,7 +137,7 @@ export const getGetLatestLiftsUrl = (params?: GetLatestLiftsParams,) => {
 }
 
 /**
- * Returns the most recent extraction snapshot per lift for today or latest available date
+ * Returns the most recent extraction snapshot per lift for the given date. If extraction is provided, pins to that specific extraction time.
  * @summary Get latest snapshot for all lifts
  */
 export const getLatestLifts = async (params?: GetLatestLiftsParams, options?: RequestInit): Promise<LiftSnapshot[]> => {
@@ -278,6 +279,91 @@ export function useGetDashboardSummary<TData = Awaited<ReturnType<typeof getDash
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetDashboardSummaryQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetLiftExtractionsUrl = (params?: GetLiftExtractionsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/lifts/extractions?${stringifiedParams}` : `/api/lifts/extractions`
+}
+
+/**
+ * Returns distinct dupd values (extraction timestamps) for a given date, ordered ascending
+ * @summary List available extraction times for a date
+ */
+export const getLiftExtractions = async (params?: GetLiftExtractionsParams, options?: RequestInit): Promise<string[]> => {
+
+  return customFetch<string[]>(getGetLiftExtractionsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetLiftExtractionsQueryKey = (params?: GetLiftExtractionsParams,) => {
+    return [
+    `/api/lifts/extractions`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetLiftExtractionsQueryOptions = <TData = Awaited<ReturnType<typeof getLiftExtractions>>, TError = ErrorType<unknown>>(params?: GetLiftExtractionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLiftExtractions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetLiftExtractionsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getLiftExtractions>>> = ({ signal }) => getLiftExtractions(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getLiftExtractions>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetLiftExtractionsQueryResult = NonNullable<Awaited<ReturnType<typeof getLiftExtractions>>>
+export type GetLiftExtractionsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List available extraction times for a date
+ */
+
+export function useGetLiftExtractions<TData = Awaited<ReturnType<typeof getLiftExtractions>>, TError = ErrorType<unknown>>(
+ params?: GetLiftExtractionsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getLiftExtractions>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetLiftExtractionsQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

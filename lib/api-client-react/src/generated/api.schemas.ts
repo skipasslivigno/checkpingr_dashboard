@@ -108,11 +108,27 @@ season?: string;
  * Date filter in YYYY-MM-DD format, defaults to today
  */
 date?: string;
+/**
+ * Specific extraction time (dupd value e.g. '20211219230000'). If omitted returns latest per lift.
+ */
+extraction?: string;
 };
 
 export type GetDashboardSummaryParams = {
 season?: string;
 date?: string;
+/**
+ * Pin to a specific extraction time (dupd value)
+ */
+extraction?: string;
+};
+
+export type GetLiftExtractionsParams = {
+/**
+ * Date in YYYY-MM-DD format, defaults to today
+ */
+date?: string;
+season?: string;
 };
 
 export type GetLiftHistoryParams = {

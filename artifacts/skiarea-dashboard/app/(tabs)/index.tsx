@@ -3,7 +3,6 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  FlatList,
   Platform,
   RefreshControl,
   ScrollView,
@@ -19,10 +18,15 @@ import {
   getGetDashboardSummaryQueryKey,
   getGetLatestLiftsQueryKey,
 } from "@workspace/api-client-react";
+import { DateExtractionPicker } from "@/components/DateExtractionPicker";
 import { LiftRow } from "@/components/LiftRow";
 import { LiftRowSkeleton, StatCardSkeleton } from "@/components/SkeletonLoader";
 import { StatCard } from "@/components/StatCard";
 import { useColors } from "@/hooks/useColors";
+
+function todayIso(): string {
+  return new Date().toISOString().slice(0, 10);
+}
 
 export default function DashboardScreen() {
   const colors = useColors();
@@ -30,14 +34,19 @@ export default function DashboardScreen() {
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState<string | undefined>(undefined);
+  const [selectedDate, setSelectedDate] = useState(todayIso());
+  const [selectedExtraction, setSelectedExtraction] = useState<string | undefined>(undefined);
 
   const { data: seasons } = useGetSeasons();
-  const { data: summary, isLoading: summaryLoading } = useGetDashboardSummary(
-    selectedSeason ? { season: selectedSeason } : {}
-  );
-  const { data: lifts, isLoading: liftsLoading } = useGetLatestLifts(
-    selectedSeason ? { season: selectedSeason } : {}
-  );
+
+  const queryParams = {
+    date: selectedDate,
+    ...(selectedSeason ? { season: selectedSeason } : {}),
+    ...(selectedExtraction ? { extraction: selectedExtraction } : {}),
+  };
+
+  const { data: summary, isLoading: summaryLoading } = useGetDashboardSummary(queryParams);
+  const { data: lifts, isLoading: liftsLoading } = useGetLatestLifts(queryParams);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -51,6 +60,7 @@ export default function DashboardScreen() {
     : [];
 
   const topPadding = Platform.OS === "web" ? 67 : 0;
+  const isToday = selectedDate === todayIso();
 
   return (
     <ScrollView
@@ -64,7 +74,7 @@ export default function DashboardScreen() {
       <View style={styles.headerRow}>
         <View>
           <Text style={[styles.dateText, { color: colors.mutedForeground }]}>
-            {summary?.date ?? new Date().toISOString().slice(0, 10)}
+            {isToday ? "Today" : selectedDate}
           </Text>
           <Text style={[styles.title, { color: colors.foreground }]}>Dashboard</Text>
         </View>
@@ -102,6 +112,18 @@ export default function DashboardScreen() {
           </ScrollView>
         )}
       </View>
+
+      {/* Date + extraction picker */}
+      <DateExtractionPicker
+        selectedDate={selectedDate}
+        selectedExtraction={selectedExtraction}
+        season={selectedSeason}
+        onDateChange={(d) => {
+          setSelectedDate(d);
+          setSelectedExtraction(undefined);
+        }}
+        onExtractionChange={setSelectedExtraction}
+      />
 
       {/* Last sync */}
       {summary?.lastSyncAt && (
@@ -153,16 +175,20 @@ export default function DashboardScreen() {
       </View>
 
       {/* Top lifts */}
-      <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Top Lifts Today</Text>
+      <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+        Top Lifts{isToday ? " Today" : ` — ${selectedDate}`}
+      </Text>
 
       {liftsLoading ? (
         Array.from({ length: 5 }).map((_, i) => <LiftRowSkeleton key={i} />)
       ) : topLifts.length === 0 ? (
         <View style={[styles.emptyState, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Feather name="wind" size={32} color={colors.mutedForeground} />
-          <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>No data for today yet</Text>
+          <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+            {isToday ? "No data for today yet" : `No data for ${selectedDate}`}
+          </Text>
           <Text style={[styles.emptySubText, { color: colors.mutedForeground }]}>
-            Push your first extraction to get started
+            {isToday ? "Push your first extraction to get started" : "Try a different date"}
           </Text>
         </View>
       ) : (
@@ -173,7 +199,12 @@ export default function DashboardScreen() {
             passages={lift.npas ?? null}
             guests={lift.nuin ?? null}
             firstPassage={lift.npin ?? null}
-            onPress={() => router.push({ pathname: "/lift/[ggnr]", params: { ggnr: lift.ggnr, name: lift.ggbz } })}
+            onPress={() =>
+              router.push({
+                pathname: "/lift/[ggnr]",
+                params: { ggnr: lift.ggnr, name: lift.ggbz },
+              })
+            }
           />
         ))
       )}
@@ -185,13 +216,14 @@ export default function DashboardScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  content: { paddingHorizontal: 16, paddingBottom: 32 },
+  content: { paddingBottom: 32 },
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-end",
     marginBottom: 16,
     gap: 12,
+    paddingHorizontal: 16,
   },
   dateText: { fontSize: 12, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
   title: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: -0.5, marginTop: 2 },
@@ -213,14 +245,16 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     marginBottom: 16,
+    marginHorizontal: 16,
   },
   syncText: { fontSize: 12, fontFamily: "Inter_400Regular" },
-  statsRow: { flexDirection: "row", gap: 10, marginBottom: 10 },
+  statsRow: { flexDirection: "row", gap: 10, marginBottom: 10, paddingHorizontal: 16 },
   sectionTitle: {
     fontSize: 18,
     fontFamily: "Inter_600SemiBold",
     marginTop: 20,
     marginBottom: 12,
+    paddingHorizontal: 16,
   },
   emptyState: {
     alignItems: "center",
@@ -229,6 +263,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     paddingVertical: 40,
     gap: 8,
+    marginHorizontal: 16,
   },
   emptyText: { fontSize: 16, fontFamily: "Inter_600SemiBold" },
   emptySubText: { fontSize: 13, fontFamily: "Inter_400Regular", textAlign: "center", paddingHorizontal: 24 },
