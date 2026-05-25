@@ -8,21 +8,23 @@ import React from "react";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 function NativeTabLayout() {
+  const { t } = useTranslation();
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
         <Icon sf={{ default: "chart.bar", selected: "chart.bar.fill" }} />
-        <Label>Dashboard</Label>
+        <Label>{t.tabDashboard}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="lifts">
         <Icon sf={{ default: "tram.fill.tunnel", selected: "tram.fill.tunnel" }} />
-        <Label>Lifts</Label>
+        <Label>{t.tabLifts}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="info">
         <Icon sf={{ default: "link", selected: "link" }} />
-        <Label>Integration</Label>
+        <Label>{t.tabIntegration}</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -30,6 +32,7 @@ function NativeTabLayout() {
 
 function ClassicTabLayout() {
   const colors = useColors();
+  const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const isIOS = Platform.OS === "ios";
@@ -69,7 +72,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Dashboard",
+          title: t.tabDashboard,
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="chart.bar.fill" tintColor={color} size={22} />
@@ -81,7 +84,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="lifts"
         options={{
-          title: "Lifts",
+          title: t.tabLifts,
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="tram.fill.tunnel" tintColor={color} size={22} />
@@ -93,7 +96,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="info"
         options={{
-          title: "Integration",
+          title: t.tabIntegration,
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="link" tintColor={color} size={22} />

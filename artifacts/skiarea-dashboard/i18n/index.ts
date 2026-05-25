@@ -1,0 +1,174 @@
+export type Language = "it" | "en";
+
+export interface Translations {
+  today: string;
+  yesterday: string;
+  dashboard: string;
+  lastSync: string;
+  passages: string;
+  guestsOnLifts: string;
+  activeLifts: string;
+  season: string;
+  topLiftsToday: string;
+  topLiftsDate: string;
+  noDataToday: string;
+  noDataDate: string;
+  pushFirstExtraction: string;
+  tryDifferentDate: string;
+
+  allLifts: string;
+  searchLift: string;
+  all: string;
+  noLiftsMatchFilters: string;
+  noLiftDataAvailable: string;
+  lift: string;
+  lifts: string;
+
+  integration: string;
+  integrationSubtitle: string;
+  syncEndpoint: string;
+  syncEndpointDesc: string;
+  postUrl: string;
+  jsonPayload: string;
+  jsonPayloadDesc: string;
+  requestBody: string;
+  sqlAgentScript: string;
+  sqlAgentScriptDesc: string;
+  tsqlLabel: string;
+  idempotentNote: string;
+  copy: string;
+  copied: string;
+
+  back: string;
+  code: string;
+  seasonLabel: string;
+  onLiftsNow: string;
+  firstPassage: string;
+  secondPassage: string;
+  todaysHistory: string;
+  historySubtitle: string;
+  noHistoryToday: string;
+  passagesRowLabel: string;
+  onLiftLabel: string;
+  firstPassLabel: string;
+
+  tabDashboard: string;
+  tabLifts: string;
+  tabIntegration: string;
+}
+
+const it: Translations = {
+  today: "Oggi",
+  yesterday: "Ieri",
+  dashboard: "Dashboard",
+  lastSync: "Ultima sincronizzazione",
+  passages: "Passaggi",
+  guestsOnLifts: "Ospiti sugli impianti",
+  activeLifts: "Impianti attivi",
+  season: "Stagione",
+  topLiftsToday: "Top Impianti Oggi",
+  topLiftsDate: "Top Impianti",
+  noDataToday: "Nessun dato per oggi",
+  noDataDate: "Nessun dato per",
+  pushFirstExtraction: "Carica la prima estrazione per iniziare",
+  tryDifferentDate: "Prova una data diversa",
+
+  allLifts: "Tutti gli impianti",
+  searchLift: "Cerca impianto...",
+  all: "Tutti",
+  noLiftsMatchFilters: "Nessun impianto corrisponde ai filtri",
+  noLiftDataAvailable: "Nessun dato disponibile",
+  lift: "impianto",
+  lifts: "impianti",
+
+  integration: "Integrazione",
+  integrationSubtitle: "Invia i dati di estrazione dal tuo script MSSQL a questo dashboard",
+  syncEndpoint: "Endpoint di sincronizzazione",
+  syncEndpointDesc: "Aggiungi un passaggio HTTP POST al tuo script di estrazione MSSQL esistente. Invia i tuoi dati a:",
+  postUrl: "URL POST",
+  jsonPayload: "Payload JSON",
+  jsonPayloadDesc: "Invia un corpo JSON con le righe snapshot. I nomi dei campi corrispondono alle colonne della tabella:",
+  requestBody: "Corpo della richiesta (JSON)",
+  sqlAgentScript: "Script SQL Server Agent",
+  sqlAgentScriptDesc: "Incolla questo nel tuo job Agent. Organizza le righe in una tabella temporanea, poi le invia in blocchi da 50 per evitare i limiti di OLE Automation. Include i campi azienda/gruppo dal join SKP_SOCIETA.",
+  tsqlLabel: "T-SQL — sincronizzazione a blocchi con campi azienda",
+  idempotentNote: "I dati vengono inseriti/aggiornati per ID riga — inviare la stessa estrazione due volte è sicuro e idempotente.",
+  copy: "Copia",
+  copied: "Copiato",
+
+  back: "Indietro",
+  code: "Codice",
+  seasonLabel: "Stagione",
+  onLiftsNow: "Sugli impianti",
+  firstPassage: "1° passaggio",
+  secondPassage: "2° passaggio",
+  todaysHistory: "Storico di oggi",
+  historySubtitle: "Ogni riga è uno snapshot di estrazione",
+  noHistoryToday: "Nessuno storico per oggi",
+  passagesRowLabel: "passaggi",
+  onLiftLabel: "sull'imp.",
+  firstPassLabel: "1° pass.",
+
+  tabDashboard: "Dashboard",
+  tabLifts: "Impianti",
+  tabIntegration: "Integrazione",
+};
+
+const en: Translations = {
+  today: "Today",
+  yesterday: "Yesterday",
+  dashboard: "Dashboard",
+  lastSync: "Last sync",
+  passages: "Passages",
+  guestsOnLifts: "Guests on lifts",
+  activeLifts: "Active lifts",
+  season: "Season",
+  topLiftsToday: "Top Lifts Today",
+  topLiftsDate: "Top Lifts",
+  noDataToday: "No data for today yet",
+  noDataDate: "No data for",
+  pushFirstExtraction: "Push your first extraction to get started",
+  tryDifferentDate: "Try a different date",
+
+  allLifts: "All Lifts",
+  searchLift: "Search lift...",
+  all: "All",
+  noLiftsMatchFilters: "No lifts match your filters",
+  noLiftDataAvailable: "No lift data available",
+  lift: "lift",
+  lifts: "lifts",
+
+  integration: "Integration",
+  integrationSubtitle: "Push extraction data from your on-site MSSQL script to this dashboard",
+  syncEndpoint: "Sync Endpoint",
+  syncEndpointDesc: "Add an HTTP POST step to your existing MSSQL extraction script. Send your data to:",
+  postUrl: "POST URL",
+  jsonPayload: "JSON Payload",
+  jsonPayloadDesc: "Send a JSON body with your snapshot rows. Field names match your existing table columns:",
+  requestBody: "Request Body (JSON)",
+  sqlAgentScript: "SQL Server Agent Script",
+  sqlAgentScriptDesc: "Paste this into your Agent job step. It stages today's rows into a temp table, then POSTs them in chunks of 50 to avoid OLE Automation size limits. Includes the company/group fields from the SKP_SOCIETA join.",
+  tsqlLabel: "T-SQL — chunked sync with company fields",
+  idempotentNote: "Data is upserted by row ID — pushing the same extraction twice is safe and idempotent.",
+  copy: "Copy",
+  copied: "Copied",
+
+  back: "Back",
+  code: "Code",
+  seasonLabel: "Season",
+  onLiftsNow: "On lifts now",
+  firstPassage: "1st passage",
+  secondPassage: "2nd passage",
+  todaysHistory: "Today's history",
+  historySubtitle: "Each row is one extraction snapshot",
+  noHistoryToday: "No history for today",
+  passagesRowLabel: "passages",
+  onLiftLabel: "on lift",
+  firstPassLabel: "1st pass",
+
+  tabDashboard: "Dashboard",
+  tabLifts: "Lifts",
+  tabIntegration: "Integration",
+};
+
+export const translations: Record<Language, Translations> = { it, en };

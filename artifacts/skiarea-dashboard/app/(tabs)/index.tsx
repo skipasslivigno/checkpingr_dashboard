@@ -23,6 +23,7 @@ import { LiftRow } from "@/components/LiftRow";
 import { LiftRowSkeleton, StatCardSkeleton } from "@/components/SkeletonLoader";
 import { StatCard } from "@/components/StatCard";
 import { useColors } from "@/hooks/useColors";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -32,6 +33,7 @@ export default function DashboardScreen() {
   const colors = useColors();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { t, language, setLanguage } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState<string | undefined>(undefined);
   const [selectedDate, setSelectedDate] = useState(todayIso());
@@ -72,11 +74,35 @@ export default function DashboardScreen() {
     >
       {/* Header row */}
       <View style={styles.headerRow}>
-        <View>
+        <View style={styles.titleBlock}>
           <Text style={[styles.dateText, { color: colors.mutedForeground }]}>
-            {isToday ? "Today" : selectedDate}
+            {isToday ? t.today : selectedDate}
           </Text>
-          <Text style={[styles.title, { color: colors.foreground }]}>Dashboard</Text>
+          <Text style={[styles.title, { color: colors.foreground }]}>{t.dashboard}</Text>
+        </View>
+
+        {/* Language toggle */}
+        <View style={[styles.langToggle, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          {(["it", "en"] as const).map((lang) => (
+            <TouchableOpacity
+              key={lang}
+              onPress={() => setLanguage(lang)}
+              style={[
+                styles.langBtn,
+                language === lang && { backgroundColor: colors.primary },
+              ]}
+              activeOpacity={0.7}
+            >
+              <Text
+                style={[
+                  styles.langText,
+                  { color: language === lang ? colors.primaryForeground : colors.mutedForeground },
+                ]}
+              >
+                {lang.toUpperCase()}
+              </Text>
+            </TouchableOpacity>
+          ))}
         </View>
 
         {seasons && seasons.length > 1 && (
@@ -130,7 +156,7 @@ export default function DashboardScreen() {
         <View style={[styles.syncRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Feather name="clock" size={12} color={colors.mutedForeground} />
           <Text style={[styles.syncText, { color: colors.mutedForeground }]}>
-            Last sync: {summary.lastSyncAt}
+            {t.lastSync}: {summary.lastSyncAt}
           </Text>
         </View>
       )}
@@ -145,12 +171,12 @@ export default function DashboardScreen() {
         ) : (
           <>
             <StatCard
-              label="Passages"
+              label={t.passages}
               value={(summary?.totalPassages ?? 0).toLocaleString()}
               accent
             />
             <StatCard
-              label="Guests on lifts"
+              label={t.guestsOnLifts}
               value={(summary?.totalGuests ?? 0).toLocaleString()}
             />
           </>
@@ -166,17 +192,17 @@ export default function DashboardScreen() {
         ) : (
           <>
             <StatCard
-              label="Active lifts"
+              label={t.activeLifts}
               value={`${summary?.activeLifts ?? 0} / ${summary?.totalLifts ?? 0}`}
             />
-            <StatCard label="Season" value={summary?.season ?? "—"} />
+            <StatCard label={t.season} value={summary?.season ?? "—"} />
           </>
         )}
       </View>
 
       {/* Top lifts */}
       <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-        Top Lifts{isToday ? " Today" : ` — ${selectedDate}`}
+        {isToday ? t.topLiftsToday : `${t.topLiftsDate} — ${selectedDate}`}
       </Text>
 
       {liftsLoading ? (
@@ -185,10 +211,10 @@ export default function DashboardScreen() {
         <View style={[styles.emptyState, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Feather name="wind" size={32} color={colors.mutedForeground} />
           <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-            {isToday ? "No data for today yet" : `No data for ${selectedDate}`}
+            {isToday ? t.noDataToday : `${t.noDataDate} ${selectedDate}`}
           </Text>
           <Text style={[styles.emptySubText, { color: colors.mutedForeground }]}>
-            {isToday ? "Push your first extraction to get started" : "Try a different date"}
+            {isToday ? t.pushFirstExtraction : t.tryDifferentDate}
           </Text>
         </View>
       ) : (
@@ -222,13 +248,30 @@ const styles = StyleSheet.create({
   headerRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-end",
+    alignItems: "center",
     marginBottom: 16,
-    gap: 12,
+    gap: 8,
     paddingHorizontal: 16,
   },
+  titleBlock: { flex: 1 },
   dateText: { fontSize: 12, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
   title: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: -0.5, marginTop: 2 },
+  langToggle: {
+    flexDirection: "row",
+    borderRadius: 16,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  langBtn: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 14,
+  },
+  langText: {
+    fontSize: 11,
+    fontFamily: "Inter_700Bold",
+    letterSpacing: 0.5,
+  },
   seasonScroll: { flexShrink: 1 },
   seasonChip: {
     borderRadius: 20,

@@ -14,10 +14,12 @@ import { useGetLiftHistory } from "@workspace/api-client-react";
 import { LiftRowSkeleton } from "@/components/SkeletonLoader";
 import { StatCard } from "@/components/StatCard";
 import { useColors } from "@/hooks/useColors";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 export default function LiftDetailScreen() {
   const colors = useColors();
   const router = useRouter();
+  const { t } = useTranslation();
   const { ggnr, name } = useLocalSearchParams<{ ggnr: string; name: string }>();
 
   const ggnrNum = parseInt(ggnr ?? "0", 10);
@@ -36,7 +38,7 @@ export default function LiftDetailScreen() {
       <View style={[styles.navBar, { paddingTop: topPadding + 12, backgroundColor: colors.background, borderBottomColor: colors.border }]}>
         <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
           <Feather name="chevron-left" size={22} color={colors.primary} />
-          <Text style={[styles.backText, { color: colors.primary }]}>Back</Text>
+          <Text style={[styles.backText, { color: colors.primary }]}>{t.back}</Text>
         </TouchableOpacity>
       </View>
 
@@ -47,7 +49,7 @@ export default function LiftDetailScreen() {
         <Text style={[styles.title, { color: colors.foreground }]} numberOfLines={2}>
           {name ?? `Lift #${ggnr}`}
         </Text>
-        <Text style={[styles.code, { color: colors.mutedForeground }]}>Code: {ggnr}</Text>
+        <Text style={[styles.code, { color: colors.mutedForeground }]}>{t.code}: {ggnr}</Text>
         {latest?.nomeSocieta && (
           <View style={[styles.companyBadge, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
             <Text style={[styles.companyText, { color: colors.foreground }]} numberOfLines={1}>
@@ -61,22 +63,22 @@ export default function LiftDetailScreen() {
           </View>
         )}
         {latest?.eser && (
-          <Text style={[styles.season, { color: colors.mutedForeground }]}>Season: {latest.eser}</Text>
+          <Text style={[styles.season, { color: colors.mutedForeground }]}>{t.seasonLabel}: {latest.eser}</Text>
         )}
 
         {/* Current stats */}
         <View style={styles.statsRow}>
-          <StatCard label="Passages" value={(latest?.npas ?? 0).toLocaleString()} accent />
-          <StatCard label="On lifts now" value={latest?.nuin ?? "—"} />
+          <StatCard label={t.passages} value={(latest?.npas ?? 0).toLocaleString()} accent />
+          <StatCard label={t.onLiftsNow} value={latest?.nuin ?? "—"} />
         </View>
         <View style={styles.statsRow}>
-          <StatCard label="1st passage" value={latest?.npin ?? "—"} />
-          <StatCard label="2nd passage" value={latest?.npic ?? "—"} />
+          <StatCard label={t.firstPassage} value={latest?.npin ?? "—"} />
+          <StatCard label={t.secondPassage} value={latest?.npic ?? "—"} />
         </View>
 
-        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Today's history</Text>
+        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t.todaysHistory}</Text>
         <Text style={[styles.sectionSub, { color: colors.mutedForeground }]}>
-          Each row is one extraction snapshot
+          {t.historySubtitle}
         </Text>
 
         {isLoading ? (
@@ -84,10 +86,10 @@ export default function LiftDetailScreen() {
         ) : !history || history.length === 0 ? (
           <View style={[styles.emptyState, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <Feather name="wind" size={28} color={colors.mutedForeground} />
-            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>No history for today</Text>
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>{t.noHistoryToday}</Text>
           </View>
         ) : (
-          history.map((snap, i) => (
+          history.map((snap) => (
             <View
               key={snap.id}
               style={[styles.histRow, { backgroundColor: colors.card, borderColor: colors.border }]}
@@ -105,19 +107,19 @@ export default function LiftDetailScreen() {
                   <Text style={[styles.histVal, { color: colors.primary }]}>
                     {(snap.npas ?? 0).toLocaleString()}
                   </Text>
-                  <Text style={[styles.histLabel, { color: colors.mutedForeground }]}>passages</Text>
+                  <Text style={[styles.histLabel, { color: colors.mutedForeground }]}>{t.passagesRowLabel}</Text>
                 </View>
                 <View style={styles.histStat}>
                   <Text style={[styles.histVal, { color: colors.foreground }]}>
                     {snap.nuin ?? "—"}
                   </Text>
-                  <Text style={[styles.histLabel, { color: colors.mutedForeground }]}>on lift</Text>
+                  <Text style={[styles.histLabel, { color: colors.mutedForeground }]}>{t.onLiftLabel}</Text>
                 </View>
                 <View style={styles.histStat}>
                   <Text style={[styles.histVal, { color: colors.foreground }]}>
                     {snap.npin ?? "—"}
                   </Text>
-                  <Text style={[styles.histLabel, { color: colors.mutedForeground }]}>1st pass</Text>
+                  <Text style={[styles.histLabel, { color: colors.mutedForeground }]}>{t.firstPassLabel}</Text>
                 </View>
               </View>
             </View>

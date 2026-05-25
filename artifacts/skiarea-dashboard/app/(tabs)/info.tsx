@@ -11,6 +11,7 @@ import {
   View,
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 const DOMAIN = process.env.EXPO_PUBLIC_DOMAIN ?? "your-app.replit.app";
 
@@ -125,6 +126,7 @@ PRINT 'Sync complete'`;
 
 function CopyBlock({ label, content }: { label: string; content: string }) {
   const colors = useColors();
+  const { t } = useTranslation();
   const [copied, setCopied] = useState(false);
 
   const onCopy = async () => {
@@ -141,7 +143,7 @@ function CopyBlock({ label, content }: { label: string; content: string }) {
         <TouchableOpacity onPress={onCopy} style={styles.copyBtn} activeOpacity={0.7}>
           <Feather name={copied ? "check" : "copy"} size={14} color={copied ? colors.success : colors.primary} />
           <Text style={[styles.copyBtnText, { color: copied ? colors.success : colors.primary }]}>
-            {copied ? "Copied" : "Copy"}
+            {copied ? t.copied : t.copy}
           </Text>
         </TouchableOpacity>
       </View>
@@ -152,6 +154,7 @@ function CopyBlock({ label, content }: { label: string; content: string }) {
 
 export default function InfoScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const topPadding = Platform.OS === "web" ? 67 : 0;
 
   return (
@@ -159,9 +162,9 @@ export default function InfoScreen() {
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={[styles.content, { paddingTop: topPadding + 16, paddingBottom: Platform.OS === "web" ? 34 : 100 }]}
     >
-      <Text style={[styles.title, { color: colors.foreground }]}>Integration</Text>
+      <Text style={[styles.title, { color: colors.foreground }]}>{t.integration}</Text>
       <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-        Push extraction data from your on-site MSSQL script to this dashboard
+        {t.integrationSubtitle}
       </Text>
 
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -169,12 +172,12 @@ export default function InfoScreen() {
           <View style={[styles.stepNum, { backgroundColor: colors.primary }]}>
             <Text style={[styles.stepNumText, { color: colors.primaryForeground }]}>1</Text>
           </View>
-          <Text style={[styles.stepTitle, { color: colors.foreground }]}>Sync Endpoint</Text>
+          <Text style={[styles.stepTitle, { color: colors.foreground }]}>{t.syncEndpoint}</Text>
         </View>
         <Text style={[styles.stepDesc, { color: colors.mutedForeground }]}>
-          Add an HTTP POST step to your existing MSSQL extraction script. Send your data to:
+          {t.syncEndpointDesc}
         </Text>
-        <CopyBlock label="POST URL" content={syncUrl} />
+        <CopyBlock label={t.postUrl} content={syncUrl} />
       </View>
 
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -182,12 +185,12 @@ export default function InfoScreen() {
           <View style={[styles.stepNum, { backgroundColor: colors.primary }]}>
             <Text style={[styles.stepNumText, { color: colors.primaryForeground }]}>2</Text>
           </View>
-          <Text style={[styles.stepTitle, { color: colors.foreground }]}>JSON Payload</Text>
+          <Text style={[styles.stepTitle, { color: colors.foreground }]}>{t.jsonPayload}</Text>
         </View>
         <Text style={[styles.stepDesc, { color: colors.mutedForeground }]}>
-          Send a JSON body with your snapshot rows. Field names match your existing table columns:
+          {t.jsonPayloadDesc}
         </Text>
-        <CopyBlock label="Request Body (JSON)" content={examplePayload} />
+        <CopyBlock label={t.requestBody} content={examplePayload} />
       </View>
 
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -195,18 +198,18 @@ export default function InfoScreen() {
           <View style={[styles.stepNum, { backgroundColor: colors.primary }]}>
             <Text style={[styles.stepNumText, { color: colors.primaryForeground }]}>3</Text>
           </View>
-          <Text style={[styles.stepTitle, { color: colors.foreground }]}>SQL Server Agent Script</Text>
+          <Text style={[styles.stepTitle, { color: colors.foreground }]}>{t.sqlAgentScript}</Text>
         </View>
         <Text style={[styles.stepDesc, { color: colors.mutedForeground }]}>
-          Paste this into your Agent job step. It stages today's rows into a temp table, then POSTs them in chunks of 50 to avoid OLE Automation size limits. Includes the company/group fields from the SKP_SOCIETA join.
+          {t.sqlAgentScriptDesc}
         </Text>
-        <CopyBlock label="T-SQL — chunked sync with company fields" content={sqlExample} />
+        <CopyBlock label={t.tsqlLabel} content={sqlExample} />
       </View>
 
       <View style={[styles.noteBox, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
         <Feather name="info" size={16} color={colors.primary} />
         <Text style={[styles.noteText, { color: colors.foreground }]}>
-          Data is upserted by row ID — pushing the same extraction twice is safe and idempotent.
+          {t.idempotentNote}
         </Text>
       </View>
     </ScrollView>

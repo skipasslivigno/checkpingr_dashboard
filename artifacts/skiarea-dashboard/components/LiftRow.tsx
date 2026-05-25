@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 interface LiftRowProps {
   name: string;
@@ -15,6 +16,7 @@ interface LiftRowProps {
 
 export function LiftRow({ name, passages, guests, firstPassage, company, group, onPress }: LiftRowProps) {
   const colors = useColors();
+  const { t } = useTranslation();
 
   const isActive = (passages ?? 0) > 0;
   const subtitle = company ?? group ?? `${firstPassage ?? 0} guests today`;
@@ -32,11 +34,11 @@ export function LiftRow({ name, passages, guests, firstPassage, company, group, 
       </View>
       <View style={styles.stats}>
         <Text style={[styles.passageCount, { color: colors.primary }]}>{(passages ?? 0).toLocaleString()}</Text>
-        <Text style={[styles.passageLabel, { color: colors.mutedForeground }]}>PASSAGES</Text>
+        <Text style={[styles.passageLabel, { color: colors.mutedForeground }]}>{t.passages.toUpperCase()}</Text>
       </View>
       <View style={styles.guestBlock}>
         <Text style={[styles.guestCount, { color: colors.foreground }]}>{guests ?? 0}</Text>
-        <Text style={[styles.guestLabel, { color: colors.mutedForeground }]}>ON LIFT</Text>
+        <Text style={[styles.guestLabel, { color: colors.mutedForeground }]}>{t.onLiftLabel.toUpperCase()}</Text>
       </View>
       {onPress ? <Feather name="chevron-right" size={16} color={colors.mutedForeground} /> : null}
     </TouchableOpacity>

@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { useGetLiftDates, useGetLiftExtractions } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -17,22 +18,6 @@ function yesterdayIso(): string {
   const d = new Date();
   d.setDate(d.getDate() - 1);
   return d.toISOString().slice(0, 10);
-}
-
-function dateChipLabel(dateStr: string): string {
-  const today = todayIso();
-  const yesterday = yesterdayIso();
-  if (dateStr === today) return "Today";
-  if (dateStr === yesterday) return "Yesterday";
-
-  const d = new Date(dateStr + "T12:00:00Z");
-  const now = new Date();
-  const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
-
-  if (diffDays <= 6) {
-    return d.toLocaleDateString("en", { weekday: "short", day: "numeric" });
-  }
-  return d.toLocaleDateString("en", { day: "numeric", month: "short" });
 }
 
 export function dupdToTime(dupd: string): string {
@@ -56,6 +41,7 @@ export function DateExtractionPicker({
   onExtractionChange,
 }: DateExtractionPickerProps) {
   const colors = useColors();
+  const { t, language } = useTranslation();
   const scrollRef = useRef<ScrollView>(null);
   const prevSeasonRef = useRef(season);
 
@@ -102,11 +88,29 @@ export function DateExtractionPicker({
     }
   }, [selectedDate, dates]);
 
+  const locale = language === "it" ? "it-IT" : "en-GB";
+
+  function dateChipLabel(dateStr: string): string {
+    const today = todayIso();
+    const yesterday = yesterdayIso();
+    if (dateStr === today) return t.today;
+    if (dateStr === yesterday) return t.yesterday;
+
+    const d = new Date(dateStr + "T12:00:00Z");
+    const now = new Date();
+    const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
+
+    if (diffDays <= 6) {
+      return d.toLocaleDateString(locale, { weekday: "short", day: "numeric" });
+    }
+    return d.toLocaleDateString(locale, { day: "numeric", month: "short" });
+  }
+
   if (!dates || dates.length === 0) return null;
 
   return (
     <View style={styles.wrapper}>
-      {/* Date chips — all available dates, most recent first (right end) */}
+      {/* Date chips — most recent first (API returns DESC) */}
       <ScrollView
         ref={scrollRef}
         horizontal

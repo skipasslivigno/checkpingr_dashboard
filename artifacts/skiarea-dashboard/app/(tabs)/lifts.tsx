@@ -21,6 +21,7 @@ import { DateExtractionPicker } from "@/components/DateExtractionPicker";
 import { LiftRow } from "@/components/LiftRow";
 import { LiftRowSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
+import { useTranslation } from "@/contexts/LanguageContext";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -30,6 +31,7 @@ export default function LiftsScreen() {
   const colors = useColors();
   const router = useRouter();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const [selectedDate, setSelectedDate] = useState(todayIso());
@@ -79,7 +81,7 @@ export default function LiftsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: topPadding + 16, backgroundColor: colors.background }]}>
-        <Text style={[styles.title, { color: colors.foreground }]}>All Lifts</Text>
+        <Text style={[styles.title, { color: colors.foreground }]}>{t.allLifts}</Text>
 
         <DateExtractionPicker
           selectedDate={selectedDate}
@@ -95,7 +97,7 @@ export default function LiftsScreen() {
           <Feather name="search" size={16} color={colors.mutedForeground} />
           <TextInput
             style={[styles.searchInput, { color: colors.foreground }]}
-            placeholder="Search lift..."
+            placeholder={t.searchLift}
             placeholderTextColor={colors.mutedForeground}
             value={search}
             onChangeText={setSearch}
@@ -131,7 +133,7 @@ export default function LiftsScreen() {
                   { color: selectedCompany === null ? "#fff" : colors.foreground },
                 ]}
               >
-                All
+                {t.all}
               </Text>
             </TouchableOpacity>
 
@@ -165,7 +167,7 @@ export default function LiftsScreen() {
         {selectedCompany !== null && (
           <View style={[styles.filterBar, { marginHorizontal: 16 }]}>
             <Text style={[styles.filterLabel, { color: colors.mutedForeground }]}>
-              {filtered.length} lift{filtered.length !== 1 ? "s" : ""} · {selectedCompany}
+              {filtered.length} {filtered.length !== 1 ? t.lifts : t.lift} · {selectedCompany}
             </Text>
             <TouchableOpacity onPress={() => setSelectedCompany(null)} hitSlop={8}>
               <Feather name="x" size={14} color={colors.mutedForeground} />
@@ -187,7 +189,7 @@ export default function LiftsScreen() {
             <View style={[styles.emptyState]}>
               <Feather name="alert-circle" size={32} color={colors.mutedForeground} />
               <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-                {search || selectedCompany ? "No lifts match your filters" : "No lift data available"}
+                {search || selectedCompany ? t.noLiftsMatchFilters : t.noLiftDataAvailable}
               </Text>
             </View>
           ) : null
