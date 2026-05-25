@@ -34,11 +34,11 @@ const examplePayload = `{
   ]
 }`;
 
-const sqlExample = `-- Chunked HTTP POST — avoids OLE Automation size limits
+const sqlExample = `-- Chunked HTTP POST — sends 50 rows per call, safe for full history loads
 -- Replace SKP_PASSAGGI / SKP_IMPIANTI / SKP_SOCIETA with your table names
 
 DECLARE @url        NVARCHAR(512) = N'${syncUrl}'
-DECLARE @chunkSize  INT           = 50   -- rows per POST (keep ≤ 100)
+DECLARE @chunkSize  INT           = 50   -- rows per POST; keep <= 100
 DECLARE @offset     INT           = 0
 DECLARE @total      INT
 DECLARE @json       NVARCHAR(MAX)
@@ -46,61 +46,70 @@ DECLARE @http       INT
 DECLARE @status     INT
 DECLARE @resp       NVARCHAR(MAX)
 
--- Stage today's rows
+-- Stage rows — remove the WHERE to load full history across all seasons
 SELECT
-    CAST(idin  AS NVARCHAR(50))  AS idin,
-    CAST(dupd  AS NVARCHAR(20))  AS dupd,
-    CONVERT(NVARCHAR(20), dtgg, 120) AS dtgg,
-    ggnr, ggbz,
-    nsoc, npin, npic, nuin, npas, eser,
-    s.nome  AS nome_societa,
-    s.descr_grp,
-    s.id    AS id_societa,
-    s.codgrp
+    CAST(p.idin AS NVARCHAR(50))        AS idin,
+    CAST(p.dupd AS NVARCHAR(20))        AS dupd,
+    CONVERT(NVARCHAR(20), p.dtgg, 120)  AS dtgg,
+    p.ggnr,
+    p.ggbz,
+    p.nsoc,
+    p.npin,
+    p.npic,
+    p.nuin,
+    p.npas,
+    p.eser,
+    s.nome      AS nome_societa,
+    s.descr_grp AS descr_grp,
+    s.id        AS id_societa,
+    s.codgrp    AS codgrp
 INTO #rows
 FROM SKP_PASSAGGI p
-JOIN SKP_IMPIANTI i  ON p.ggnr = i.ggnr
+JOIN SKP_IMPIANTI i   ON p.ggnr  = i.ggnr
 LEFT JOIN SKP_SOCIETA s ON i.id_societa = s.id
-WHERE CAST(p.dtgg AS DATE) = CAST(GETDATE() AS DATE)
+WHERE p.dupd IS NOT NULL   -- required fields must not be NULL
+  AND p.dtgg IS NOT NULL
+  AND p.ggnr IS NOT NULL
+  AND p.ggbz IS NOT NULL
+  AND p.eser IS NOT NULL
+-- AND CAST(p.dtgg AS DATE) = CAST(GETDATE() AS DATE)  -- today only
 
 SELECT @total = COUNT(*) FROM #rows
+PRINT CONCAT('Rows to sync: ', @total)
 
 WHILE @offset < @total
 BEGIN
-    -- Build JSON chunk
     SELECT @json = N'{"snapshots":' +
-        (SELECT TOP (@chunkSize) *
-         FROM (
-           SELECT * FROM #rows
-           ORDER BY (SELECT NULL)
-           OFFSET @offset ROWS
-         ) t
-         FOR JSON PATH) +
+        (SELECT *
+         FROM   #rows
+         ORDER  BY (SELECT NULL)
+         OFFSET @offset ROWS
+         FETCH  NEXT @chunkSize ROWS ONLY
+         FOR JSON PATH, INCLUDE_NULL_VALUES) +
         N'}'
 
-    -- HTTP POST
-    EXEC sp_OACreate 'MSXML2.ServerXMLHTTP.6.0', @http OUT
-    EXEC sp_OAMethod @http, 'open', NULL, 'POST', @url, false
-    EXEC sp_OAMethod @http, 'setRequestHeader', NULL,
-         'Content-Type', 'application/json'
-    EXEC sp_OAMethod @http, 'send', NULL, @json
-    EXEC sp_OAGetProperty @http, 'status', @status OUT
+    EXEC sp_OACreate      'MSXML2.ServerXMLHTTP.6.0', @http OUT
+    EXEC sp_OAMethod       @http, 'open',             NULL, 'POST', @url, false
+    EXEC sp_OAMethod       @http, 'setRequestHeader', NULL, 'Content-Type', 'application/json'
+    EXEC sp_OAMethod       @http, 'send',             NULL, @json
+    EXEC sp_OAGetProperty  @http, 'status',           @status OUT
+    EXEC sp_OAGetProperty  @http, 'responseText',     @resp   OUT
+    EXEC sp_OADestroy      @http
 
-    IF @status <> 200
+    IF @status NOT IN (200, 201)
     BEGIN
-        EXEC sp_OAGetProperty @http, 'responseText', @resp OUT
-        EXEC sp_OADestroy @http
         DROP TABLE #rows
-        RAISERROR('Sync chunk failed. Status: %d  Offset: %d  Body: %s',
+        RAISERROR('Chunk failed. HTTP %d at offset %d. Body: %s',
                   16, 1, @status, @offset, @resp)
         RETURN
     END
 
-    EXEC sp_OADestroy @http
+    PRINT CONCAT('  offset=', @offset, ' -> ok (', @status, ')')
     SET @offset = @offset + @chunkSize
 END
 
-DROP TABLE #rows`;
+DROP TABLE #rows
+PRINT 'Sync complete'`;
 
 function CopyBlock({ label, content }: { label: string; content: string }) {
   const colors = useColors();
