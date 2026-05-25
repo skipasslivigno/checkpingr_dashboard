@@ -64,9 +64,9 @@ SELECT
     s.id        AS id_societa,
     s.codgrp    AS codgrp
 INTO #rows
-FROM SKP_PASSAGGI p
+FROM ACCESSI_IMPIANTI p
 JOIN SKP_IMPIANTI i   ON p.ggnr  = i.ggnr
-LEFT JOIN SKP_SOCIETA s ON i.id_societa = s.id
+LEFT JOIN SKP_SOCIETA s ON i.id_soc = s.id
 WHERE p.dupd IS NOT NULL   -- required fields must not be NULL
   AND p.dtgg IS NOT NULL
   AND p.ggnr IS NOT NULL
