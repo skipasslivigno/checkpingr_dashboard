@@ -54,7 +54,13 @@ export interface Translations {
 
   tabDashboard: string;
   tabLifts: string;
+  tabGroups: string;
   tabIntegration: string;
+
+  groups: string;
+  noGroupData: string;
+  activeLiftsOf: string;
+  firstPassages: string;
 
   guestsToday: string;
   liftPrefix: string;
@@ -129,7 +135,13 @@ const it: Translations = {
 
   tabDashboard: "Dashboard",
   tabLifts: "Impianti",
+  tabGroups: "Gruppi",
   tabIntegration: "Integrazione",
+
+  groups: "Gruppi",
+  noGroupData: "Nessun dato per questo gruppo",
+  activeLiftsOf: "attivi su",
+  firstPassages: "1° pass.",
 
   guestsToday: "ospiti oggi",
   liftPrefix: "Impianto #",
@@ -204,7 +216,13 @@ const en: Translations = {
 
   tabDashboard: "Dashboard",
   tabLifts: "Lifts",
+  tabGroups: "Groups",
   tabIntegration: "Integration",
+
+  groups: "Groups",
+  noGroupData: "No data for this group",
+  activeLiftsOf: "active of",
+  firstPassages: "1st pass.",
 
   guestsToday: "guests today",
   liftPrefix: "Lift #",

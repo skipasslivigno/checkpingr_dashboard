@@ -22,6 +22,10 @@ function NativeTabLayout() {
         <Icon sf={{ default: "tram.fill.tunnel", selected: "tram.fill.tunnel" }} />
         <Label>{t.tabLifts}</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="groups">
+        <Icon sf={{ default: "rectangle.3.group", selected: "rectangle.3.group.fill" }} />
+        <Label>{t.tabGroups}</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="info">
         <Icon sf={{ default: "link", selected: "link" }} />
         <Label>{t.tabIntegration}</Label>
@@ -90,6 +94,18 @@ function ClassicTabLayout() {
               <SymbolView name="tram.fill.tunnel" tintColor={color} size={22} />
             ) : (
               <Feather name="list" size={22} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="groups"
+        options={{
+          title: t.tabGroups,
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="rectangle.3.group.fill" tintColor={color} size={22} />
+            ) : (
+              <Feather name="layers" size={22} color={color} />
             ),
         }}
       />
