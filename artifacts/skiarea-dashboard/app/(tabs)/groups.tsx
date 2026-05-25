@@ -48,11 +48,13 @@ function GroupSection({
   visibleLifts,
   expanded,
   onToggle,
+  maxPassages,
 }: {
   group: GroupData;
   visibleLifts: GroupData["lifts"];
   expanded: boolean;
   onToggle: () => void;
+  maxPassages: number;
 }) {
   const colors = useColors();
   const { t } = useTranslation();
@@ -121,6 +123,20 @@ function GroupSection({
               {t.activeLifts.toUpperCase()}
             </Text>
           </View>
+        </View>
+
+        <View style={[styles.passageBarTrack, { backgroundColor: colors.border }]}>
+          <View
+            style={[
+              styles.passageBarFill,
+              {
+                backgroundColor: colors.primary,
+                width: maxPassages > 0
+                  ? `${Math.round((group.totalPassages / maxPassages) * 100)}%`
+                  : "0%",
+              },
+            ]}
+          />
         </View>
       </TouchableOpacity>
 
@@ -225,6 +241,11 @@ export default function GroupsScreen() {
       .filter((g) => g.totalLifts > 0)
       .sort((a, b) => a.minNsoc - b.minNsoc);
   }, [lifts]);
+
+  const maxPassages = useMemo(
+    () => groups.reduce((max, g) => Math.max(max, g.totalPassages), 0),
+    [groups]
+  );
 
   const isSearching = searchQuery.trim().length > 0;
 
@@ -345,6 +366,7 @@ export default function GroupsScreen() {
               visibleLifts={item.group.visibleLifts}
               expanded={isGroupExpanded(item.group.name)}
               onToggle={isSearching ? () => undefined : () => toggleGroup(item.group.name)}
+              maxPassages={maxPassages}
             />
           );
         }}
@@ -432,6 +454,16 @@ const styles = StyleSheet.create({
     width: 1,
     height: 28,
     marginHorizontal: 2,
+  },
+  passageBarTrack: {
+    height: 3,
+    borderRadius: 2,
+    overflow: "hidden",
+    marginTop: 2,
+  },
+  passageBarFill: {
+    height: 3,
+    borderRadius: 2,
   },
   liftList: {
     borderTopWidth: 1,
