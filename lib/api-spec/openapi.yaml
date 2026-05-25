@@ -349,7 +349,7 @@ components:
           type: ["string", "null"]
           description: Company group description
         id_societa:
-          type: ["integer", "null"]
+          type: ["string", "null"]
           description: Company ID
         codgrp:
           type: ["string", "null"]

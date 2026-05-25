@@ -26,7 +26,7 @@ const CoercedSyncBody = z.object({
     eser:         z.string(),
     nome_societa: z.string().nullish(),
     descr_grp:    z.string().nullish(),
-    id_societa:   z.coerce.number().nullish(),
+    id_societa:   z.string().nullish(),
     codgrp:       z.string().nullish(),
   })),
 });

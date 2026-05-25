@@ -120,7 +120,7 @@ export interface SnapshotInput {
      * Company ID
      * @nullable
      */
-  id_societa?: number | null;
+  id_societa?: string | null;
   /**
      * Company group code
      * @nullable

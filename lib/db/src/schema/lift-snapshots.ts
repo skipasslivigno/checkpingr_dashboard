@@ -19,7 +19,7 @@ export const liftSnapshotsTable = pgTable(
     eser: text("eser").notNull(),
     nomeSocieta: text("nome_societa"),
     descrGrp: text("descr_grp"),
-    idSocieta: integer("id_societa"),
+    idSocieta: text("id_societa"),
     codgrp: text("codgrp"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },

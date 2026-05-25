@@ -143,7 +143,7 @@ export const SyncLiftsBody = zod.object({
   "eser": zod.string(),
   "nome_societa": zod.string().nullish().describe('Company name'),
   "descr_grp": zod.string().nullish().describe('Company group description'),
-  "id_societa": zod.number().nullish().describe('Company ID'),
+  "id_societa": zod.string().nullish().describe('Company ID'),
   "codgrp": zod.string().nullish().describe('Company group code')
 }))
 })
