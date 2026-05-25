@@ -10,12 +10,14 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Svg, { Circle, G, Line, Path, Text as SvgText } from "react-native-svg";
+import Svg, { Circle, G, Line, Path, Rect, Text as SvgText } from "react-native-svg";
 import {
   getGetSeasonTrendQueryKey,
   getGetSeasonsQueryKey,
+  getGetWeekTrendQueryKey,
   useGetSeasonTrend,
   useGetSeasons,
+  useGetWeekTrend,
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
@@ -73,7 +75,6 @@ function LineChart({ lines, valueKey, containerWidth, height, colors, yLabel, xL
   const allPoints = lines.flatMap((l) => l.points);
   const maxX = allPoints.length > 0 ? Math.max(...allPoints.map((p) => p.dayIndex)) : 1;
 
-  // Make chart at least as wide as the container; expand for long seasons
   const minContentW = Math.max(MIN_CHART_CONTENT_W, maxX * PX_PER_DAY);
   const width = Math.max(containerWidth, minContentW + PAD.left + PAD.right);
 
@@ -97,106 +98,204 @@ function LineChart({ lines, valueKey, containerWidth, height, colors, yLabel, xL
   return (
     <Svg width={width} height={height}>
       <G x={PAD.left} y={PAD.top}>
-        {/* Grid lines */}
         {yTicks.map((v) => (
           <G key={v}>
-            <Line
-              x1={0}
-              y1={toY(v)}
-              x2={chartW}
-              y2={toY(v)}
-              stroke={colors.border}
-              strokeWidth={1}
-              strokeDasharray="3,3"
-            />
-            <SvgText
-              x={-6}
-              y={toY(v) + 4}
-              textAnchor="end"
-              fontSize={9}
-              fill={colors.mutedForeground}
-              fontFamily="Inter_400Regular"
-            >
+            <Line x1={0} y1={toY(v)} x2={chartW} y2={toY(v)} stroke={colors.border} strokeWidth={1} strokeDasharray="3,3" />
+            <SvgText x={-6} y={toY(v) + 4} textAnchor="end" fontSize={9} fill={colors.mutedForeground} fontFamily="Inter_400Regular">
               {formatBigNumber(v)}
             </SvgText>
           </G>
         ))}
 
-        {/* X ticks */}
         {xTicks.filter((v) => v > 0).map((v) => (
           <G key={v}>
-            <Line
-              x1={toX(v)}
-              y1={0}
-              x2={toX(v)}
-              y2={chartH}
-              stroke={colors.border}
-              strokeWidth={0.5}
-              strokeDasharray="2,4"
-            />
-            <SvgText
-              x={toX(v)}
-              y={chartH + 14}
-              textAnchor="middle"
-              fontSize={9}
-              fill={colors.mutedForeground}
-              fontFamily="Inter_400Regular"
-            >
+            <Line x1={toX(v)} y1={0} x2={toX(v)} y2={chartH} stroke={colors.border} strokeWidth={0.5} strokeDasharray="2,4" />
+            <SvgText x={toX(v)} y={chartH + 14} textAnchor="middle" fontSize={9} fill={colors.mutedForeground} fontFamily="Inter_400Regular">
               {v}
             </SvgText>
           </G>
         ))}
 
-        {/* Chart border bottom */}
         <Line x1={0} y1={chartH} x2={chartW} y2={chartH} stroke={colors.border} strokeWidth={1} />
         <Line x1={0} y1={0} x2={0} y2={chartH} stroke={colors.border} strokeWidth={1} />
 
-        {/* Season lines */}
         {lines.map((line) => {
           if (line.points.length < 2) {
             const p = line.points[0];
             if (!p) return null;
-            return (
-              <Circle
-                key={line.season}
-                cx={toX(p.dayIndex)}
-                cy={toY(p[valueKey])}
-                r={3}
-                fill={line.color}
-              />
-            );
+            return <Circle key={line.season} cx={toX(p.dayIndex)} cy={toY(p[valueKey])} r={3} fill={line.color} />;
           }
           const d = line.points
             .map((p, i) => `${i === 0 ? "M" : "L"}${toX(p.dayIndex).toFixed(1)},${toY(p[valueKey]).toFixed(1)}`)
             .join(" ");
-          return (
-            <Path
-              key={line.season}
-              d={d}
-              stroke={line.color}
-              strokeWidth={2}
-              fill="none"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          );
+          return <Path key={line.season} d={d} stroke={line.color} strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" />;
         })}
 
-        {/* Axis labels */}
-        <SvgText
-          x={chartW / 2}
-          y={chartH + 32}
-          textAnchor="middle"
-          fontSize={9}
-          fill={colors.mutedForeground}
-          fontFamily="Inter_500Medium"
-        >
+        <SvgText x={chartW / 2} y={chartH + 32} textAnchor="middle" fontSize={9} fill={colors.mutedForeground} fontFamily="Inter_500Medium">
           {xLabel}
         </SvgText>
       </G>
     </Svg>
   );
 }
+
+// ─── Weekly Bar Chart ────────────────────────────────────────────────────────
+
+interface WeekBar {
+  season: string;
+  color: string;
+  weeks: Array<{ weekNumber: number; totalPassages: number }>;
+}
+
+const BAR_W = 14;
+const BAR_GAP = 2;
+const GROUP_PAD = 12;
+
+interface WeekBarChartProps {
+  bars: WeekBar[];
+  containerWidth: number;
+  height: number;
+  colors: ReturnType<typeof useColors>;
+  weekLabel: string;
+}
+
+function WeekBarChart({ bars, containerWidth, height, colors, weekLabel }: WeekBarChartProps) {
+  const PAD = { top: 16, right: 16, bottom: 44, left: 52 };
+
+  const numSeasons = bars.length;
+  const groupW = numSeasons * BAR_W + Math.max(0, numSeasons - 1) * BAR_GAP;
+  const unitW = groupW + GROUP_PAD;
+
+  const maxWeek = bars.reduce((m, b) => Math.max(m, ...b.weeks.map((w) => w.weekNumber)), 0);
+  if (maxWeek === 0) return null;
+
+  const contentW = maxWeek * unitW + GROUP_PAD;
+  const width = Math.max(containerWidth, contentW + PAD.left + PAD.right);
+  const chartW = width - PAD.left - PAD.right;
+  const chartH = height - PAD.top - PAD.bottom;
+
+  const allValues = bars.flatMap((b) => b.weeks.map((w) => w.totalPassages));
+  const maxY = Math.max(...allValues, 1);
+
+  const toY = (v: number) => chartH - (v / maxY) * chartH;
+
+  const Y_TICKS = 4;
+  const yTicks = Array.from({ length: Y_TICKS + 1 }, (_, i) => Math.round((maxY / Y_TICKS) * i));
+
+  const groupXs = Array.from({ length: maxWeek }, (_, i) => (i + 0.5) * unitW);
+
+  return (
+    <Svg width={width} height={height}>
+      <G x={PAD.left} y={PAD.top}>
+        {/* Y grid + labels */}
+        {yTicks.map((v) => (
+          <G key={v}>
+            <Line x1={0} y1={toY(v)} x2={chartW} y2={toY(v)} stroke={colors.border} strokeWidth={1} strokeDasharray="3,3" />
+            <SvgText x={-6} y={toY(v) + 4} textAnchor="end" fontSize={9} fill={colors.mutedForeground} fontFamily="Inter_400Regular">
+              {formatBigNumber(v)}
+            </SvgText>
+          </G>
+        ))}
+
+        {/* Axes */}
+        <Line x1={0} y1={chartH} x2={chartW} y2={chartH} stroke={colors.border} strokeWidth={1} />
+        <Line x1={0} y1={0} x2={0} y2={chartH} stroke={colors.border} strokeWidth={1} />
+
+        {/* Bars + X labels */}
+        {groupXs.map((cx, wi) => {
+          const weekNum = wi + 1;
+          const barStartX = cx - groupW / 2;
+
+          return (
+            <G key={weekNum}>
+              {/* X label — show every 4th week to avoid clutter, always show W1 */}
+              {(weekNum === 1 || weekNum % 4 === 0) && (
+                <SvgText
+                  x={cx}
+                  y={chartH + 14}
+                  textAnchor="middle"
+                  fontSize={8}
+                  fill={colors.mutedForeground}
+                  fontFamily="Inter_400Regular"
+                >
+                  {`${weekLabel.slice(0, 1)}${weekNum}`}
+                </SvgText>
+              )}
+
+              {/* Vertical separator every 4 weeks */}
+              {weekNum % 4 === 0 && (
+                <Line x1={cx + unitW / 2} y1={0} x2={cx + unitW / 2} y2={chartH} stroke={colors.border} strokeWidth={0.5} strokeDasharray="2,4" />
+              )}
+
+              {bars.map((b, si) => {
+                const wk = b.weeks.find((w) => w.weekNumber === weekNum);
+                const val = wk?.totalPassages ?? 0;
+                if (val === 0) return null;
+                const barH = Math.max(2, (val / maxY) * chartH);
+                const bx = barStartX + si * (BAR_W + BAR_GAP);
+                return (
+                  <Rect
+                    key={b.season}
+                    x={bx}
+                    y={chartH - barH}
+                    width={BAR_W}
+                    height={barH}
+                    fill={b.color}
+                    rx={2}
+                    opacity={0.85}
+                  />
+                );
+              })}
+            </G>
+          );
+        })}
+
+        {/* X axis label */}
+        <SvgText x={chartW / 2} y={chartH + 36} textAnchor="middle" fontSize={9} fill={colors.mutedForeground} fontFamily="Inter_500Medium">
+          {weekLabel}
+        </SvgText>
+      </G>
+    </Svg>
+  );
+}
+
+// ─── Chart with auto-measured width ─────────────────────────────────────────
+
+function ChartWithWidth({
+  lines,
+  valueKey,
+  height,
+  colors,
+  yLabel,
+  xLabel,
+}: Omit<LineChartProps, "containerWidth">) {
+  const [containerWidth, setContainerWidth] = useState(320);
+  return (
+    <View style={{ width: "100%" }} onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}>
+      <ScrollView horizontal showsHorizontalScrollIndicator scrollIndicatorInsets={{ right: 1 }} bounces={false}>
+        <LineChart lines={lines} valueKey={valueKey} containerWidth={containerWidth} height={height} colors={colors} yLabel={yLabel} xLabel={xLabel} />
+      </ScrollView>
+    </View>
+  );
+}
+
+function WeekBarChartWithWidth({
+  bars,
+  height,
+  colors,
+  weekLabel,
+}: Omit<WeekBarChartProps, "containerWidth">) {
+  const [containerWidth, setContainerWidth] = useState(320);
+  return (
+    <View style={{ width: "100%" }} onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}>
+      <ScrollView horizontal showsHorizontalScrollIndicator scrollIndicatorInsets={{ right: 1 }} bounces={false}>
+        <WeekBarChart bars={bars} containerWidth={containerWidth} height={height} colors={colors} weekLabel={weekLabel} />
+      </ScrollView>
+    </View>
+  );
+}
+
+// ─── Screen ──────────────────────────────────────────────────────────────────
 
 export default function ChartsScreen() {
   const colors = useColors();
@@ -220,12 +319,26 @@ export default function ChartsScreen() {
     seasonsParam ? { seasons: seasonsParam } : {}
   );
 
+  const { data: weekData, isLoading: weekLoading } = useGetWeekTrend(
+    seasonsParam ? { seasons: seasonsParam } : {}
+  );
+
   const seasonLines = useMemo(() => {
     if (!trendData) return [];
     return buildSeasonLines(trendData);
   }, [trendData]);
 
+  const weekBars = useMemo((): WeekBar[] => {
+    if (!weekData) return [];
+    return weekData.map((s, i) => ({
+      season: s.season,
+      color: SEASON_COLORS[i % SEASON_COLORS.length]!,
+      weeks: s.weeks.map((w) => ({ weekNumber: w.weekNumber, totalPassages: w.totalPassages })),
+    }));
+  }, [weekData]);
+
   const hasAnyData = seasonLines.some((l) => l.points.length > 0);
+  const hasWeekData = weekBars.some((b) => b.weeks.length > 0);
 
   const topPadding = Platform.OS === "web" ? 67 : 0;
 
@@ -234,6 +347,7 @@ export default function ChartsScreen() {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: getGetSeasonTrendQueryKey() }),
       queryClient.invalidateQueries({ queryKey: getGetSeasonsQueryKey() }),
+      queryClient.invalidateQueries({ queryKey: getGetWeekTrendQueryKey() }),
     ]);
     setRefreshing(false);
   };
@@ -251,6 +365,7 @@ export default function ChartsScreen() {
   }
 
   const CHART_HEIGHT = 220;
+  const WEEK_CHART_HEIGHT = 200;
 
   return (
     <ScrollView
@@ -263,9 +378,7 @@ export default function ChartsScreen() {
       {/* Header */}
       <View style={styles.headerRow}>
         <View style={styles.titleBlock}>
-          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-            {t.chartsSubtitle}
-          </Text>
+          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{t.chartsSubtitle}</Text>
           <Text style={[styles.title, { color: colors.foreground }]}>{t.charts}</Text>
         </View>
       </View>
@@ -273,55 +386,31 @@ export default function ChartsScreen() {
       {/* Season selector */}
       {allSeasons && allSeasons.length > 0 && (
         <View style={styles.selectorSection}>
-          <Text style={[styles.selectorLabel, { color: colors.mutedForeground }]}>
-            {t.chartsSeasonSelector}
-          </Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.seasonRow}
-          >
-            {allSeasons.map((s, i) => {
+          <Text style={[styles.selectorLabel, { color: colors.mutedForeground }]}>{t.chartsSeasonSelector}</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.seasonRow}>
+            {allSeasons.map((s) => {
               const current = resolvedSeasons;
               const active = current.includes(s);
               const color = SEASON_COLORS[allSeasons.indexOf(s) % SEASON_COLORS.length]!;
               return (
                 <TouchableOpacity
                   key={s}
-                  style={[
-                    styles.seasonChip,
-                    {
-                      backgroundColor: active ? color + "22" : colors.secondary,
-                      borderColor: active ? color : colors.border,
-                    },
-                  ]}
+                  style={[styles.seasonChip, { backgroundColor: active ? color + "22" : colors.secondary, borderColor: active ? color : colors.border }]}
                   onPress={() => toggleSeason(s)}
                 >
-                  {active && (
-                    <View style={[styles.colorDot, { backgroundColor: color }]} />
-                  )}
-                  <Text
-                    style={[
-                      styles.seasonText,
-                      { color: active ? color : colors.mutedForeground },
-                    ]}
-                  >
-                    {s}
-                  </Text>
+                  {active && <View style={[styles.colorDot, { backgroundColor: color }]} />}
+                  <Text style={[styles.seasonText, { color: active ? color : colors.mutedForeground }]}>{s}</Text>
                 </TouchableOpacity>
               );
             })}
           </ScrollView>
 
-          {/* Legend */}
           {seasonLines.length > 0 && (
             <View style={styles.legendRow}>
               {seasonLines.map((line) => (
                 <View key={line.season} style={styles.legendItem}>
                   <View style={[styles.legendLine, { backgroundColor: line.color }]} />
-                  <Text style={[styles.legendText, { color: colors.mutedForeground }]}>
-                    {line.season}
-                  </Text>
+                  <Text style={[styles.legendText, { color: colors.mutedForeground }]}>{line.season}</Text>
                 </View>
               ))}
             </View>
@@ -329,13 +418,34 @@ export default function ChartsScreen() {
         </View>
       )}
 
-      {/* Daily passages chart */}
-      <View
-        style={[styles.chartCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-      >
-        <Text style={[styles.chartTitle, { color: colors.foreground }]}>
-          {t.chartsDailyPassages}
-        </Text>
+      {/* Weekly passages bar chart */}
+      <View style={[styles.chartCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Text style={[styles.chartTitle, { color: colors.foreground }]}>{t.chartsWeekly}</Text>
+        <Text style={[styles.chartSubtitle, { color: colors.mutedForeground }]}>{t.chartsWeeklySubtitle}</Text>
+
+        {weekLoading ? (
+          <View style={[styles.chartSkeleton, { height: WEEK_CHART_HEIGHT, backgroundColor: colors.secondary }]} />
+        ) : !hasWeekData ? (
+          <View style={[styles.emptyChart, { height: WEEK_CHART_HEIGHT }]}>
+            <Feather name="bar-chart" size={32} color={colors.mutedForeground} />
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>{t.chartsNoData}</Text>
+            <Text style={[styles.emptySubText, { color: colors.mutedForeground }]}>{t.chartsNoDataSub}</Text>
+          </View>
+        ) : (
+          <View style={styles.chartWrapper}>
+            <WeekBarChartWithWidth
+              bars={weekBars}
+              height={WEEK_CHART_HEIGHT}
+              colors={colors}
+              weekLabel={t.chartsWeek}
+            />
+          </View>
+        )}
+      </View>
+
+      {/* Daily passages line chart */}
+      <View style={[styles.chartCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Text style={[styles.chartTitle, { color: colors.foreground }]}>{t.chartsDailyPassages}</Text>
 
         {isLoading ? (
           <View style={[styles.chartSkeleton, { height: CHART_HEIGHT, backgroundColor: colors.secondary }]} />
@@ -347,25 +457,14 @@ export default function ChartsScreen() {
           </View>
         ) : (
           <View style={styles.chartWrapper}>
-            <ChartWithWidth
-              lines={seasonLines}
-              valueKey="totalPassages"
-              height={CHART_HEIGHT}
-              colors={colors}
-              yLabel={t.chartsPassages}
-              xLabel={t.chartsDay}
-            />
+            <ChartWithWidth lines={seasonLines} valueKey="totalPassages" height={CHART_HEIGHT} colors={colors} yLabel={t.chartsPassages} xLabel={t.chartsDay} />
           </View>
         )}
       </View>
 
-      {/* Cumulative chart */}
-      <View
-        style={[styles.chartCard, { backgroundColor: colors.card, borderColor: colors.border }]}
-      >
-        <Text style={[styles.chartTitle, { color: colors.foreground }]}>
-          {t.chartsCumulative}
-        </Text>
+      {/* Cumulative line chart */}
+      <View style={[styles.chartCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <Text style={[styles.chartTitle, { color: colors.foreground }]}>{t.chartsCumulative}</Text>
 
         {isLoading ? (
           <View style={[styles.chartSkeleton, { height: CHART_HEIGHT, backgroundColor: colors.secondary }]} />
@@ -377,14 +476,7 @@ export default function ChartsScreen() {
           </View>
         ) : (
           <View style={styles.chartWrapper}>
-            <ChartWithWidth
-              lines={seasonLines}
-              valueKey="cumulative"
-              height={CHART_HEIGHT}
-              colors={colors}
-              yLabel={t.chartsPassages}
-              xLabel={t.chartsDay}
-            />
+            <ChartWithWidth lines={seasonLines} valueKey="cumulative" height={CHART_HEIGHT} colors={colors} yLabel={t.chartsPassages} xLabel={t.chartsDay} />
           </View>
         )}
       </View>
@@ -398,39 +490,22 @@ export default function ChartsScreen() {
             const total = last?.cumulative ?? 0;
             const peak = Math.max(...line.points.map((p) => p.totalPassages));
             return (
-              <View
-                key={line.season}
-                style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: line.color + "66" }]}
-              >
+              <View key={line.season} style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: line.color + "66" }]}>
                 <View style={[styles.summaryDot, { backgroundColor: line.color }]} />
                 <View style={styles.summaryContent}>
-                  <Text style={[styles.summaryLabel, { color: colors.mutedForeground }]}>
-                    {line.season}
-                  </Text>
+                  <Text style={[styles.summaryLabel, { color: colors.mutedForeground }]}>{line.season}</Text>
                   <View style={styles.summaryStats}>
                     <View style={styles.summaryStat}>
-                      <Text style={[styles.summaryValue, { color: colors.foreground }]}>
-                        {total.toLocaleString()}
-                      </Text>
-                      <Text style={[styles.summaryStatLabel, { color: colors.mutedForeground }]}>
-                        {t.chartsPassages.toLowerCase()}
-                      </Text>
+                      <Text style={[styles.summaryValue, { color: colors.foreground }]}>{total.toLocaleString()}</Text>
+                      <Text style={[styles.summaryStatLabel, { color: colors.mutedForeground }]}>{t.chartsPassages.toLowerCase()}</Text>
                     </View>
                     <View style={styles.summaryStat}>
-                      <Text style={[styles.summaryValue, { color: colors.foreground }]}>
-                        {totalDays}
-                      </Text>
-                      <Text style={[styles.summaryStatLabel, { color: colors.mutedForeground }]}>
-                        {t.periodDays}
-                      </Text>
+                      <Text style={[styles.summaryValue, { color: colors.foreground }]}>{totalDays}</Text>
+                      <Text style={[styles.summaryStatLabel, { color: colors.mutedForeground }]}>{t.periodDays}</Text>
                     </View>
                     <View style={styles.summaryStat}>
-                      <Text style={[styles.summaryValue, { color: colors.foreground }]}>
-                        {peak.toLocaleString()}
-                      </Text>
-                      <Text style={[styles.summaryStatLabel, { color: colors.mutedForeground }]}>
-                        {t.periodBusiestDay.toLowerCase()}
-                      </Text>
+                      <Text style={[styles.summaryValue, { color: colors.foreground }]}>{peak.toLocaleString()}</Text>
+                      <Text style={[styles.summaryStatLabel, { color: colors.mutedForeground }]}>{t.periodBusiestDay.toLowerCase()}</Text>
                     </View>
                   </View>
                 </View>
@@ -445,40 +520,6 @@ export default function ChartsScreen() {
   );
 }
 
-function ChartWithWidth({
-  lines,
-  valueKey,
-  height,
-  colors,
-  yLabel,
-  xLabel,
-}: Omit<LineChartProps, "containerWidth">) {
-  const [containerWidth, setContainerWidth] = useState(320);
-  return (
-    <View
-      style={{ width: "100%" }}
-      onLayout={(e) => setContainerWidth(e.nativeEvent.layout.width)}
-    >
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator
-        scrollIndicatorInsets={{ right: 1 }}
-        bounces={false}
-      >
-        <LineChart
-          lines={lines}
-          valueKey={valueKey}
-          containerWidth={containerWidth}
-          height={height}
-          colors={colors}
-          yLabel={yLabel}
-          xLabel={xLabel}
-        />
-      </ScrollView>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingBottom: 32 },
@@ -490,95 +531,29 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   titleBlock: { flex: 1 },
-  subtitle: {
-    fontSize: 12,
-    fontFamily: "Inter_500Medium",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
+  subtitle: { fontSize: 12, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
   title: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: -0.5, marginTop: 2 },
-  selectorSection: {
-    marginBottom: 16,
-    paddingHorizontal: 16,
-  },
-  selectorLabel: {
-    fontSize: 11,
-    fontFamily: "Inter_500Medium",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    marginBottom: 8,
-  },
-  seasonRow: {
-    flexDirection: "row",
-    gap: 6,
-  },
-  seasonChip: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderWidth: 1.5,
-    gap: 5,
-  },
-  colorDot: {
-    width: 7,
-    height: 7,
-    borderRadius: 4,
-  },
+  selectorSection: { marginBottom: 16, paddingHorizontal: 16 },
+  selectorLabel: { fontSize: 11, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 },
+  seasonRow: { flexDirection: "row", gap: 6 },
+  seasonChip: { flexDirection: "row", alignItems: "center", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1.5, gap: 5 },
+  colorDot: { width: 7, height: 7, borderRadius: 4 },
   seasonText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
-  legendRow: {
-    flexDirection: "row",
-    gap: 16,
-    marginTop: 10,
-  },
+  legendRow: { flexDirection: "row", gap: 16, marginTop: 10 },
   legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
   legendLine: { width: 18, height: 3, borderRadius: 2 },
   legendText: { fontSize: 11, fontFamily: "Inter_500Medium" },
-  chartCard: {
-    marginHorizontal: 16,
-    marginBottom: 16,
-    borderRadius: 14,
-    borderWidth: 1,
-    padding: 14,
-    overflow: "hidden",
-  },
-  chartTitle: {
-    fontSize: 15,
-    fontFamily: "Inter_600SemiBold",
-    marginBottom: 12,
-  },
-  chartWrapper: {
-    width: "100%",
-  },
-  chartSkeleton: {
-    borderRadius: 8,
-  },
-  emptyChart: {
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
+  chartCard: { marginHorizontal: 16, marginBottom: 16, borderRadius: 14, borderWidth: 1, padding: 14, overflow: "hidden" },
+  chartTitle: { fontSize: 15, fontFamily: "Inter_600SemiBold", marginBottom: 2 },
+  chartSubtitle: { fontSize: 11, fontFamily: "Inter_400Regular", marginBottom: 12 },
+  chartWrapper: { width: "100%" },
+  chartSkeleton: { borderRadius: 8 },
+  emptyChart: { alignItems: "center", justifyContent: "center", gap: 8 },
   emptyText: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
   emptySubText: { fontSize: 12, fontFamily: "Inter_400Regular", textAlign: "center" },
-  summarySection: {
-    paddingHorizontal: 16,
-    gap: 10,
-  },
-  summaryCard: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    borderRadius: 12,
-    borderWidth: 1.5,
-    padding: 14,
-    gap: 10,
-  },
-  summaryDot: {
-    width: 10,
-    height: 10,
-    borderRadius: 5,
-    marginTop: 4,
-  },
+  summarySection: { paddingHorizontal: 16, gap: 10 },
+  summaryCard: { flexDirection: "row", alignItems: "flex-start", borderRadius: 12, borderWidth: 1.5, padding: 14, gap: 10 },
+  summaryDot: { width: 10, height: 10, borderRadius: 5, marginTop: 4 },
   summaryContent: { flex: 1, gap: 6 },
   summaryLabel: { fontSize: 12, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
   summaryStats: { flexDirection: "row", gap: 20 },

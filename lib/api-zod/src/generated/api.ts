@@ -213,3 +213,24 @@ export const GetSeasonTrendResponseItem = zod.object({
 export const GetSeasonTrendResponse = zod.array(GetSeasonTrendResponseItem)
 
 
+/**
+ * Returns weekly aggregated passages for one or more seasons. Weeks start on Saturday. Week 1 begins on the first Saturday on or before the first day of data in the season.
+ * @summary Get weekly passage totals per season
+ */
+export const GetWeekTrendQueryParams = zod.object({
+  "seasons": zod.coerce.string().optional().describe('Comma-separated season identifiers (max 3). Defaults to the two most recent seasons.')
+})
+
+export const GetWeekTrendResponseItem = zod.object({
+  "season": zod.string().describe('Season identifier e.g. \"2024-2025\"'),
+  "weeks": zod.array(zod.object({
+  "weekNumber": zod.number().describe('1-based week number within the season (weeks start on Saturday)'),
+  "fromDate": zod.string().describe('First date in this week that has data (YYYY-MM-DD)'),
+  "toDate": zod.string().describe('Last date in this week that has data (YYYY-MM-DD)'),
+  "totalPassages": zod.number().describe('Total passages across all lifts during this week'),
+  "totalGuests": zod.number().describe('Total guests on lifts across all lifts during this week')
+})).describe('Weekly data points ordered by week number')
+})
+export const GetWeekTrendResponse = zod.array(GetWeekTrendResponseItem)
+
+

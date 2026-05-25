@@ -28,12 +28,14 @@ import type {
   GetLiftHistoryParams,
   GetLiftsPeriodParams,
   GetSeasonTrendParams,
+  GetWeekTrendParams,
   HealthStatus,
   LiftSnapshot,
   PeriodResult,
   SeasonTrend,
   SyncInput,
-  SyncResult
+  SyncResult,
+  WeekTrend
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -857,6 +859,91 @@ export function useGetSeasonTrend<TData = Awaited<ReturnType<typeof getSeasonTre
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetSeasonTrendQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetWeekTrendUrl = (params?: GetWeekTrendParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/lifts/week-trend?${stringifiedParams}` : `/api/lifts/week-trend`
+}
+
+/**
+ * Returns weekly aggregated passages for one or more seasons. Weeks start on Saturday. Week 1 begins on the first Saturday on or before the first day of data in the season.
+ * @summary Get weekly passage totals per season
+ */
+export const getWeekTrend = async (params?: GetWeekTrendParams, options?: RequestInit): Promise<WeekTrend[]> => {
+
+  return customFetch<WeekTrend[]>(getGetWeekTrendUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetWeekTrendQueryKey = (params?: GetWeekTrendParams,) => {
+    return [
+    `/api/lifts/week-trend`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetWeekTrendQueryOptions = <TData = Awaited<ReturnType<typeof getWeekTrend>>, TError = ErrorType<unknown>>(params?: GetWeekTrendParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWeekTrend>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetWeekTrendQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getWeekTrend>>> = ({ signal }) => getWeekTrend(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getWeekTrend>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetWeekTrendQueryResult = NonNullable<Awaited<ReturnType<typeof getWeekTrend>>>
+export type GetWeekTrendQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get weekly passage totals per season
+ */
+
+export function useGetWeekTrend<TData = Awaited<ReturnType<typeof getWeekTrend>>, TError = ErrorType<unknown>>(
+ params?: GetWeekTrendParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWeekTrend>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetWeekTrendQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

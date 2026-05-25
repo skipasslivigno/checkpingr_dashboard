@@ -173,6 +173,26 @@ export interface SeasonTrend {
   data: SeasonTrendPoint[];
 }
 
+export interface WeekTrendPoint {
+  /** 1-based week number within the season (weeks start on Saturday) */
+  weekNumber: number;
+  /** First date in this week that has data (YYYY-MM-DD) */
+  fromDate: string;
+  /** Last date in this week that has data (YYYY-MM-DD) */
+  toDate: string;
+  /** Total passages across all lifts during this week */
+  totalPassages: number;
+  /** Total guests on lifts across all lifts during this week */
+  totalGuests: number;
+}
+
+export interface WeekTrend {
+  /** Season identifier e.g. "2024-2025" */
+  season: string;
+  /** Weekly data points ordered by week number */
+  weeks: WeekTrendPoint[];
+}
+
 export interface PeriodResult {
   /** Start date YYYY-MM-DD */
   from: string;
@@ -260,6 +280,13 @@ season?: string;
 export type GetSeasonTrendParams = {
 /**
  * Comma-separated list of season strings e.g. "2023-2024,2024-2025". Defaults to the two most recent seasons.
+ */
+seasons?: string;
+};
+
+export type GetWeekTrendParams = {
+/**
+ * Comma-separated season identifiers (max 3). Defaults to the two most recent seasons.
  */
 seasons?: string;
 };

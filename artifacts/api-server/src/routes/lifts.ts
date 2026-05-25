@@ -404,6 +404,87 @@ router.get("/lifts/period", async (req, res): Promise<void> => {
   });
 });
 
+router.get("/lifts/week-trend", async (req, res): Promise<void> => {
+  let requestedSeasons: string[] | null = null;
+  if (req.query["seasons"] && typeof req.query["seasons"] === "string") {
+    requestedSeasons = req.query["seasons"]
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)
+      .slice(0, 3);
+  }
+
+  if (!requestedSeasons || requestedSeasons.length === 0) {
+    const allSeasons = await db
+      .selectDistinct({ eser: liftSnapshotsTable.eser })
+      .from(liftSnapshotsTable)
+      .orderBy(desc(liftSnapshotsTable.eser))
+      .limit(2);
+    requestedSeasons = allSeasons.map((r) => r.eser);
+  }
+
+  if (requestedSeasons.length === 0) {
+    res.json([]);
+    return;
+  }
+
+  const result: Array<{
+    season: string;
+    weeks: Array<{ weekNumber: number; fromDate: string; toDate: string; totalPassages: number; totalGuests: number }>;
+  }> = [];
+
+  for (const season of requestedSeasons) {
+    const rows = await db.execute<{
+      week_number: string;
+      from_date: string;
+      to_date: string;
+      total_passages: string;
+      total_guests: string;
+    }>(sql`
+      WITH daily AS (
+        SELECT DISTINCT ON (LEFT(${liftSnapshotsTable.dtgg}, 10), ${liftSnapshotsTable.ggnr})
+          LEFT(${liftSnapshotsTable.dtgg}, 10) AS dtgg_date,
+          COALESCE(${liftSnapshotsTable.npas}, 0) AS npas,
+          COALESCE(${liftSnapshotsTable.nuin}, 0) AS nuin
+        FROM ${liftSnapshotsTable}
+        WHERE ${liftSnapshotsTable.eser} = ${season}
+        ORDER BY LEFT(${liftSnapshotsTable.dtgg}, 10), ${liftSnapshotsTable.ggnr}, ${liftSnapshotsTable.dupd} DESC
+      ),
+      daily_totals AS (
+        SELECT dtgg_date, SUM(npas)::int AS tp, SUM(nuin)::int AS tg
+        FROM daily
+        GROUP BY dtgg_date
+      ),
+      first_sat AS (
+        SELECT (MIN(dtgg_date::date) - ((EXTRACT(DOW FROM MIN(dtgg_date::date))::int + 1) % 7))::date AS sat
+        FROM daily_totals
+      )
+      SELECT
+        ((dtgg_date::date - (SELECT sat FROM first_sat)) / 7 + 1)::int AS week_number,
+        MIN(dtgg_date)                                                   AS from_date,
+        MAX(dtgg_date)                                                   AS to_date,
+        SUM(tp)::int                                                     AS total_passages,
+        SUM(tg)::int                                                     AS total_guests
+      FROM daily_totals
+      GROUP BY ((dtgg_date::date - (SELECT sat FROM first_sat)) / 7 + 1)
+      ORDER BY week_number
+    `);
+
+    result.push({
+      season,
+      weeks: rows.rows.map((r) => ({
+        weekNumber: Number(r.week_number),
+        fromDate: r.from_date,
+        toDate: r.to_date,
+        totalPassages: Number(r.total_passages),
+        totalGuests: Number(r.total_guests),
+      })),
+    });
+  }
+
+  res.json(result);
+});
+
 router.get("/seasons", async (_req, res): Promise<void> => {
   const rows = await db
     .selectDistinct({ eser: liftSnapshotsTable.eser })

@@ -82,6 +82,9 @@ export interface Translations {
   chartsSubtitle: string;
   chartsDailyPassages: string;
   chartsCumulative: string;
+  chartsWeekly: string;
+  chartsWeeklySubtitle: string;
+  chartsWeek: string;
   chartsNoData: string;
   chartsNoDataSub: string;
   chartsSeasonSelector: string;
@@ -189,6 +192,9 @@ const it: Translations = {
   chartsSubtitle: "Confronto stagioni",
   chartsDailyPassages: "Passaggi giornalieri",
   chartsCumulative: "Passaggi cumulativi",
+  chartsWeekly: "Passaggi settimanali",
+  chartsWeeklySubtitle: "Sab–Ven · ogni barra = una settimana",
+  chartsWeek: "Sett.",
   chartsNoData: "Nessun dato disponibile",
   chartsNoDataSub: "Carica dati per visualizzare i grafici",
   chartsSeasonSelector: "Stagioni da confrontare",
@@ -296,6 +302,9 @@ const en: Translations = {
   chartsSubtitle: "Season comparison",
   chartsDailyPassages: "Daily passages",
   chartsCumulative: "Cumulative passages",
+  chartsWeekly: "Weekly Passages",
+  chartsWeeklySubtitle: "Sat–Fri · each bar = one week",
+  chartsWeek: "Week",
   chartsNoData: "No data available",
   chartsNoDataSub: "Push data to see charts",
   chartsSeasonSelector: "Seasons to compare",

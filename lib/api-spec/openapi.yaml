@@ -275,6 +275,29 @@ paths:
                 items:
                   $ref: "#/components/schemas/SeasonTrend"
 
+  /lifts/week-trend:
+    get:
+      operationId: getWeekTrend
+      tags: [lifts]
+      summary: Get weekly passage totals per season
+      description: Returns weekly aggregated passages for one or more seasons. Weeks start on Saturday. Week 1 begins on the first Saturday on or before the first day of data in the season.
+      parameters:
+        - name: seasons
+          in: query
+          required: false
+          schema:
+            type: string
+          description: Comma-separated season identifiers (max 3). Defaults to the two most recent seasons.
+      responses:
+        "200":
+          description: Weekly trend data per season
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WeekTrend"
+
 components:
   securitySchemes:
     ApiKeyAuth:
@@ -478,6 +501,39 @@ components:
           items:
             $ref: "#/components/schemas/SeasonTrendPoint"
           description: Daily data points ordered by date
+
+    WeekTrendPoint:
+      type: object
+      required: [weekNumber, fromDate, toDate, totalPassages, totalGuests]
+      properties:
+        weekNumber:
+          type: integer
+          description: 1-based week number within the season (weeks start on Saturday)
+        fromDate:
+          type: string
+          description: First date in this week that has data (YYYY-MM-DD)
+        toDate:
+          type: string
+          description: Last date in this week that has data (YYYY-MM-DD)
+        totalPassages:
+          type: integer
+          description: Total passages across all lifts during this week
+        totalGuests:
+          type: integer
+          description: Total guests on lifts across all lifts during this week
+
+    WeekTrend:
+      type: object
+      required: [season, weeks]
+      properties:
+        season:
+          type: string
+          description: Season identifier e.g. "2024-2025"
+        weeks:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeekTrendPoint"
+          description: Weekly data points ordered by week number
 
     PeriodResult:
       type: object
