@@ -53,8 +53,8 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
-      <ErrorBoundary>
-        <LanguageProvider>
+      <LanguageProvider>
+        <ErrorBoundary>
           <QueryClientProvider client={queryClient}>
             <GestureHandlerRootView>
               <KeyboardProvider>
@@ -62,8 +62,8 @@ export default function RootLayout() {
               </KeyboardProvider>
             </GestureHandlerRootView>
           </QueryClientProvider>
-        </LanguageProvider>
-      </ErrorBoundary>
+        </ErrorBoundary>
+      </LanguageProvider>
     </SafeAreaProvider>
   );
 }

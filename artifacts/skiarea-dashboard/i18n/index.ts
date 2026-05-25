@@ -61,9 +61,18 @@ export interface Translations {
 
   sqlComment1: string;
   sqlComment2: string;
+  sqlCommentChunkSize: string;
   sqlPrintRowsToSync: string;
+  sqlPrintChunkOk: string;
   sqlPrintComplete: string;
   sqlErrorChunkFailed: string;
+
+  errorTitle: string;
+  errorMessage: string;
+  errorTryAgain: string;
+  errorDetails: string;
+  notFoundTitle: string;
+  notFoundLink: string;
 }
 
 const it: Translations = {
@@ -127,9 +136,18 @@ const it: Translations = {
 
   sqlComment1: "-- POST HTTP a blocchi — invia 50 righe per chiamata, sicuro per caricamenti completi",
   sqlComment2: "-- Sostituisci SKP_PASSAGGI / SKP_IMPIANTI / SKP_SOCIETA con i nomi reali delle tabelle",
+  sqlCommentChunkSize: "-- righe per POST; mantenere <= 100",
   sqlPrintRowsToSync: "Righe da sincronizzare: ",
+  sqlPrintChunkOk: "-> ok",
   sqlPrintComplete: "Sincronizzazione completata",
   sqlErrorChunkFailed: "Blocco fallito. HTTP %d all''offset %d. Body: %s",
+
+  errorTitle: "Qualcosa è andato storto",
+  errorMessage: "Ricarica l'app per continuare.",
+  errorTryAgain: "Riprova",
+  errorDetails: "Dettagli errore",
+  notFoundTitle: "Questa pagina non esiste.",
+  notFoundLink: "Vai alla schermata principale",
 };
 
 const en: Translations = {
@@ -193,9 +211,18 @@ const en: Translations = {
 
   sqlComment1: "-- Chunked HTTP POST — sends 50 rows per call, safe for full history loads",
   sqlComment2: "-- Replace SKP_PASSAGGI / SKP_IMPIANTI / SKP_SOCIETA with your table names",
+  sqlCommentChunkSize: "-- rows per POST; keep <= 100",
   sqlPrintRowsToSync: "Rows to sync: ",
+  sqlPrintChunkOk: "-> ok",
   sqlPrintComplete: "Sync complete",
   sqlErrorChunkFailed: "Chunk failed. HTTP %d at offset %d. Body: %s",
+
+  errorTitle: "Something went wrong",
+  errorMessage: "Please reload the app to continue.",
+  errorTryAgain: "Try Again",
+  errorDetails: "Error Details",
+  notFoundTitle: "This screen doesn't exist.",
+  notFoundLink: "Go to home screen",
 };
 
 export const translations: Record<Language, Translations> = { it, en };

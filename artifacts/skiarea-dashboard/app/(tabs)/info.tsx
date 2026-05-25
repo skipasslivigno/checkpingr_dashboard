@@ -40,7 +40,7 @@ function buildSqlExample(url: string, t: Translations): string {
 ${t.sqlComment2}
 
 DECLARE @url        NVARCHAR(512) = N'${url}'
-DECLARE @chunkSize  INT           = 50   -- rows per POST; keep <= 100
+DECLARE @chunkSize  INT           = 50   ${t.sqlCommentChunkSize}
 DECLARE @offset     INT           = 0
 DECLARE @total      INT
 DECLARE @json       NVARCHAR(MAX)
@@ -114,7 +114,7 @@ BEGIN
         RETURN
     END
 
-    PRINT CONCAT('  offset=', @offset, ' -> ok (', @status, ')')
+    PRINT CONCAT(N'  offset=', @offset, N' ${t.sqlPrintChunkOk} (', @status, N')')
     SET @offset = @offset + @chunkSize
 END
 
