@@ -204,8 +204,28 @@ router.post("/lifts/sync", async (req, res): Promise<void> => {
     }
   }
 
-  const parsed = SyncLiftsBody.safeParse(req.body);
+  // Defensively coerce numeric fields — SQL Server's FOR JSON PATH can emit
+  // numeric columns as quoted strings in some edge cases (e.g. DECIMAL types).
+  const coerceNum = (v: unknown) =>
+    v === null || v === undefined ? v : isNaN(Number(v)) ? v : Number(v);
+
+  const rawSnapshots = Array.isArray(req.body?.snapshots) ? req.body.snapshots : [];
+  const coerced = {
+    snapshots: rawSnapshots.map((s: Record<string, unknown>) => ({
+      ...s,
+      ggnr:       coerceNum(s["ggnr"]),
+      nsoc:       coerceNum(s["nsoc"]),
+      npin:       coerceNum(s["npin"]),
+      npic:       coerceNum(s["npic"]),
+      nuin:       coerceNum(s["nuin"]),
+      npas:       coerceNum(s["npas"]),
+      id_societa: coerceNum(s["id_societa"]),
+    })),
+  };
+
+  const parsed = SyncLiftsBody.safeParse(coerced);
   if (!parsed.success) {
+    req.log.error({ zodError: parsed.error.flatten() }, "sync validation failed");
     res.status(400).json({ error: parsed.error.message });
     return;
   }
