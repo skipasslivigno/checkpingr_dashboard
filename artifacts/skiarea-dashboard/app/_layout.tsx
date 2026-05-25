@@ -16,6 +16,7 @@ import { setBaseUrl } from "@workspace/api-client-react";
 
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LanguageProvider } from "@/contexts/LanguageContext";
+import { SelectedDateProvider } from "@/contexts/SelectedDateContext";
 
 // Configure API base URL for Expo (runs outside the shared proxy)
 if (process.env.EXPO_PUBLIC_DOMAIN) {
@@ -56,11 +57,13 @@ export default function RootLayout() {
       <LanguageProvider>
         <ErrorBoundary>
           <QueryClientProvider client={queryClient}>
-            <GestureHandlerRootView>
-              <KeyboardProvider>
-                <RootLayoutNav />
-              </KeyboardProvider>
-            </GestureHandlerRootView>
+            <SelectedDateProvider>
+              <GestureHandlerRootView>
+                <KeyboardProvider>
+                  <RootLayoutNav />
+                </KeyboardProvider>
+              </GestureHandlerRootView>
+            </SelectedDateProvider>
           </QueryClientProvider>
         </ErrorBoundary>
       </LanguageProvider>

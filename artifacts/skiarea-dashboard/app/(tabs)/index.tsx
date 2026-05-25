@@ -24,6 +24,7 @@ import { LiftRowSkeleton, StatCardSkeleton } from "@/components/SkeletonLoader";
 import { StatCard } from "@/components/StatCard";
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { useSelectedDate } from "@/contexts/SelectedDateContext";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -36,8 +37,7 @@ export default function DashboardScreen() {
   const { t, language, setLanguage } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
   const [selectedSeason, setSelectedSeason] = useState<string | undefined>(undefined);
-  const [selectedDate, setSelectedDate] = useState(todayIso());
-  const [selectedExtraction, setSelectedExtraction] = useState<string | undefined>(undefined);
+  const { selectedDate, setSelectedDate, selectedExtraction, setSelectedExtraction } = useSelectedDate();
 
   const { data: seasons } = useGetSeasons();
 

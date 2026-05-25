@@ -22,10 +22,7 @@ import { LiftRow } from "@/components/LiftRow";
 import { LiftRowSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
+import { useSelectedDate } from "@/contexts/SelectedDateContext";
 
 export default function LiftsScreen() {
   const colors = useColors();
@@ -34,8 +31,7 @@ export default function LiftsScreen() {
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(todayIso());
-  const [selectedExtraction, setSelectedExtraction] = useState<string | undefined>(undefined);
+  const { selectedDate, setSelectedDate, selectedExtraction, setSelectedExtraction } = useSelectedDate();
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
 
   const queryParams = {

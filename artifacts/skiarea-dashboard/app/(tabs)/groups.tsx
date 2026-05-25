@@ -20,10 +20,7 @@ import { LiftRow } from "@/components/LiftRow";
 import { LiftRowSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
+import { useSelectedDate } from "@/contexts/SelectedDateContext";
 
 interface GroupData {
   name: string;
@@ -150,8 +147,7 @@ export default function GroupsScreen() {
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(todayIso());
-  const [selectedExtraction, setSelectedExtraction] = useState<string | undefined>(undefined);
+  const { selectedDate, setSelectedDate, selectedExtraction, setSelectedExtraction } = useSelectedDate();
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   const queryParams = {
