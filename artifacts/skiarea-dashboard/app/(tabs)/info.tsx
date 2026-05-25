@@ -34,15 +34,73 @@ const examplePayload = `{
   ]
 }`;
 
-const sqlExample = `-- Add to your extraction script:
-INSERT INTO extraction_push
-SELECT idin, dupd, dtgg, ggnr, ggbz, nsoc,
-       npin, npic, nuin, npas, eser
-FROM your_lift_table
-WHERE dtgg = CAST(GETDATE() AS DATE);
+const sqlExample = `-- Chunked HTTP POST — avoids OLE Automation size limits
+-- Replace SKP_PASSAGGI / SKP_IMPIANTI / SKP_SOCIETA with your table names
 
--- Then POST via HTTP to:
--- ${syncUrl}`;
+DECLARE @url        NVARCHAR(512) = N'${syncUrl}'
+DECLARE @chunkSize  INT           = 50   -- rows per POST (keep ≤ 100)
+DECLARE @offset     INT           = 0
+DECLARE @total      INT
+DECLARE @json       NVARCHAR(MAX)
+DECLARE @http       INT
+DECLARE @status     INT
+DECLARE @resp       NVARCHAR(MAX)
+
+-- Stage today's rows
+SELECT
+    CAST(idin  AS NVARCHAR(50))  AS idin,
+    CAST(dupd  AS NVARCHAR(20))  AS dupd,
+    CONVERT(NVARCHAR(20), dtgg, 120) AS dtgg,
+    ggnr, ggbz,
+    nsoc, npin, npic, nuin, npas, eser,
+    s.nome  AS nome_societa,
+    s.descr_grp,
+    s.id    AS id_societa,
+    s.codgrp
+INTO #rows
+FROM SKP_PASSAGGI p
+JOIN SKP_IMPIANTI i  ON p.ggnr = i.ggnr
+LEFT JOIN SKP_SOCIETA s ON i.id_societa = s.id
+WHERE CAST(p.dtgg AS DATE) = CAST(GETDATE() AS DATE)
+
+SELECT @total = COUNT(*) FROM #rows
+
+WHILE @offset < @total
+BEGIN
+    -- Build JSON chunk
+    SELECT @json = N'{"snapshots":' +
+        (SELECT TOP (@chunkSize) *
+         FROM (
+           SELECT * FROM #rows
+           ORDER BY (SELECT NULL)
+           OFFSET @offset ROWS
+         ) t
+         FOR JSON PATH) +
+        N'}'
+
+    -- HTTP POST
+    EXEC sp_OACreate 'MSXML2.ServerXMLHTTP.6.0', @http OUT
+    EXEC sp_OAMethod @http, 'open', NULL, 'POST', @url, false
+    EXEC sp_OAMethod @http, 'setRequestHeader', NULL,
+         'Content-Type', 'application/json'
+    EXEC sp_OAMethod @http, 'send', NULL, @json
+    EXEC sp_OAGetProperty @http, 'status', @status OUT
+
+    IF @status <> 200
+    BEGIN
+        EXEC sp_OAGetProperty @http, 'responseText', @resp OUT
+        EXEC sp_OADestroy @http
+        DROP TABLE #rows
+        RAISERROR('Sync chunk failed. Status: %d  Offset: %d  Body: %s',
+                  16, 1, @status, @offset, @resp)
+        RETURN
+    END
+
+    EXEC sp_OADestroy @http
+    SET @offset = @offset + @chunkSize
+END
+
+DROP TABLE #rows`;
 
 function CopyBlock({ label, content }: { label: string; content: string }) {
   const colors = useColors();
@@ -116,12 +174,12 @@ export default function InfoScreen() {
           <View style={[styles.stepNum, { backgroundColor: colors.primary }]}>
             <Text style={[styles.stepNumText, { color: colors.primaryForeground }]}>3</Text>
           </View>
-          <Text style={[styles.stepTitle, { color: colors.foreground }]}>MSSQL Script Guide</Text>
+          <Text style={[styles.stepTitle, { color: colors.foreground }]}>SQL Server Agent Script</Text>
         </View>
         <Text style={[styles.stepDesc, { color: colors.mutedForeground }]}>
-          After your extraction runs, add a step to POST the data using a tool like PowerShell, Python, or a SQL Server Agent job:
+          Paste this into your Agent job step. It stages today's rows into a temp table, then POSTs them in chunks of 50 to avoid OLE Automation size limits. Includes the company/group fields from the SKP_SOCIETA join.
         </Text>
-        <CopyBlock label="PowerShell example" content={`$url = "${syncUrl}"\n$body = @{\n  snapshots = @(\n    # ... your rows from MSSQL here\n  )\n} | ConvertTo-Json -Depth 5\nInvoke-RestMethod -Method Post -Uri $url -Body $body -ContentType 'application/json'`} />
+        <CopyBlock label="T-SQL — chunked sync with company fields" content={sqlExample} />
       </View>
 
       <View style={[styles.noteBox, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
