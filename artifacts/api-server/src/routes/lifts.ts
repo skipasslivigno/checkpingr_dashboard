@@ -8,7 +8,6 @@ import {
   GetLiftHistoryQueryParams,
   GetLiftExtractionsQueryParams,
 } from "@workspace/api-zod";
-
 const router: IRouter = Router();
 
 function todayIso(): string {
@@ -224,20 +223,16 @@ router.post("/lifts/sync", async (req, res): Promise<void> => {
     return;
   }
 
-  let inserted = 0;
-  let updated = 0;
-
-  for (const snap of snapshots) {
-    const existing = await db
-      .select({ id: liftSnapshotsTable.id })
-      .from(liftSnapshotsTable)
-      .where(eq(liftSnapshotsTable.idin, snap.idin))
-      .limit(1);
-
-    if (existing.length > 0) {
-      await db
-        .update(liftSnapshotsTable)
-        .set({
+  // Batch upsert: unique key is (dupd, ggnr) — one lift per extraction time.
+  // Inserting the same (dupd, ggnr) again updates all other fields in place.
+  const CHUNK = 500;
+  for (let i = 0; i < snapshots.length; i += CHUNK) {
+    const chunk = snapshots.slice(i, i + CHUNK);
+    await db
+      .insert(liftSnapshotsTable)
+      .values(
+        chunk.map((snap) => ({
+          idin: snap.idin ?? null,
           dupd: snap.dupd,
           dtgg: snap.dtgg,
           ggnr: snap.ggnr,
@@ -248,28 +243,25 @@ router.post("/lifts/sync", async (req, res): Promise<void> => {
           nuin: snap.nuin ?? null,
           npas: snap.npas ?? null,
           eser: snap.eser,
-        })
-        .where(eq(liftSnapshotsTable.idin, snap.idin));
-      updated++;
-    } else {
-      await db.insert(liftSnapshotsTable).values({
-        idin: snap.idin,
-        dupd: snap.dupd,
-        dtgg: snap.dtgg,
-        ggnr: snap.ggnr,
-        ggbz: snap.ggbz,
-        nsoc: snap.nsoc ?? null,
-        npin: snap.npin ?? null,
-        npic: snap.npic ?? null,
-        nuin: snap.nuin ?? null,
-        npas: snap.npas ?? null,
-        eser: snap.eser,
+        }))
+      )
+      .onConflictDoUpdate({
+        target: [liftSnapshotsTable.dupd, liftSnapshotsTable.ggnr],
+        set: {
+          idin: sql`excluded.idin`,
+          dtgg: sql`excluded.dtgg`,
+          ggbz: sql`excluded.ggbz`,
+          nsoc: sql`excluded.nsoc`,
+          npin: sql`excluded.npin`,
+          npic: sql`excluded.npic`,
+          nuin: sql`excluded.nuin`,
+          npas: sql`excluded.npas`,
+          eser: sql`excluded.eser`,
+        },
       });
-      inserted++;
-    }
   }
 
-  res.json({ inserted, updated, total: snapshots.length });
+  res.json({ inserted: snapshots.length, updated: 0, total: snapshots.length });
 });
 
 router.get("/seasons", async (_req, res): Promise<void> => {
