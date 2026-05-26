@@ -15,16 +15,18 @@ import { LiftRowSkeleton } from "@/components/SkeletonLoader";
 import { StatCard } from "@/components/StatCard";
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { useSelectedDate } from "@/contexts/SelectedDateContext";
 
 export default function LiftDetailScreen() {
   const colors = useColors();
   const router = useRouter();
   const { t } = useTranslation();
   const { ggnr, name } = useLocalSearchParams<{ ggnr: string; name: string }>();
+  const { selectedDate } = useSelectedDate();
 
   const ggnrNum = parseInt(ggnr ?? "0", 10);
   const { data: history, isLoading } = useGetLiftHistory(
-    { ggnr: ggnrNum },
+    { ggnr: ggnrNum, date: selectedDate },
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     { query: { enabled: !!ggnrNum } as any }
   );
@@ -76,7 +78,9 @@ export default function LiftDetailScreen() {
           <StatCard label={t.secondPassage} value={latest?.npic ?? "—"} />
         </View>
 
-        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t.todaysHistory}</Text>
+        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+          {t.todaysHistory} — {selectedDate}
+        </Text>
         <Text style={[styles.sectionSub, { color: colors.mutedForeground }]}>
           {t.historySubtitle}
         </Text>
