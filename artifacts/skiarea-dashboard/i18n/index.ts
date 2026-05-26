@@ -103,6 +103,7 @@ export interface Translations {
   chartsPassages: string;
   chartsFirstEntries: string;
   chartsDay: string;
+  chartsTapHint: string;
 
   guestsToday: string;
   liftPrefix: string;
@@ -226,6 +227,7 @@ const it: Translations = {
   chartsPassages: "Passaggi",
   chartsFirstEntries: "Primi ingressi",
   chartsDay: "Giorno",
+  chartsTapHint: "Tocca un punto per i dettagli",
 
   guestsToday: "ospiti oggi",
   liftPrefix: "Impianto #",
@@ -349,6 +351,7 @@ const en: Translations = {
   chartsPassages: "Passages",
   chartsFirstEntries: "First Entries",
   chartsDay: "Day",
+  chartsTapHint: "Tap a point to see details",
 
   guestsToday: "guests today",
   liftPrefix: "Lift #",

@@ -30,10 +30,19 @@ function formatBigNumber(n: number): string {
   return String(n);
 }
 
+function formatDate(iso: string): string {
+  const parts = iso.split("T")[0]?.split("-");
+  if (!parts || parts.length < 3) return iso;
+  const [, mm, dd] = parts;
+  const month = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][parseInt(mm ?? "1", 10) - 1] ?? mm;
+  return `${parseInt(dd ?? "1", 10)} ${month}`;
+}
+
 interface DataPoint {
   dayIndex: number;
   totalPassages: number;
   cumulative: number;
+  date: string;
 }
 
 interface SeasonLine {
@@ -50,7 +59,7 @@ function buildSeasonLines(
     let cum = 0;
     const points = s.data.map((d) => {
       cum += d.totalFirstPassages;
-      return { dayIndex: d.dayIndex, totalPassages: d.totalFirstPassages, cumulative: cum };
+      return { dayIndex: d.dayIndex, totalPassages: d.totalFirstPassages, cumulative: cum, date: d.date };
     });
     return { season: s.season, color: SEASON_COLORS[(i + colorOffset) % SEASON_COLORS.length]!, points };
   });
@@ -58,6 +67,20 @@ function buildSeasonLines(
 
 const PX_PER_DAY = 6;
 const MIN_CHART_CONTENT_W = 260;
+
+const TOOLTIP_W = 130;
+const TOOLTIP_H = 58;
+const TOOLTIP_PADDING = 8;
+const HIT_RADIUS = 14;
+
+interface ActivePoint {
+  svgX: number;
+  svgY: number;
+  season: string;
+  seasonColor: string;
+  date: string;
+  value: number;
+}
 
 interface LineChartProps {
   lines: SeasonLine[];
@@ -71,6 +94,7 @@ interface LineChartProps {
 
 function LineChart({ lines, valueKey, containerWidth, height, colors, yLabel, xLabel }: LineChartProps) {
   const PAD = { top: 16, right: 16, bottom: 40, left: 52 };
+  const [activePoint, setActivePoint] = useState<ActivePoint | null>(null);
 
   const allPoints = lines.flatMap((l) => l.points);
   const maxX = allPoints.length > 0 ? Math.max(...allPoints.map((p) => p.dayIndex)) : 1;
@@ -95,9 +119,34 @@ function LineChart({ lines, valueKey, containerWidth, height, colors, yLabel, xL
   const xTickStep = Math.max(1, Math.round(maxX / X_TICKS));
   const xTicks = Array.from({ length: X_TICKS + 1 }, (_, i) => Math.min(i * xTickStep, maxX));
 
+  function computeTooltipPos(sx: number, sy: number) {
+    let tx = sx + 10;
+    if (tx + TOOLTIP_W > chartW) tx = sx - TOOLTIP_W - 10;
+    tx = Math.max(0, Math.min(tx, chartW - TOOLTIP_W));
+
+    let ty = sy - TOOLTIP_H - 10;
+    if (ty < 0) ty = sy + 10;
+    ty = Math.max(0, Math.min(ty, chartH - TOOLTIP_H));
+
+    return { tx, ty };
+  }
+
+  function handlePointPress(line: SeasonLine, pt: DataPoint) {
+    const sx = toX(pt.dayIndex);
+    const sy = toY(pt[valueKey]);
+    if (activePoint && activePoint.season === line.season && activePoint.svgX === sx && activePoint.svgY === sy) {
+      setActivePoint(null);
+    } else {
+      setActivePoint({ svgX: sx, svgY: sy, season: line.season, seasonColor: line.color, date: pt.date, value: pt[valueKey] });
+    }
+  }
+
+  const tooltipPos = activePoint ? computeTooltipPos(activePoint.svgX, activePoint.svgY) : null;
+
   return (
     <Svg width={width} height={height}>
       <G x={PAD.left} y={PAD.top}>
+        {/* Grid lines + Y labels */}
         {yTicks.map((v) => (
           <G key={v}>
             <Line x1={0} y1={toY(v)} x2={chartW} y2={toY(v)} stroke={colors.border} strokeWidth={1} strokeDasharray="3,3" />
@@ -107,6 +156,7 @@ function LineChart({ lines, valueKey, containerWidth, height, colors, yLabel, xL
           </G>
         ))}
 
+        {/* X grid lines + labels */}
         {xTicks.filter((v) => v > 0).map((v) => (
           <G key={v}>
             <Line x1={toX(v)} y1={0} x2={toX(v)} y2={chartH} stroke={colors.border} strokeWidth={0.5} strokeDasharray="2,4" />
@@ -116,9 +166,11 @@ function LineChart({ lines, valueKey, containerWidth, height, colors, yLabel, xL
           </G>
         ))}
 
+        {/* Axes */}
         <Line x1={0} y1={chartH} x2={chartW} y2={chartH} stroke={colors.border} strokeWidth={1} />
         <Line x1={0} y1={0} x2={0} y2={chartH} stroke={colors.border} strokeWidth={1} />
 
+        {/* Lines */}
         {lines.map((line) => {
           if (line.points.length < 2) {
             const p = line.points[0];
@@ -131,6 +183,111 @@ function LineChart({ lines, valueKey, containerWidth, height, colors, yLabel, xL
           return <Path key={line.season} d={d} stroke={line.color} strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" />;
         })}
 
+        {/* Active point highlight ring (rendered above lines) */}
+        {activePoint && (
+          <Circle
+            cx={activePoint.svgX}
+            cy={activePoint.svgY}
+            r={7}
+            fill={activePoint.seasonColor}
+            stroke="white"
+            strokeWidth={2}
+            opacity={0.95}
+          />
+        )}
+
+        {/* Transparent dismiss overlay — covers entire chart area, tapping dismisses tooltip */}
+        {activePoint && (
+          <Rect
+            x={0}
+            y={0}
+            width={chartW}
+            height={chartH}
+            fill="transparent"
+            onPress={() => setActivePoint(null)}
+          />
+        )}
+
+        {/* Hit-area circles for every data point (on top of dismiss rect) */}
+        {lines.map((line) =>
+          line.points.map((pt) => (
+            <Circle
+              key={`${line.season}-${pt.dayIndex}`}
+              cx={toX(pt.dayIndex)}
+              cy={toY(pt[valueKey])}
+              r={HIT_RADIUS}
+              fill="transparent"
+              onPress={() => handlePointPress(line, pt)}
+            />
+          ))
+        )}
+
+        {/* Tooltip card */}
+        {activePoint && tooltipPos && (
+          <G x={tooltipPos.tx} y={tooltipPos.ty}>
+            {/* Shadow approximation */}
+            <Rect
+              x={2}
+              y={2}
+              width={TOOLTIP_W}
+              height={TOOLTIP_H}
+              rx={8}
+              fill="rgba(0,0,0,0.18)"
+            />
+            {/* Card background */}
+            <Rect
+              x={0}
+              y={0}
+              width={TOOLTIP_W}
+              height={TOOLTIP_H}
+              rx={8}
+              fill={colors.card}
+              stroke={activePoint.seasonColor}
+              strokeWidth={1.5}
+            />
+            {/* Season colour bar on the left */}
+            <Rect
+              x={0}
+              y={0}
+              width={4}
+              height={TOOLTIP_H}
+              rx={4}
+              fill={activePoint.seasonColor}
+            />
+            {/* Season label */}
+            <SvgText
+              x={TOOLTIP_PADDING + 4}
+              y={TOOLTIP_PADDING + 10}
+              fontSize={9}
+              fill={colors.mutedForeground}
+              fontFamily="Inter_500Medium"
+            >
+              {activePoint.season}
+            </SvgText>
+            {/* Date */}
+            <SvgText
+              x={TOOLTIP_PADDING + 4}
+              y={TOOLTIP_PADDING + 24}
+              fontSize={11}
+              fill={colors.foreground}
+              fontFamily="Inter_600SemiBold"
+            >
+              {formatDate(activePoint.date)}
+            </SvgText>
+            {/* Value */}
+            <SvgText
+              x={TOOLTIP_PADDING + 4}
+              y={TOOLTIP_PADDING + 42}
+              fontSize={13}
+              fill={activePoint.seasonColor}
+              fontFamily="Inter_700Bold"
+            >
+              {activePoint.value.toLocaleString()}
+            </SvgText>
+          </G>
+        )}
+
+        {/* X axis label */}
         <SvgText x={chartW / 2} y={chartH + 32} textAnchor="middle" fontSize={9} fill={colors.mutedForeground} fontFamily="Inter_500Medium">
           {xLabel}
         </SvgText>
@@ -446,6 +603,7 @@ export default function ChartsScreen() {
       {/* Daily passages line chart */}
       <View style={[styles.chartCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={[styles.chartTitle, { color: colors.foreground }]}>{t.chartsDailyPassages}</Text>
+        <Text style={[styles.chartHint, { color: colors.mutedForeground }]}>{t.chartsTapHint}</Text>
 
         {isLoading ? (
           <View style={[styles.chartSkeleton, { height: CHART_HEIGHT, backgroundColor: colors.secondary }]} />
@@ -465,6 +623,7 @@ export default function ChartsScreen() {
       {/* Cumulative line chart */}
       <View style={[styles.chartCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={[styles.chartTitle, { color: colors.foreground }]}>{t.chartsCumulative}</Text>
+        <Text style={[styles.chartHint, { color: colors.mutedForeground }]}>{t.chartsTapHint}</Text>
 
         {isLoading ? (
           <View style={[styles.chartSkeleton, { height: CHART_HEIGHT, backgroundColor: colors.secondary }]} />
@@ -546,6 +705,7 @@ const styles = StyleSheet.create({
   chartCard: { marginHorizontal: 16, marginBottom: 16, borderRadius: 14, borderWidth: 1, padding: 14, overflow: "hidden" },
   chartTitle: { fontSize: 15, fontFamily: "Inter_600SemiBold", marginBottom: 2 },
   chartSubtitle: { fontSize: 11, fontFamily: "Inter_400Regular", marginBottom: 12 },
+  chartHint: { fontSize: 10, fontFamily: "Inter_400Regular", marginBottom: 10 },
   chartWrapper: { width: "100%" },
   chartSkeleton: { borderRadius: 8 },
   emptyChart: { alignItems: "center", justifyContent: "center", gap: 8 },
