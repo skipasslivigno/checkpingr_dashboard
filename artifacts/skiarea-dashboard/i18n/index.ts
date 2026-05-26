@@ -123,6 +123,14 @@ export interface Translations {
   errorDetails: string;
   notFoundTitle: string;
   notFoundLink: string;
+
+  loginTitle: string;
+  loginSubtitle: string;
+  loginUsername: string;
+  loginPassword: string;
+  loginButton: string;
+  loginError: string;
+  logout: string;
 }
 
 const it: Translations = {
@@ -248,6 +256,14 @@ const it: Translations = {
   errorDetails: "Dettagli errore",
   notFoundTitle: "Questa pagina non esiste.",
   notFoundLink: "Vai alla schermata principale",
+
+  loginTitle: "Ski Area Dashboard",
+  loginSubtitle: "Accedi per visualizzare i dati",
+  loginUsername: "Nome utente",
+  loginPassword: "Password",
+  loginButton: "Accedi",
+  loginError: "Credenziali non valide",
+  logout: "Esci",
 };
 
 const en: Translations = {
@@ -373,6 +389,14 @@ const en: Translations = {
   errorDetails: "Error Details",
   notFoundTitle: "This screen doesn't exist.",
   notFoundLink: "Go to home screen",
+
+  loginTitle: "Ski Area Dashboard",
+  loginSubtitle: "Sign in to view data",
+  loginUsername: "Username",
+  loginPassword: "Password",
+  loginButton: "Sign In",
+  loginError: "Invalid credentials",
+  logout: "Sign Out",
 };
 
 export const translations: Record<Language, Translations> = { it, en };

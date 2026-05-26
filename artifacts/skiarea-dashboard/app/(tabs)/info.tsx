@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import type { Translations } from "@/i18n";
 
 const DOMAIN = process.env.EXPO_PUBLIC_DOMAIN ?? "your-app.replit.app";
@@ -155,6 +156,7 @@ function CopyBlock({ label, content }: { label: string; content: string }) {
 export default function InfoScreen() {
   const colors = useColors();
   const { t } = useTranslation();
+  const { logout } = useAuth();
   const topPadding = Platform.OS === "web" ? 67 : 0;
 
   const sqlExample = useMemo(() => buildSqlExample(syncUrl, t), [t]);
@@ -214,6 +216,15 @@ export default function InfoScreen() {
           {t.idempotentNote}
         </Text>
       </View>
+
+      <TouchableOpacity
+        style={[styles.logoutBtn, { borderColor: colors.destructive + "60" }]}
+        onPress={logout}
+        activeOpacity={0.7}
+      >
+        <Feather name="log-out" size={15} color={colors.destructive} />
+        <Text style={[styles.logoutText, { color: colors.destructive }]}>{t.logout}</Text>
+      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -272,4 +283,14 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   noteText: { flex: 1, fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 20 },
+  logoutBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingVertical: 12,
+  },
+  logoutText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
 });
