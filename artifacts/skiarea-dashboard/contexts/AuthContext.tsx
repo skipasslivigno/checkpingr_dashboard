@@ -24,13 +24,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     AsyncStorage.getItem(TOKEN_KEY)
-      .then((stored) => setToken(stored))
+      .then((stored) => {
+        if (stored) setAuthTokenGetter(() => stored);
+        setToken(stored);
+      })
       .finally(() => setIsLoading(false));
   }, []);
-
-  useEffect(() => {
-    setAuthTokenGetter(token ? () => token : null);
-  }, [token]);
 
   async function login(username: string, password: string): Promise<void> {
     const res = await fetch(`${BASE_URL}/api/auth/login`, {
@@ -46,10 +45,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     const data = await res.json() as { token: string };
     await AsyncStorage.setItem(TOKEN_KEY, data.token);
+    setAuthTokenGetter(() => data.token);
     setToken(data.token);
   }
 
   async function logout(): Promise<void> {
+    setAuthTokenGetter(null);
     await AsyncStorage.removeItem(TOKEN_KEY);
     setToken(null);
   }
