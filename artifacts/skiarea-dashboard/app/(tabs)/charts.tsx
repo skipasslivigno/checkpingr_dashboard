@@ -316,8 +316,18 @@ interface WeekBarChartProps {
   weekLabel: string;
 }
 
+interface ActiveBar {
+  svgX: number;
+  svgY: number;
+  season: string;
+  seasonColor: string;
+  weekNumber: number;
+  value: number;
+}
+
 function WeekBarChart({ bars, containerWidth, height, colors, weekLabel }: WeekBarChartProps) {
   const PAD = { top: 16, right: 16, bottom: 44, left: 52 };
+  const [activeBar, setActiveBar] = useState<ActiveBar | null>(null);
 
   const numSeasons = bars.length;
   const groupW = numSeasons * BAR_W + Math.max(0, numSeasons - 1) * BAR_GAP;
@@ -340,6 +350,30 @@ function WeekBarChart({ bars, containerWidth, height, colors, weekLabel }: WeekB
   const yTicks = Array.from({ length: Y_TICKS + 1 }, (_, i) => Math.round((maxY / Y_TICKS) * i));
 
   const groupXs = Array.from({ length: maxWeek }, (_, i) => (i + 0.5) * unitW);
+
+  function computeBarTooltipPos(sx: number, sy: number) {
+    let tx = sx + 10;
+    if (tx + TOOLTIP_W > chartW) tx = sx - TOOLTIP_W - 10;
+    tx = Math.max(0, Math.min(tx, chartW - TOOLTIP_W));
+
+    let ty = sy - TOOLTIP_H - 10;
+    if (ty < 0) ty = sy + 10;
+    ty = Math.max(0, Math.min(ty, chartH - TOOLTIP_H));
+
+    return { tx, ty };
+  }
+
+  function handleBarPress(b: WeekBar, weekNum: number, val: number, cx: number, barH: number) {
+    const sx = cx;
+    const sy = chartH - barH;
+    if (activeBar && activeBar.season === b.season && activeBar.weekNumber === weekNum) {
+      setActiveBar(null);
+    } else {
+      setActiveBar({ svgX: sx, svgY: sy, season: b.season, seasonColor: b.color, weekNumber: weekNum, value: val });
+    }
+  }
+
+  const tooltipPos = activeBar ? computeBarTooltipPos(activeBar.svgX, activeBar.svgY) : null;
 
   return (
     <Svg width={width} height={height}>
@@ -390,6 +424,7 @@ function WeekBarChart({ bars, containerWidth, height, colors, weekLabel }: WeekB
                 if (val === 0) return null;
                 const barH = Math.max(2, (val / maxY) * chartH);
                 const bx = barStartX + si * (BAR_W + BAR_GAP);
+                const isActive = activeBar?.season === b.season && activeBar?.weekNumber === weekNum;
                 return (
                   <Rect
                     key={b.season}
@@ -399,13 +434,101 @@ function WeekBarChart({ bars, containerWidth, height, colors, weekLabel }: WeekB
                     height={barH}
                     fill={b.color}
                     rx={2}
-                    opacity={0.85}
+                    opacity={isActive ? 1 : 0.85}
+                    onPress={() => handleBarPress(b, weekNum, val, bx + BAR_W / 2, barH)}
                   />
                 );
               })}
             </G>
           );
         })}
+
+        {/* Dismiss overlay — covers entire chart, tapping outside dismisses tooltip */}
+        {activeBar && (
+          <Rect
+            x={0}
+            y={0}
+            width={chartW}
+            height={chartH}
+            fill="transparent"
+            onPress={() => setActiveBar(null)}
+          />
+        )}
+
+        {/* Hit-area rects for each bar (on top of dismiss overlay) */}
+        {activeBar && groupXs.map((cx, wi) => {
+          const weekNum = wi + 1;
+          const barStartX = cx - groupW / 2;
+          return bars.map((b, si) => {
+            const wk = b.weeks.find((w) => w.weekNumber === weekNum);
+            const val = wk?.totalPassages ?? 0;
+            if (val === 0) return null;
+            const barH = Math.max(2, (val / maxY) * chartH);
+            const bx = barStartX + si * (BAR_W + BAR_GAP);
+            return (
+              <Rect
+                key={`hit-${b.season}-${weekNum}`}
+                x={bx - 4}
+                y={chartH - barH - 4}
+                width={BAR_W + 8}
+                height={barH + 4}
+                fill="transparent"
+                onPress={() => handleBarPress(b, weekNum, val, bx + BAR_W / 2, barH)}
+              />
+            );
+          });
+        })}
+
+        {/* Tooltip card */}
+        {activeBar && tooltipPos && (
+          <G x={tooltipPos.tx} y={tooltipPos.ty}>
+            {/* Shadow approximation */}
+            <Rect x={2} y={2} width={TOOLTIP_W} height={TOOLTIP_H} rx={8} fill="rgba(0,0,0,0.18)" />
+            {/* Card background */}
+            <Rect
+              x={0}
+              y={0}
+              width={TOOLTIP_W}
+              height={TOOLTIP_H}
+              rx={8}
+              fill={colors.card}
+              stroke={activeBar.seasonColor}
+              strokeWidth={1.5}
+            />
+            {/* Season colour bar on the left */}
+            <Rect x={0} y={0} width={4} height={TOOLTIP_H} rx={4} fill={activeBar.seasonColor} />
+            {/* Season label */}
+            <SvgText
+              x={TOOLTIP_PADDING + 4}
+              y={TOOLTIP_PADDING + 10}
+              fontSize={9}
+              fill={colors.mutedForeground}
+              fontFamily="Inter_500Medium"
+            >
+              {activeBar.season}
+            </SvgText>
+            {/* Week number */}
+            <SvgText
+              x={TOOLTIP_PADDING + 4}
+              y={TOOLTIP_PADDING + 24}
+              fontSize={11}
+              fill={colors.foreground}
+              fontFamily="Inter_600SemiBold"
+            >
+              {`${weekLabel.slice(0, 1)}${activeBar.weekNumber}`}
+            </SvgText>
+            {/* Passage count */}
+            <SvgText
+              x={TOOLTIP_PADDING + 4}
+              y={TOOLTIP_PADDING + 42}
+              fontSize={13}
+              fill={activeBar.seasonColor}
+              fontFamily="Inter_700Bold"
+            >
+              {activeBar.value.toLocaleString()}
+            </SvgText>
+          </G>
+        )}
 
         {/* X axis label */}
         <SvgText x={chartW / 2} y={chartH + 36} textAnchor="middle" fontSize={9} fill={colors.mutedForeground} fontFamily="Inter_500Medium">
