@@ -72,13 +72,20 @@ export default function DashboardScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
       }
     >
-      {/* Header row */}
+      {/* Header row — fixed height: logo · title · lang toggle */}
       <View style={styles.headerRow}>
+        {/* Logo placeholder — swap this View for an <Image> when you have a logo */}
+        <View style={[styles.logoBox, { backgroundColor: colors.primary + "18", borderColor: colors.border }]}>
+          <Feather name="wind" size={20} color={colors.primary} />
+        </View>
+
         <View style={styles.titleBlock}>
-          <Text style={[styles.dateText, { color: colors.mutedForeground }]}>
+          <Text style={[styles.dateText, { color: colors.mutedForeground }]} numberOfLines={1}>
             {isToday ? t.today : selectedDate}
           </Text>
-          <Text style={[styles.title, { color: colors.foreground }]}>{t.dashboard}</Text>
+          <Text style={[styles.title, { color: colors.foreground }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+            {t.dashboard}
+          </Text>
         </View>
 
         {/* Language toggle */}
@@ -104,40 +111,46 @@ export default function DashboardScreen() {
             </TouchableOpacity>
           ))}
         </View>
+      </View>
 
-        {seasons && seasons.length > 1 && (
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.seasonScroll}>
-            {seasons.map((s) => (
-              <TouchableOpacity
-                key={s}
+      {/* Season selector — its own row so it never crowds the title */}
+      {seasons && seasons.length > 1 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.seasonRow}
+          contentContainerStyle={styles.seasonRowContent}
+        >
+          {seasons.map((s) => (
+            <TouchableOpacity
+              key={s}
+              style={[
+                styles.seasonChip,
+                {
+                  backgroundColor:
+                    (selectedSeason ?? seasons[0]) === s ? colors.primary : colors.secondary,
+                  borderColor: colors.border,
+                },
+              ]}
+              onPress={() => setSelectedSeason(s === seasons[0] ? undefined : s)}
+            >
+              <Text
                 style={[
-                  styles.seasonChip,
+                  styles.seasonText,
                   {
-                    backgroundColor:
-                      (selectedSeason ?? seasons[0]) === s ? colors.primary : colors.secondary,
-                    borderColor: colors.border,
+                    color:
+                      (selectedSeason ?? seasons[0]) === s
+                        ? colors.primaryForeground
+                        : colors.foreground,
                   },
                 ]}
-                onPress={() => setSelectedSeason(s === seasons[0] ? undefined : s)}
               >
-                <Text
-                  style={[
-                    styles.seasonText,
-                    {
-                      color:
-                        (selectedSeason ?? seasons[0]) === s
-                          ? colors.primaryForeground
-                          : colors.foreground,
-                    },
-                  ]}
-                >
-                  {s}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        )}
-      </View>
+                {s}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
+      )}
 
       {/* Date + extraction picker */}
       <DateExtractionPicker
@@ -247,20 +260,30 @@ const styles = StyleSheet.create({
   content: { paddingBottom: 32 },
   headerRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
     alignItems: "center",
-    marginBottom: 16,
-    gap: 8,
+    marginBottom: 10,
+    gap: 10,
     paddingHorizontal: 16,
+    minHeight: 56,
   },
-  titleBlock: { flex: 1 },
-  dateText: { fontSize: 12, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
-  title: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: -0.5, marginTop: 2 },
+  logoBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    flexShrink: 0,
+  },
+  titleBlock: { flex: 1, justifyContent: "center" },
+  dateText: { fontSize: 11, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
+  title: { fontSize: 26, fontFamily: "Inter_700Bold", letterSpacing: -0.5, marginTop: 1 },
   langToggle: {
     flexDirection: "row",
     borderRadius: 16,
     borderWidth: 1,
     overflow: "hidden",
+    flexShrink: 0,
   },
   langBtn: {
     paddingHorizontal: 8,
@@ -272,13 +295,13 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     letterSpacing: 0.5,
   },
-  seasonScroll: { flexShrink: 1 },
+  seasonRow: { marginBottom: 10 },
+  seasonRowContent: { paddingHorizontal: 16, gap: 6, flexDirection: "row" },
   seasonChip: {
     borderRadius: 20,
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderWidth: 1,
-    marginLeft: 6,
   },
   seasonText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
   syncRow: {
