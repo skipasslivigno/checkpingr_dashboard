@@ -278,7 +278,8 @@ export default function GroupsScreen() {
     | { type: "picker" }
     | { type: "search" }
     | { type: "group"; group: GroupData & { visibleLifts: GroupData["lifts"] } }
-    | { type: "skeleton"; key: string };
+    | { type: "skeleton"; key: string }
+    | { type: "emptySearch" };
 
   const listData: ListItem[] = useMemo(() => {
     if (isLoading) {
@@ -288,12 +289,19 @@ export default function GroupsScreen() {
         ...Array.from({ length: 5 }, (_, i) => ({ type: "skeleton" as const, key: String(i) })),
       ];
     }
+    if (isSearching && filteredGroups.length === 0) {
+      return [
+        { type: "picker" },
+        { type: "search" },
+        { type: "emptySearch" },
+      ];
+    }
     return [
       { type: "picker" },
       { type: "search" },
       ...filteredGroups.map((g) => ({ type: "group" as const, group: g })),
     ];
-  }, [isLoading, filteredGroups]);
+  }, [isLoading, isSearching, filteredGroups]);
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -307,6 +315,7 @@ export default function GroupsScreen() {
           if (item.type === "picker") return "picker";
           if (item.type === "search") return "search";
           if (item.type === "skeleton") return `skeleton-${item.key}`;
+          if (item.type === "emptySearch") return "emptySearch";
           return `group-${item.group.name}`;
         }}
         contentContainerStyle={[styles.list, { paddingBottom: Platform.OS === "web" ? 34 : 100 }]}
@@ -359,6 +368,16 @@ export default function GroupsScreen() {
           }
           if (item.type === "skeleton") {
             return <LiftRowSkeleton />;
+          }
+          if (item.type === "emptySearch") {
+            return (
+              <View style={styles.emptyState}>
+                <Feather name="search" size={32} color={colors.mutedForeground} />
+                <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+                  {t.noGroupsMatchSearch}
+                </Text>
+              </View>
+            );
           }
           return (
             <GroupSection

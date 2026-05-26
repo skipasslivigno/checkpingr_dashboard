@@ -87,6 +87,7 @@ export interface Translations {
 
   groups: string;
   noGroupData: string;
+  noGroupsMatchSearch: string;
   activeLiftsOf: string;
   firstPassages: string;
 
@@ -211,6 +212,7 @@ const it: Translations = {
 
   groups: "Gruppi",
   noGroupData: "Nessun dato per questo gruppo",
+  noGroupsMatchSearch: "Nessun gruppo o impianto corrisponde alla ricerca",
   activeLiftsOf: "attivi su",
   firstPassages: "1° pass.",
 
@@ -335,6 +337,7 @@ const en: Translations = {
 
   groups: "Groups",
   noGroupData: "No data for this group",
+  noGroupsMatchSearch: "No groups or lifts match your search",
   activeLiftsOf: "active of",
   firstPassages: "1st pass.",
 
