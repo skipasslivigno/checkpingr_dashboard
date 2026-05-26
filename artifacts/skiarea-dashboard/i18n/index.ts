@@ -175,8 +175,8 @@ const it: Translations = {
   historySubtitle: "Ogni riga è uno snapshot di estrazione",
   noHistoryToday: "Nessuno storico per oggi",
   passagesRowLabel: "passaggi",
-  onLiftLabel: "sull'imp.",
-  firstPassLabel: "1° pass.",
+  onLiftLabel: "presenze",
+  firstPassLabel: "1° ingressi",
 
   tabDashboard: "Dashboard",
   tabLifts: "Impianti",
@@ -214,7 +214,7 @@ const it: Translations = {
   noGroupData: "Nessun dato per questo gruppo",
   noGroupsMatchSearch: "Nessun gruppo o impianto corrisponde alla ricerca",
   activeLiftsOf: "attivi su",
-  firstPassages: "1° pass.",
+  firstPassages: "1° ingressi",
 
   charts: "Grafici",
   chartsSubtitle: "Confronto stagioni",
