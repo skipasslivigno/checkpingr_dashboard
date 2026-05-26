@@ -9,13 +9,13 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
 import {
   useGetLiftsPeriod,
   useGetSeasons,
+  useGetLiftDates,
   getGetLiftsPeriodQueryKey,
   getLiftsPeriod,
 } from "@workspace/api-client-react";
@@ -24,6 +24,7 @@ import { StatCard } from "@/components/StatCard";
 import { StatCardSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { CalendarRangePicker } from "@/components/CalendarRangePicker";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -126,7 +127,13 @@ export default function PeriodScreen() {
   const [selectedSeason, setSelectedSeason] = useState<string | undefined>(undefined);
   const [compareEnabled, setCompareEnabled] = useState(false);
 
+  const [calendarVisible, setCalendarVisible] = useState(false);
+  const [calendarMode, setCalendarMode] = useState<"from" | "to">("from");
+
   const { data: seasons } = useGetSeasons();
+  const { data: availableDates } = useGetLiftDates(
+    selectedSeason ? { season: selectedSeason } : {}
+  );
 
   const currentSeasonStr = selectedSeason ?? seasons?.[0];
   const currentSeasonIndex = seasons && currentSeasonStr ? seasons.indexOf(currentSeasonStr) : -1;
@@ -183,9 +190,29 @@ export default function PeriodScreen() {
     }
   }
 
+  function handleCalendarSelect(date: string) {
+    if (calendarMode === "from") {
+      setFromInput(date);
+      // If the new from-date is after the current to-date, push to forward
+      if (date > toInput) setToInput(date);
+      // Auto-switch to "to" mode so the user can pick the end date next
+      setCalendarMode("to");
+    } else {
+      setToInput(date);
+      const newFrom = date < fromInput ? date : fromInput;
+      const newTo = date < fromInput ? fromInput : date;
+      setFromInput(newFrom);
+      setToInput(newTo);
+      setAppliedFrom(newFrom);
+      setAppliedTo(newTo);
+      setCalendarVisible(false);
+    }
+  }
+
   const hasData = data && data.lifts.length > 0;
 
   return (
+    <>
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={[styles.content, { paddingTop: topPadding + 16 }]}
@@ -297,32 +324,38 @@ export default function PeriodScreen() {
         <View style={styles.rangeRow}>
           <View style={styles.rangeField}>
             <Text style={[styles.rangeLabel, { color: colors.mutedForeground }]}>{t.periodFrom}</Text>
-            <TextInput
-              style={[styles.rangeInput, { color: colors.foreground, borderColor: colors.border }]}
-              value={fromInput}
-              onChangeText={setFromInput}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={colors.mutedForeground}
-              keyboardType="numeric"
-              maxLength={10}
-              onSubmitEditing={applyRange}
-            />
+            <TouchableOpacity
+              style={[styles.dateButton, { borderColor: calendarMode === "from" && calendarVisible ? colors.primary : colors.border }]}
+              onPress={() => {
+                setCalendarMode("from");
+                setCalendarVisible(true);
+              }}
+              activeOpacity={0.7}
+            >
+              <Feather name="calendar" size={13} color={colors.primary} />
+              <Text style={[styles.dateButtonText, { color: colors.foreground }]}>
+                {formatDate(fromInput, language)}
+              </Text>
+            </TouchableOpacity>
           </View>
 
           <Feather name="arrow-right" size={16} color={colors.mutedForeground} style={styles.arrow} />
 
           <View style={styles.rangeField}>
             <Text style={[styles.rangeLabel, { color: colors.mutedForeground }]}>{t.periodTo}</Text>
-            <TextInput
-              style={[styles.rangeInput, { color: colors.foreground, borderColor: colors.border }]}
-              value={toInput}
-              onChangeText={setToInput}
-              placeholder="YYYY-MM-DD"
-              placeholderTextColor={colors.mutedForeground}
-              keyboardType="numeric"
-              maxLength={10}
-              onSubmitEditing={applyRange}
-            />
+            <TouchableOpacity
+              style={[styles.dateButton, { borderColor: calendarMode === "to" && calendarVisible ? colors.primary : colors.border }]}
+              onPress={() => {
+                setCalendarMode("to");
+                setCalendarVisible(true);
+              }}
+              activeOpacity={0.7}
+            >
+              <Feather name="calendar" size={13} color={colors.primary} />
+              <Text style={[styles.dateButtonText, { color: colors.foreground }]}>
+                {formatDate(toInput, language)}
+              </Text>
+            </TouchableOpacity>
           </View>
         </View>
 
@@ -589,6 +622,17 @@ export default function PeriodScreen() {
 
       <View style={{ height: Platform.OS === "web" ? 34 : 100 }} />
     </ScrollView>
+
+    <CalendarRangePicker
+      visible={calendarVisible}
+      mode={calendarMode}
+      fromDate={fromInput}
+      toDate={toInput}
+      availableDates={availableDates ?? []}
+      onSelect={handleCalendarSelect}
+      onClose={() => setCalendarVisible(false)}
+    />
+    </>
   );
 }
 
@@ -672,13 +716,19 @@ const styles = StyleSheet.create({
   },
   rangeField: { flex: 1, gap: 4 },
   rangeLabel: { fontSize: 11, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
-  rangeInput: {
+  dateButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     borderWidth: 1,
     borderRadius: 8,
     paddingHorizontal: 10,
-    paddingVertical: 8,
+    paddingVertical: 9,
+  },
+  dateButtonText: {
     fontSize: 13,
     fontFamily: "Inter_500Medium",
+    flex: 1,
   },
   arrow: { marginTop: 16 },
   presetsRow: {

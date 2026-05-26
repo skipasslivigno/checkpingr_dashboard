@@ -81,6 +81,10 @@ export interface Translations {
   periodVs: string;
   periodNoPriorSeason: string;
 
+  calendarSelectFrom: string;
+  calendarSelectTo: string;
+  calendarHasData: string;
+
   groups: string;
   noGroupData: string;
   activeLiftsOf: string;
@@ -199,6 +203,10 @@ const it: Translations = {
   periodVs: "vs",
   periodNoPriorSeason: "Nessuna stagione precedente disponibile",
 
+  calendarSelectFrom: "Seleziona data inizio",
+  calendarSelectTo: "Seleziona data fine",
+  calendarHasData: "Giorni con dati disponibili",
+
   groups: "Gruppi",
   noGroupData: "Nessun dato per questo gruppo",
   activeLiftsOf: "attivi su",
@@ -316,6 +324,10 @@ const en: Translations = {
   periodPrior: "Prior",
   periodVs: "vs",
   periodNoPriorSeason: "No prior season available",
+
+  calendarSelectFrom: "Select start date",
+  calendarSelectTo: "Select end date",
+  calendarHasData: "Days with available data",
 
   groups: "Groups",
   noGroupData: "No data for this group",
