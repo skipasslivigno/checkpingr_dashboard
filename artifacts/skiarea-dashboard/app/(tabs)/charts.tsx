@@ -183,15 +183,33 @@ function LineChart({ lines, valueKey, containerWidth, height, colors, yLabel, xL
           return <Path key={line.season} d={d} stroke={line.color} strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" />;
         })}
 
+        {/* Dots at every data point */}
+        {lines.map((line) =>
+          line.points.map((pt) => {
+            const isActive = activePoint && activePoint.season === line.season && activePoint.svgX === toX(pt.dayIndex) && activePoint.svgY === toY(pt[valueKey]);
+            return (
+              <Circle
+                key={`dot-${line.season}-${pt.dayIndex}`}
+                cx={toX(pt.dayIndex)}
+                cy={toY(pt[valueKey])}
+                r={isActive ? 5 : 3}
+                fill={line.color}
+                stroke="white"
+                strokeWidth={isActive ? 1.5 : 1}
+              />
+            );
+          })
+        )}
+
         {/* Active point highlight ring (rendered above lines) */}
         {activePoint && (
           <Circle
             cx={activePoint.svgX}
             cy={activePoint.svgY}
-            r={7}
+            r={5}
             fill={activePoint.seasonColor}
             stroke="white"
-            strokeWidth={2}
+            strokeWidth={1.5}
             opacity={0.95}
           />
         )}
@@ -726,7 +744,6 @@ export default function ChartsScreen() {
       {/* Daily passages line chart */}
       <View style={[styles.chartCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={[styles.chartTitle, { color: colors.foreground }]}>{t.chartsDailyPassages}</Text>
-        <Text style={[styles.chartHint, { color: colors.mutedForeground }]}>{t.chartsTapHint}</Text>
 
         {isLoading ? (
           <View style={[styles.chartSkeleton, { height: CHART_HEIGHT, backgroundColor: colors.secondary }]} />
@@ -746,7 +763,6 @@ export default function ChartsScreen() {
       {/* Cumulative line chart */}
       <View style={[styles.chartCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <Text style={[styles.chartTitle, { color: colors.foreground }]}>{t.chartsCumulative}</Text>
-        <Text style={[styles.chartHint, { color: colors.mutedForeground }]}>{t.chartsTapHint}</Text>
 
         {isLoading ? (
           <View style={[styles.chartSkeleton, { height: CHART_HEIGHT, backgroundColor: colors.secondary }]} />
@@ -828,7 +844,6 @@ const styles = StyleSheet.create({
   chartCard: { marginHorizontal: 16, marginBottom: 16, borderRadius: 14, borderWidth: 1, padding: 14, overflow: "hidden" },
   chartTitle: { fontSize: 15, fontFamily: "Inter_600SemiBold", marginBottom: 2 },
   chartSubtitle: { fontSize: 11, fontFamily: "Inter_400Regular", marginBottom: 12 },
-  chartHint: { fontSize: 10, fontFamily: "Inter_400Regular", marginBottom: 10 },
   chartWrapper: { width: "100%" },
   chartSkeleton: { borderRadius: 8 },
   emptyChart: { alignItems: "center", justifyContent: "center", gap: 8 },
