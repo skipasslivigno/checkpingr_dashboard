@@ -35,7 +35,7 @@ sudo -u postgres createdb skiarea
 ## 2 — Clone the repo and install dependencies
 
 ```bash
-git clone <your-repo-url> /opt/skiarea
+git clone https://github.com/skipasslivigno/checkpingr_dashboard.git /opt/skiarea
 cd /opt/skiarea
 pnpm install
 ```
@@ -87,8 +87,8 @@ pm2 startup   # follow the printed command to enable on reboot
 ## 6 — Build the Expo web app
 
 ```bash
-cd /opt/skiarea
-pnpm --filter @workspace/skiarea-dashboard run export
+cd /opt/skiarea/artifacts/skiarea-dashboard
+EXPO_PUBLIC_DOMAIN=yourdomain.com pnpm exec expo export --platform web
 # output: artifacts/skiarea-dashboard/dist/
 ```
 
@@ -183,7 +183,9 @@ pnpm --filter @workspace/api-server run build
 pm2 restart api-server
 
 # Rebuild web app (only if UI changed)
-pnpm --filter @workspace/skiarea-dashboard run export
+cd artifacts/skiarea-dashboard
+EXPO_PUBLIC_DOMAIN=yourdomain.com pnpm exec expo export --platform web
+cd /opt/skiarea
 sudo cp -r artifacts/skiarea-dashboard/dist /var/www/skiarea
 
 # Run migrations (only if DB schema changed)
