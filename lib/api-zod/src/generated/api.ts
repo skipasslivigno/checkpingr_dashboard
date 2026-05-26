@@ -207,7 +207,8 @@ export const GetSeasonTrendResponseItem = zod.object({
   "date": zod.string().describe('Date in YYYY-MM-DD format'),
   "dayIndex": zod.number().describe('1-based index of this day within the season (for aligning seasons on the x-axis)'),
   "totalPassages": zod.number().describe('Total passages across all lifts on this date'),
-  "totalGuests": zod.number().describe('Total guests on lifts across all lifts on this date')
+  "totalGuests": zod.number().describe('Total guests on lifts across all lifts on this date'),
+  "totalFirstPassages": zod.number().describe('Sum of npin (first daily entries) across all lifts on this date')
 })).describe('Daily data points ordered by date')
 })
 export const GetSeasonTrendResponse = zod.array(GetSeasonTrendResponseItem)
@@ -228,7 +229,8 @@ export const GetWeekTrendResponseItem = zod.object({
   "fromDate": zod.string().describe('First date in this week that has data (YYYY-MM-DD)'),
   "toDate": zod.string().describe('Last date in this week that has data (YYYY-MM-DD)'),
   "totalPassages": zod.number().describe('Total passages across all lifts during this week'),
-  "totalGuests": zod.number().describe('Total guests on lifts across all lifts during this week')
+  "totalGuests": zod.number().describe('Total guests on lifts across all lifts during this week'),
+  "totalFirstPassages": zod.number().describe('Sum of npin (first daily entries) across all lifts during this week')
 })).describe('Weekly data points ordered by week number')
 })
 export const GetWeekTrendResponse = zod.array(GetWeekTrendResponseItem)

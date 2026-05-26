@@ -101,6 +101,7 @@ export interface Translations {
   chartsNoDataSub: string;
   chartsSeasonSelector: string;
   chartsPassages: string;
+  chartsFirstEntries: string;
   chartsDay: string;
 
   guestsToday: string;
@@ -214,15 +215,16 @@ const it: Translations = {
 
   charts: "Grafici",
   chartsSubtitle: "Confronto stagioni",
-  chartsDailyPassages: "Passaggi giornalieri",
-  chartsCumulative: "Passaggi cumulativi",
-  chartsWeekly: "Passaggi settimanali",
+  chartsDailyPassages: "Primi ingressi giornalieri",
+  chartsCumulative: "Primi ingressi cumulativi",
+  chartsWeekly: "Primi ingressi settimanali",
   chartsWeeklySubtitle: "Sab–Ven · ogni barra = una settimana",
   chartsWeek: "Sett.",
   chartsNoData: "Nessun dato disponibile",
   chartsNoDataSub: "Carica dati per visualizzare i grafici",
   chartsSeasonSelector: "Stagioni da confrontare",
   chartsPassages: "Passaggi",
+  chartsFirstEntries: "Primi ingressi",
   chartsDay: "Giorno",
 
   guestsToday: "ospiti oggi",
@@ -336,15 +338,16 @@ const en: Translations = {
 
   charts: "Charts",
   chartsSubtitle: "Season comparison",
-  chartsDailyPassages: "Daily passages",
-  chartsCumulative: "Cumulative passages",
-  chartsWeekly: "Weekly Passages",
+  chartsDailyPassages: "Daily First Entries",
+  chartsCumulative: "Cumulative First Entries",
+  chartsWeekly: "Weekly First Entries",
   chartsWeeklySubtitle: "Sat–Fri · each bar = one week",
   chartsWeek: "Week",
   chartsNoData: "No data available",
   chartsNoDataSub: "Push data to see charts",
   chartsSeasonSelector: "Seasons to compare",
   chartsPassages: "Passages",
+  chartsFirstEntries: "First Entries",
   chartsDay: "Day",
 
   guestsToday: "guests today",

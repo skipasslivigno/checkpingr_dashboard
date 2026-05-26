@@ -43,14 +43,14 @@ interface SeasonLine {
 }
 
 function buildSeasonLines(
-  rawData: Array<{ season: string; data: Array<{ date: string; dayIndex: number; totalPassages: number; totalGuests: number }> }>,
+  rawData: Array<{ season: string; data: Array<{ date: string; dayIndex: number; totalPassages: number; totalGuests: number; totalFirstPassages: number }> }>,
   colorOffset = 0
 ): SeasonLine[] {
   return rawData.map((s, i) => {
     let cum = 0;
     const points = s.data.map((d) => {
-      cum += d.totalPassages;
-      return { dayIndex: d.dayIndex, totalPassages: d.totalPassages, cumulative: cum };
+      cum += d.totalFirstPassages;
+      return { dayIndex: d.dayIndex, totalPassages: d.totalFirstPassages, cumulative: cum };
     });
     return { season: s.season, color: SEASON_COLORS[(i + colorOffset) % SEASON_COLORS.length]!, points };
   });
@@ -333,7 +333,7 @@ export default function ChartsScreen() {
     return weekData.map((s, i) => ({
       season: s.season,
       color: SEASON_COLORS[i % SEASON_COLORS.length]!,
-      weeks: s.weeks.map((w) => ({ weekNumber: w.weekNumber, totalPassages: w.totalPassages })),
+      weeks: s.weeks.map((w) => ({ weekNumber: w.weekNumber, totalPassages: w.totalFirstPassages })),
     }));
   }, [weekData]);
 
@@ -457,7 +457,7 @@ export default function ChartsScreen() {
           </View>
         ) : (
           <View style={styles.chartWrapper}>
-            <ChartWithWidth lines={seasonLines} valueKey="totalPassages" height={CHART_HEIGHT} colors={colors} yLabel={t.chartsPassages} xLabel={t.chartsDay} />
+            <ChartWithWidth lines={seasonLines} valueKey="totalPassages" height={CHART_HEIGHT} colors={colors} yLabel={t.chartsFirstEntries} xLabel={t.chartsDay} />
           </View>
         )}
       </View>
@@ -476,7 +476,7 @@ export default function ChartsScreen() {
           </View>
         ) : (
           <View style={styles.chartWrapper}>
-            <ChartWithWidth lines={seasonLines} valueKey="cumulative" height={CHART_HEIGHT} colors={colors} yLabel={t.chartsPassages} xLabel={t.chartsDay} />
+            <ChartWithWidth lines={seasonLines} valueKey="cumulative" height={CHART_HEIGHT} colors={colors} yLabel={t.chartsFirstEntries} xLabel={t.chartsDay} />
           </View>
         )}
       </View>
@@ -497,7 +497,7 @@ export default function ChartsScreen() {
                   <View style={styles.summaryStats}>
                     <View style={styles.summaryStat}>
                       <Text style={[styles.summaryValue, { color: colors.foreground }]}>{total.toLocaleString()}</Text>
-                      <Text style={[styles.summaryStatLabel, { color: colors.mutedForeground }]}>{t.chartsPassages.toLowerCase()}</Text>
+                      <Text style={[styles.summaryStatLabel, { color: colors.mutedForeground }]}>{t.chartsFirstEntries.toLowerCase()}</Text>
                     </View>
                     <View style={styles.summaryStat}>
                       <Text style={[styles.summaryValue, { color: colors.foreground }]}>{totalDays}</Text>

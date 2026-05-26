@@ -164,6 +164,8 @@ export interface SeasonTrendPoint {
   totalPassages: number;
   /** Total guests on lifts across all lifts on this date */
   totalGuests: number;
+  /** Sum of npin (first daily entries) across all lifts on this date */
+  totalFirstPassages: number;
 }
 
 export interface SeasonTrend {
@@ -184,6 +186,8 @@ export interface WeekTrendPoint {
   totalPassages: number;
   /** Total guests on lifts across all lifts during this week */
   totalGuests: number;
+  /** Sum of npin (first daily entries) across all lifts during this week */
+  totalFirstPassages: number;
 }
 
 export interface WeekTrend {

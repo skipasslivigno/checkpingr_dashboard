@@ -474,7 +474,7 @@ components:
 
     SeasonTrendPoint:
       type: object
-      required: [date, dayIndex, totalPassages, totalGuests]
+      required: [date, dayIndex, totalPassages, totalGuests, totalFirstPassages]
       properties:
         date:
           type: string
@@ -488,6 +488,9 @@ components:
         totalGuests:
           type: integer
           description: Total guests on lifts across all lifts on this date
+        totalFirstPassages:
+          type: integer
+          description: Sum of npin (first daily entries) across all lifts on this date
 
     SeasonTrend:
       type: object
@@ -504,7 +507,7 @@ components:
 
     WeekTrendPoint:
       type: object
-      required: [weekNumber, fromDate, toDate, totalPassages, totalGuests]
+      required: [weekNumber, fromDate, toDate, totalPassages, totalGuests, totalFirstPassages]
       properties:
         weekNumber:
           type: integer
@@ -521,6 +524,9 @@ components:
         totalGuests:
           type: integer
           description: Total guests on lifts across all lifts during this week
+        totalFirstPassages:
+          type: integer
+          description: Sum of npin (first daily entries) across all lifts during this week
 
     WeekTrend:
       type: object

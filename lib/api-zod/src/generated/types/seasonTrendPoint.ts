@@ -15,4 +15,6 @@ export interface SeasonTrendPoint {
   totalPassages: number;
   /** Total guests on lifts across all lifts on this date */
   totalGuests: number;
+  /** Sum of npin (first daily entries) across all lifts on this date */
+  totalFirstPassages: number;
 }

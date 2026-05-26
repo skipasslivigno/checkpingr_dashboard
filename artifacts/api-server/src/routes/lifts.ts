@@ -430,7 +430,7 @@ router.get("/lifts/week-trend", async (req, res): Promise<void> => {
 
   const result: Array<{
     season: string;
-    weeks: Array<{ weekNumber: number; fromDate: string; toDate: string; totalPassages: number; totalGuests: number }>;
+    weeks: Array<{ weekNumber: number; fromDate: string; toDate: string; totalPassages: number; totalGuests: number; totalFirstPassages: number }>;
   }> = [];
 
   for (const season of requestedSeasons) {
@@ -440,18 +440,20 @@ router.get("/lifts/week-trend", async (req, res): Promise<void> => {
       to_date: string;
       total_passages: string;
       total_guests: string;
+      total_first_passages: string;
     }>(sql`
       WITH daily AS (
         SELECT DISTINCT ON (LEFT(${liftSnapshotsTable.dtgg}, 10), ${liftSnapshotsTable.ggnr})
           LEFT(${liftSnapshotsTable.dtgg}, 10) AS dtgg_date,
           COALESCE(${liftSnapshotsTable.npas}, 0) AS npas,
-          COALESCE(${liftSnapshotsTable.nuin}, 0) AS nuin
+          COALESCE(${liftSnapshotsTable.nuin}, 0) AS nuin,
+          COALESCE(${liftSnapshotsTable.npin}, 0) AS npin
         FROM ${liftSnapshotsTable}
         WHERE ${liftSnapshotsTable.eser} = ${season}
         ORDER BY LEFT(${liftSnapshotsTable.dtgg}, 10), ${liftSnapshotsTable.ggnr}, ${liftSnapshotsTable.dupd} DESC
       ),
       daily_totals AS (
-        SELECT dtgg_date, SUM(npas)::int AS tp, SUM(nuin)::int AS tg
+        SELECT dtgg_date, SUM(npas)::int AS tp, SUM(nuin)::int AS tg, SUM(npin)::int AS tfp
         FROM daily
         GROUP BY dtgg_date
       ),
@@ -464,7 +466,8 @@ router.get("/lifts/week-trend", async (req, res): Promise<void> => {
         MIN(dtgg_date)                                                   AS from_date,
         MAX(dtgg_date)                                                   AS to_date,
         SUM(tp)::int                                                     AS total_passages,
-        SUM(tg)::int                                                     AS total_guests
+        SUM(tg)::int                                                     AS total_guests,
+        SUM(tfp)::int                                                    AS total_first_passages
       FROM daily_totals
       GROUP BY ((dtgg_date::date - (SELECT sat FROM first_sat)) / 7 + 1)
       ORDER BY week_number
@@ -478,6 +481,7 @@ router.get("/lifts/week-trend", async (req, res): Promise<void> => {
         toDate: r.to_date,
         totalPassages: Number(r.total_passages),
         totalGuests: Number(r.total_guests),
+        totalFirstPassages: Number(r.total_first_passages),
       })),
     });
   }
@@ -531,20 +535,23 @@ router.get("/lifts/season-trend", async (req, res): Promise<void> => {
       dtgg_date: string;
       total_passages: string;
       total_guests: string;
+      total_first_passages: string;
     }>(sql`
       WITH latest_per_lift_per_day AS (
         SELECT DISTINCT ON (LEFT(${liftSnapshotsTable.dtgg}, 10), ${liftSnapshotsTable.ggnr})
           LEFT(${liftSnapshotsTable.dtgg}, 10) AS dtgg_date,
           ${liftSnapshotsTable.npas},
-          ${liftSnapshotsTable.nuin}
+          ${liftSnapshotsTable.nuin},
+          ${liftSnapshotsTable.npin}
         FROM ${liftSnapshotsTable}
         WHERE ${liftSnapshotsTable.eser} = ${season}
         ORDER BY LEFT(${liftSnapshotsTable.dtgg}, 10), ${liftSnapshotsTable.ggnr}, ${liftSnapshotsTable.dupd} DESC
       )
       SELECT
         dtgg_date,
-        COALESCE(SUM(npas), 0)::int AS total_passages,
-        COALESCE(SUM(nuin), 0)::int AS total_guests
+        COALESCE(SUM(npas), 0)::int  AS total_passages,
+        COALESCE(SUM(nuin), 0)::int  AS total_guests,
+        COALESCE(SUM(npin), 0)::int  AS total_first_passages
       FROM latest_per_lift_per_day
       GROUP BY dtgg_date
       ORDER BY dtgg_date ASC
@@ -564,6 +571,7 @@ router.get("/lifts/season-trend", async (req, res): Promise<void> => {
         dayIndex,
         totalPassages: Number(r.total_passages),
         totalGuests: Number(r.total_guests),
+        totalFirstPassages: Number(r.total_first_passages),
       };
     });
 
