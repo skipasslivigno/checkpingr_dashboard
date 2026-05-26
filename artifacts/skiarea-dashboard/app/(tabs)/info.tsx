@@ -40,6 +40,7 @@ function buildSqlExample(url: string, t: Translations): string {
 ${t.sqlComment2}
 
 DECLARE @url        NVARCHAR(512) = N'${url}'
+DECLARE @api_key    NVARCHAR(128) = N'YOUR_API_KEY'
 DECLARE @chunkSize  INT           = 50   ${t.sqlCommentChunkSize}
 DECLARE @offset     INT           = 0
 DECLARE @total      INT
@@ -102,7 +103,7 @@ BEGIN
     EXEC sp_OACreate      'MSXML2.ServerXMLHTTP.6.0', @http OUT
     EXEC sp_OAMethod       @http, 'open',             NULL, 'POST', @url, false
     EXEC sp_OAMethod       @http, 'setRequestHeader', NULL, 'Content-Type', 'application/json'
-    EXEC sp_OAMethod       @http, 'setRequestHeader', NULL, 'X-API-Key', 'YOUR_API_KEY'
+    EXEC sp_OAMethod       @http, 'setRequestHeader', NULL, 'X-API-Key', @api_key
     EXEC sp_OAMethod       @http, 'send',             NULL, @json
     EXEC sp_OAGetProperty  @http, 'status',           @status OUT
     EXEC sp_OAGetProperty  @http, 'responseText',     @resp   OUT
