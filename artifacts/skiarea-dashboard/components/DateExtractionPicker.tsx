@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import {
+  LayoutChangeEvent,
   ScrollView,
   StyleSheet,
   Text,
@@ -44,6 +45,10 @@ export function DateExtractionPicker({
   const { t, language } = useTranslation();
   const scrollRef = useRef<ScrollView>(null);
   const prevSeasonRef = useRef(season);
+  // Map date string → { x, width } measured by onLayout on each chip
+  const chipLayoutRef = useRef<Record<string, { x: number; width: number }>>({});
+  // Visible width of the ScrollView container
+  const containerWidthRef = useRef<number>(0);
 
   const { data: dates } = useGetLiftDates(season ? { season } : {});
 
@@ -78,14 +83,16 @@ export function DateExtractionPicker({
     }
   }, [extractions, selectedDate]);
 
-  // Scroll selected date chip into view.
-  // dates is DESC so index 0 = most recent = leftmost chip.
+  // Scroll the selected date chip into the center of the visible area.
+  // Uses measured chip positions so the scroll offset is always exact,
+  // regardless of variable chip widths or the row's horizontal padding.
   useEffect(() => {
-    if (!dates || !selectedDate) return;
-    const idx = dates.indexOf(selectedDate);
-    if (idx >= 0 && scrollRef.current) {
-      scrollRef.current.scrollTo({ x: idx * 84, animated: true });
-    }
+    if (!selectedDate || !scrollRef.current) return;
+    const layout = chipLayoutRef.current[selectedDate];
+    if (!layout) return;
+    const containerW = containerWidthRef.current;
+    const targetX = layout.x - containerW / 2 + layout.width / 2;
+    scrollRef.current.scrollTo({ x: Math.max(0, targetX), animated: true });
   }, [selectedDate, dates]);
 
   const locale = language === "it" ? "it-IT" : "en-GB";
@@ -116,6 +123,9 @@ export function DateExtractionPicker({
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.row}
+        onLayout={(e: LayoutChangeEvent) => {
+          containerWidthRef.current = e.nativeEvent.layout.width;
+        }}
       >
         {dates.map((d) => {
           const active = d === selectedDate;
@@ -129,6 +139,12 @@ export function DateExtractionPicker({
                   borderColor: active ? colors.primary : colors.border,
                 },
               ]}
+              onLayout={(e: LayoutChangeEvent) => {
+                chipLayoutRef.current[d] = {
+                  x: e.nativeEvent.layout.x,
+                  width: e.nativeEvent.layout.width,
+                };
+              }}
               onPress={() => {
                 onDateChange(d);
                 onExtractionChange(undefined);
