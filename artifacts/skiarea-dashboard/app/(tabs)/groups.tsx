@@ -1,8 +1,9 @@
 import { Feather } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Animated,
   FlatList,
   Platform,
   RefreshControl,
@@ -49,16 +50,43 @@ function GroupSection({
   expanded,
   onToggle,
   maxPassages,
+  index,
 }: {
   group: GroupData;
   visibleLifts: GroupData["lifts"];
   expanded: boolean;
   onToggle: () => void;
   maxPassages: number;
+  index: number;
 }) {
   const colors = useColors();
   const { t } = useTranslation();
   const router = useRouter();
+
+  const targetFill = maxPassages > 0
+    ? Math.round((group.totalPassages / maxPassages) * 100)
+    : 0;
+
+  const animatedFill = useRef(new Animated.Value(0)).current;
+  const lastTargetRef = useRef<number>(-1);
+
+  useEffect(() => {
+    if (lastTargetRef.current === targetFill) return;
+    lastTargetRef.current = targetFill;
+    animatedFill.setValue(0);
+    Animated.timing(animatedFill, {
+      toValue: targetFill,
+      duration: 500,
+      delay: index * 60,
+      useNativeDriver: false,
+    }).start();
+  }, [targetFill, index]);
+
+  const animatedWidth = animatedFill.interpolate({
+    inputRange: [0, 100],
+    outputRange: ["0%", "100%"],
+    extrapolate: "clamp",
+  });
 
   return (
     <View style={[styles.groupCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -126,14 +154,12 @@ function GroupSection({
         </View>
 
         <View style={[styles.passageBarTrack, { backgroundColor: colors.border }]}>
-          <View
+          <Animated.View
             style={[
               styles.passageBarFill,
               {
                 backgroundColor: colors.primary,
-                width: maxPassages > 0
-                  ? `${Math.round((group.totalPassages / maxPassages) * 100)}%`
-                  : "0%",
+                width: animatedWidth,
               },
             ]}
           />
@@ -332,7 +358,7 @@ export default function GroupsScreen() {
             </View>
           ) : null
         }
-        renderItem={({ item }) => {
+        renderItem={({ item, index: flatIndex }) => {
           if (item.type === "picker") {
             return (
               <DateExtractionPicker
@@ -386,6 +412,7 @@ export default function GroupsScreen() {
               expanded={isGroupExpanded(item.group.name)}
               onToggle={isSearching ? () => undefined : () => toggleGroup(item.group.name)}
               maxPassages={maxPassages}
+              index={Math.max(0, flatIndex - 2)}
             />
           );
         }}
