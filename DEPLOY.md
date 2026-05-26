@@ -174,23 +174,45 @@ EXEC sp_OAMethod @http, 'setRequestHeader', NULL, 'X-Api-Key', 'your-secret-key'
 
 ## Redeployment (subsequent updates)
 
+### Workflow: Replit → VPS
+
+Develop and test on Replit, then deploy to the VPS manually.
+
+> **Important:** changes made on Replit are NOT automatically pushed to GitHub.
+> You must push from Replit (or your local machine) before running `git pull` on the VPS.
+
+### Redeployment checklist
+
+Run only the steps that match what changed:
+
 ```bash
 cd /opt/skiarea
-git pull
-pnpm install
 
-# Rebuild API
+# 1. Pull latest code (only after pushing from Replit/local)
+git pull
+pnpm install --ignore-scripts
+
+# 2. Rebuild API server (only if routes/logic changed)
 pnpm --filter @workspace/api-server run build
 pm2 restart api-server
 
-# Rebuild web app (only if UI changed)
-cd artifacts/skiarea-dashboard
-EXPO_PUBLIC_DOMAIN=yourdomain.com pnpm exec expo export --platform web
-cd /opt/skiarea
-sudo cp -r artifacts/skiarea-dashboard/dist /var/www/skiarea
+# 3. Rebuild web app (only if UI/screens changed)
+cd /opt/skiarea/artifacts/skiarea-dashboard
+EXPO_PUBLIC_DOMAIN=dashboard.skipasslivigno.com pnpm exec expo export --platform web
+sudo rm -rf /var/www/skiarea/dist/*
+sudo cp -r dist/* /var/www/skiarea/dist/
 
-# Run migrations (only if DB schema changed)
-source .env.production && pnpm --filter @workspace/db run push
+# 4. Run DB migrations (only if schema changed)
+export $(grep -v '^#' /opt/skiarea/.env.production | xargs)
+pnpm --filter @workspace/db run push
+```
+
+### Quick verify after deploy
+
+```bash
+pm2 status                                                      # API running?
+curl -s https://dashboard.skipasslivigno.com/api/healthz        # API reachable?
+sudo -u postgres psql -d skiarea -c "SELECT COUNT(*) FROM lift_snapshots;"  # data ok?
 ```
 
 ---
