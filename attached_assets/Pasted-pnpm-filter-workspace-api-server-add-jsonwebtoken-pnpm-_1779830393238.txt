@@ -1,0 +1,52 @@
+pnpm --filter @workspace/api-server add jsonwebtoken
+pnpm --filter @workspace/api-server add -D @types/jsonwebtoken
+pnpm --filter @workspace/api-server run build
+artifacts/mockup-sandbox                 | [WARN] deprecated recharts@2.15.4
+[WARN] 5 deprecated subdependencies found: glob@7.2.3, inflight@1.0.6, rimraf@3.0.2, uuid@3.4.0, uuid@7.0.3
+Progress: resolved 1085, reused 0, downloaded 0, added 0, done
+.                                        |   -2 -
+. preinstall$ sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+│ Use pnpm instead
+└─ Failed in 26ms at /opt/skiarea
+[ELIFECYCLE] Command failed with exit code 1.
+artifacts/mockup-sandbox                 | [WARN] deprecated recharts@2.15.4
+[WARN] 5 deprecated subdependencies found: glob@7.2.3, inflight@1.0.6, rimraf@3.0.2, uuid@3.4.0, uuid@7.0.3
+Progress: resolved 1075, reused 0, downloaded 0, added 0, done
+.                                        |  -12 -
+. preinstall$ sh -c 'rm -f package-lock.json yarn.lock; case "$npm_config_user_agent" in pnpm/*) ;; *) echo "Use pnpm instead" >&2; exit 1 ;; esac'
+│ Use pnpm instead
+└─ Failed in 24ms at /opt/skiarea
+[ELIFECYCLE] Command failed with exit code 1.
+$ node ./build.mjs
+✘ [ERROR] Could not resolve "jsonwebtoken"
+
+    src/middleware/requireAuth.ts:2:16:
+      2 │ import jwt from "jsonwebtoken";
+        ╵                 ~~~~~~~~~~~~~~
+
+  You can mark the path "jsonwebtoken" as external to exclude it from the bundle, which will remove
+  this error and leave the unresolved path in the bundle.
+
+✘ [ERROR] Could not resolve "jsonwebtoken"
+
+    src/routes/auth.ts:2:16:
+      2 │ import jwt from "jsonwebtoken";
+        ╵                 ~~~~~~~~~~~~~~
+
+  You can mark the path "jsonwebtoken" as external to exclude it from the bundle, which will remove
+  this error and leave the unresolved path in the bundle.
+
+2 errors
+Error: Build failed with 2 errors:
+src/middleware/requireAuth.ts:2:16: ERROR: Could not resolve "jsonwebtoken"
+src/routes/auth.ts:2:16: ERROR: Could not resolve "jsonwebtoken"
+    at failureErrorWithLog (/opt/skiarea/node_modules/.pnpm/esbuild@0.27.3/node_modules/esbuild/lib/main.js:1467:15)
+    at /opt/skiarea/node_modules/.pnpm/esbuild@0.27.3/node_modules/esbuild/lib/main.js:926:25
+    at /opt/skiarea/node_modules/.pnpm/esbuild@0.27.3/node_modules/esbuild/lib/main.js:1345:9
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5) {
+  errors: [Getter/Setter],
+  warnings: [Getter/Setter]
+}
+/opt/skiarea/artifacts/api-server:
+[ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL] @workspace/api-server@0.0.0 build: `node ./build.mjs`
+Exit status 1
