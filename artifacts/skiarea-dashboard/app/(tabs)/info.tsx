@@ -102,6 +102,7 @@ BEGIN
     EXEC sp_OACreate      'MSXML2.ServerXMLHTTP.6.0', @http OUT
     EXEC sp_OAMethod       @http, 'open',             NULL, 'POST', @url, false
     EXEC sp_OAMethod       @http, 'setRequestHeader', NULL, 'Content-Type', 'application/json'
+    EXEC sp_OAMethod       @http, 'setRequestHeader', NULL, 'X-API-Key', 'YOUR_API_KEY'
     EXEC sp_OAMethod       @http, 'send',             NULL, @json
     EXEC sp_OAGetProperty  @http, 'status',           @status OUT
     EXEC sp_OAGetProperty  @http, 'responseText',     @resp   OUT
