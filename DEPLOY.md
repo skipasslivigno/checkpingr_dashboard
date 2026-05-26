@@ -89,12 +89,13 @@ pm2 startup   # follow the printed command to enable on reboot
 ```bash
 cd /opt/skiarea/artifacts/skiarea-dashboard
 EXPO_PUBLIC_DOMAIN=yourdomain.com pnpm exec expo export --platform web
-# output: artifacts/skiarea-dashboard/dist/
+# output: dist/   (full path: /opt/skiarea/artifacts/skiarea-dashboard/dist)
 ```
 
 Copy static files to the web root:
 
 ```bash
+cd /opt/skiarea
 sudo cp -r artifacts/skiarea-dashboard/dist /var/www/skiarea
 ```
 
