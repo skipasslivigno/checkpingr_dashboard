@@ -1,0 +1,1 @@
+- [VPS deploy: web build vs API deploy are separate](vps-deploy-web-vs-api.md) — API code deploy does NOT redeploy the static web frontend; verify both independently after any prod issue report.
