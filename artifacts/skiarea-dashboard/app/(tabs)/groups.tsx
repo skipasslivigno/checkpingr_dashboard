@@ -21,6 +21,7 @@ import { DateExtractionPicker } from "@/components/DateExtractionPicker";
 import { LiftRow } from "@/components/LiftRow";
 import { LiftRowSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
+import { useResponsive, CONTENT_MAX_WIDTH } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
 
@@ -299,6 +300,7 @@ export default function GroupsScreen() {
   };
 
   const topPadding = Platform.OS === "web" ? 67 : 0;
+  const { isWide } = useResponsive();
 
   type ListItem =
     | { type: "picker" }
@@ -332,9 +334,12 @@ export default function GroupsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: topPadding + 16 }]}>
+       <View style={[styles.inner, isWide && styles.innerWide]}>
         <Text style={[styles.title, { color: colors.foreground }]}>{t.groups}</Text>
+       </View>
       </View>
 
+      <View style={[styles.listWrap, isWide && styles.listWrapWide]}>
       <FlatList
         data={listData}
         keyExtractor={(item) => {
@@ -417,6 +422,7 @@ export default function GroupsScreen() {
           );
         }}
       />
+      </View>
     </View>
   );
 }
@@ -427,6 +433,10 @@ const styles = StyleSheet.create({
     paddingBottom: 4,
     paddingHorizontal: 16,
   },
+  inner: { width: "100%" },
+  innerWide: { maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" },
+  listWrap: { flex: 1, width: "100%" },
+  listWrapWide: { maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" },
   title: {
     fontSize: 28,
     fontFamily: "Inter_700Bold",

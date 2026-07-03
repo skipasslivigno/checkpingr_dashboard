@@ -23,6 +23,7 @@ import { LiftRow } from "@/components/LiftRow";
 import { LiftRowSkeleton, StatCardSkeleton } from "@/components/SkeletonLoader";
 import { StatCard } from "@/components/StatCard";
 import { useColors } from "@/hooks/useColors";
+import { useResponsive, CONTENT_MAX_WIDTH } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
 
@@ -63,6 +64,7 @@ export default function DashboardScreen() {
 
   const topPadding = Platform.OS === "web" ? 67 : 0;
   const isToday = selectedDate === todayIso();
+  const { isWide } = useResponsive();
 
   return (
     <ScrollView
@@ -72,6 +74,7 @@ export default function DashboardScreen() {
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
       }
     >
+      <View style={[styles.inner, isWide && styles.innerWide]}>
       {/* Header row — fixed height: logo · title · lang toggle */}
       <View style={styles.headerRow}>
         {/* Logo placeholder — swap this View for an <Image> when you have a logo */}
@@ -174,44 +177,79 @@ export default function DashboardScreen() {
         </View>
       )}
 
-      {/* Stats row */}
-      <View style={styles.statsRow}>
-        {summaryLoading ? (
-          <>
-            <StatCardSkeleton />
-            <StatCardSkeleton />
-          </>
-        ) : (
-          <>
-            <StatCard
-              label={t.passages}
-              value={(summary?.totalPassages ?? 0).toLocaleString()}
-              accent
-            />
-            <StatCard
-              label={t.guestsOnLifts}
-              value={(summary?.totalGuests ?? 0).toLocaleString()}
-            />
-          </>
-        )}
-      </View>
+      {/* Stats — single row on wide screens, two stacked rows on narrow */}
+      {isWide ? (
+        <View style={styles.statsRow}>
+          {summaryLoading ? (
+            <>
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+              <StatCardSkeleton />
+            </>
+          ) : (
+            <>
+              <StatCard
+                compact
+                label={t.passages}
+                value={(summary?.totalPassages ?? 0).toLocaleString()}
+                accent
+              />
+              <StatCard
+                compact
+                label={t.guestsOnLifts}
+                value={(summary?.totalGuests ?? 0).toLocaleString()}
+              />
+              <StatCard
+                compact
+                label={t.activeLifts}
+                value={`${summary?.activeLifts ?? 0} / ${summary?.totalLifts ?? 0}`}
+              />
+              <StatCard compact label={t.season} value={summary?.season ?? "—"} />
+            </>
+          )}
+        </View>
+      ) : (
+        <>
+          <View style={styles.statsRow}>
+            {summaryLoading ? (
+              <>
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+              </>
+            ) : (
+              <>
+                <StatCard
+                  label={t.passages}
+                  value={(summary?.totalPassages ?? 0).toLocaleString()}
+                  accent
+                />
+                <StatCard
+                  label={t.guestsOnLifts}
+                  value={(summary?.totalGuests ?? 0).toLocaleString()}
+                />
+              </>
+            )}
+          </View>
 
-      <View style={styles.statsRow}>
-        {summaryLoading ? (
-          <>
-            <StatCardSkeleton />
-            <StatCardSkeleton />
-          </>
-        ) : (
-          <>
-            <StatCard
-              label={t.activeLifts}
-              value={`${summary?.activeLifts ?? 0} / ${summary?.totalLifts ?? 0}`}
-            />
-            <StatCard label={t.season} value={summary?.season ?? "—"} />
-          </>
-        )}
-      </View>
+          <View style={styles.statsRow}>
+            {summaryLoading ? (
+              <>
+                <StatCardSkeleton />
+                <StatCardSkeleton />
+              </>
+            ) : (
+              <>
+                <StatCard
+                  label={t.activeLifts}
+                  value={`${summary?.activeLifts ?? 0} / ${summary?.totalLifts ?? 0}`}
+                />
+                <StatCard label={t.season} value={summary?.season ?? "—"} />
+              </>
+            )}
+          </View>
+        </>
+      )}
 
       {/* Top lifts */}
       <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
@@ -251,6 +289,7 @@ export default function DashboardScreen() {
       )}
 
       <View style={{ height: Platform.OS === "web" ? 34 : 100 }} />
+      </View>
     </ScrollView>
   );
 }
@@ -258,6 +297,8 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingBottom: 32 },
+  inner: { width: "100%" },
+  innerWide: { maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" },
   headerRow: {
     flexDirection: "row",
     alignItems: "center",

@@ -21,6 +21,7 @@ import { DateExtractionPicker } from "@/components/DateExtractionPicker";
 import { LiftRow } from "@/components/LiftRow";
 import { LiftRowSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
+import { useResponsive, CONTENT_MAX_WIDTH } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
 
@@ -73,10 +74,12 @@ export default function LiftsScreen() {
 
   const topPadding = Platform.OS === "web" ? 67 : 0;
   const showChips = companies.length > 1;
+  const { isWide } = useResponsive();
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: topPadding + 16, backgroundColor: colors.background }]}>
+       <View style={[styles.inner, isWide && styles.innerWide]}>
         <Text style={[styles.title, { color: colors.foreground }]}>{t.allLifts}</Text>
 
         <DateExtractionPicker
@@ -170,44 +173,47 @@ export default function LiftsScreen() {
             </TouchableOpacity>
           </View>
         )}
+       </View>
       </View>
 
-      <FlatList
-        data={isLoading ? Array.from<(typeof filtered)[number] | undefined>({ length: 10 }) : filtered}
-        keyExtractor={(item, i) => (item ? String(item.ggnr) : String(i))}
-        contentContainerStyle={[styles.list, { paddingBottom: Platform.OS === "web" ? 34 : 100 }]}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
-        }
-        scrollEnabled={!!filtered.length}
-        ListEmptyComponent={
-          !isLoading ? (
-            <View style={[styles.emptyState]}>
-              <Feather name="alert-circle" size={32} color={colors.mutedForeground} />
-              <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-                {search || selectedCompany ? t.noLiftsMatchFilters : t.noLiftDataAvailable}
-              </Text>
-            </View>
-          ) : null
-        }
-        renderItem={({ item }) =>
-          item ? (
-            <LiftRow
-              name={item.ggbz}
-              passages={item.npas ?? null}
-              guests={item.nuin ?? null}
-              firstPassage={item.npin ?? null}
-              company={item.nomeSocieta}
-              group={item.descrGrp}
-              onPress={() =>
-                router.push({ pathname: "/lift/[ggnr]", params: { ggnr: item.ggnr, name: item.ggbz } })
-              }
-            />
-          ) : (
-            <LiftRowSkeleton />
-          )
-        }
-      />
+      <View style={[styles.listWrap, isWide && styles.listWrapWide]}>
+        <FlatList
+          data={isLoading ? Array.from<(typeof filtered)[number] | undefined>({ length: 10 }) : filtered}
+          keyExtractor={(item, i) => (item ? String(item.ggnr) : String(i))}
+          contentContainerStyle={[styles.list, { paddingBottom: Platform.OS === "web" ? 34 : 100 }]}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
+          }
+          scrollEnabled={!!filtered.length}
+          ListEmptyComponent={
+            !isLoading ? (
+              <View style={[styles.emptyState]}>
+                <Feather name="alert-circle" size={32} color={colors.mutedForeground} />
+                <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+                  {search || selectedCompany ? t.noLiftsMatchFilters : t.noLiftDataAvailable}
+                </Text>
+              </View>
+            ) : null
+          }
+          renderItem={({ item }) =>
+            item ? (
+              <LiftRow
+                name={item.ggbz}
+                passages={item.npas ?? null}
+                guests={item.nuin ?? null}
+                firstPassage={item.npin ?? null}
+                company={item.nomeSocieta}
+                group={item.descrGrp}
+                onPress={() =>
+                  router.push({ pathname: "/lift/[ggnr]", params: { ggnr: item.ggnr, name: item.ggbz } })
+                }
+              />
+            ) : (
+              <LiftRowSkeleton />
+            )
+          }
+        />
+      </View>
     </View>
   );
 }
@@ -217,6 +223,10 @@ const styles = StyleSheet.create({
   header: {
     paddingBottom: 8,
   },
+  inner: { width: "100%" },
+  innerWide: { maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" },
+  listWrap: { flex: 1, width: "100%" },
+  listWrapWide: { maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" },
   title: {
     fontSize: 28,
     fontFamily: "Inter_700Bold",

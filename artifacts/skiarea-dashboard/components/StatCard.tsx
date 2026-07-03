@@ -7,12 +7,19 @@ interface StatCardProps {
   value: string | number;
   sub?: string;
   accent?: boolean;
+  compact?: boolean;
 }
 
-export function StatCard({ label, value, sub, accent }: StatCardProps) {
+export function StatCard({ label, value, sub, accent, compact }: StatCardProps) {
   const colors = useColors();
   return (
-    <View style={[styles.card, { backgroundColor: accent ? colors.primary : colors.card, borderColor: colors.border }]}>
+    <View
+      style={[
+        styles.card,
+        compact && styles.cardCompact,
+        { backgroundColor: accent ? colors.primary : colors.card, borderColor: colors.border },
+      ]}
+    >
       <Text style={[styles.value, { color: accent ? colors.primaryForeground : colors.foreground }]}>{value}</Text>
       <Text style={[styles.label, { color: accent ? colors.primaryForeground : colors.mutedForeground }]}>{label}</Text>
       {sub ? <Text style={[styles.sub, { color: accent ? colors.primaryForeground : colors.mutedForeground }]}>{sub}</Text> : null}
@@ -29,6 +36,11 @@ const styles = StyleSheet.create({
     gap: 4,
     minHeight: 88,
     justifyContent: "center",
+  },
+  cardCompact: {
+    padding: 12,
+    minHeight: 72,
+    gap: 2,
   },
   value: {
     fontSize: 28,

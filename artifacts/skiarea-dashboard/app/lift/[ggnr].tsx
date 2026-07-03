@@ -14,6 +14,7 @@ import { useGetLiftHistory } from "@workspace/api-client-react";
 import { LiftRowSkeleton } from "@/components/SkeletonLoader";
 import { StatCard } from "@/components/StatCard";
 import { useColors } from "@/hooks/useColors";
+import { useResponsive, CONTENT_MAX_WIDTH } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
 
@@ -33,21 +34,25 @@ export default function LiftDetailScreen() {
 
   const latest = history?.[0];
   const topPadding = Platform.OS === "web" ? 67 : 0;
+  const { isWide } = useResponsive();
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Custom header */}
       <View style={[styles.navBar, { paddingTop: topPadding + 12, backgroundColor: colors.background, borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
-          <Feather name="chevron-left" size={22} color={colors.primary} />
-          <Text style={[styles.backText, { color: colors.primary }]}>{t.back}</Text>
-        </TouchableOpacity>
+        <View style={[styles.navBarInner, isWide && styles.navBarInnerWide]}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
+            <Feather name="chevron-left" size={22} color={colors.primary} />
+            <Text style={[styles.backText, { color: colors.primary }]}>{t.back}</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={[styles.content, { paddingBottom: Platform.OS === "web" ? 34 : 100 }]}
       >
+        <View style={[styles.inner, isWide && styles.innerWide]}>
         <Text style={[styles.title, { color: colors.foreground }]} numberOfLines={2}>
           {name ?? `${t.liftPrefix}${ggnr}`}
         </Text>
@@ -129,6 +134,7 @@ export default function LiftDetailScreen() {
             </View>
           ))
         )}
+        </View>
       </ScrollView>
     </View>
   );
@@ -143,10 +149,14 @@ const styles = StyleSheet.create({
     paddingBottom: 10,
     borderBottomWidth: 1,
   },
+  navBarInner: { width: "100%" },
+  navBarInnerWide: { maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" },
   backBtn: { flexDirection: "row", alignItems: "center", gap: 2 },
   backText: { fontSize: 16, fontFamily: "Inter_500Medium" },
   scroll: { flex: 1 },
   content: { paddingHorizontal: 16, paddingTop: 20, gap: 0 },
+  inner: { width: "100%" },
+  innerWide: { maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" },
   title: { fontSize: 22, fontFamily: "Inter_700Bold", letterSpacing: -0.3, marginBottom: 4 },
   code: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 2 },
   season: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 16 },
