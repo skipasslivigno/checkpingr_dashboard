@@ -1,0 +1,85 @@
+
+*** System restart required ***
+Last login: Tue May 26 19:19:05 2026 from 169.254.0.1
+root@srv1468395:~# curl -s -X POST https://dashboard.skipasslivigno.com/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"y11sk1pa55"}'
+
+curl -s https://dashboard.skipasslivigno.com/api/healthz
+
+pm2 list
+
+pm2 logs api-server --lines 30 --nostream
+
+docker logs traefik --tail 30 2>&1 | grep -i skiarea
+{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VybmFtZSI6ImFkbWluIiwiaWF0IjoxNzgzMDkwMzc3LCJleHAiOjE3ODU2ODIzNzd9.2khWvGmfheMiB9dC8CWOMUilbZnxFHF4lN8zN5MWbRM"}{"status":"ok"}┌────┬───────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name          │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼───────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 0  │ api-server    │ default     │ 0.0.0   │ fork    │ 859665   │ 37D    │ 1    │ online    │ 0%       │ 105.7mb  │ root     │ disabled │
+└────┴───────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+[TAILING] Tailing last 30 lines for [api-server] process (change the value with --lines option)
+/root/.pm2/logs/api-server-error.log last 30 lines:
+0|api-serv |   url: 'file:///opt/skiarea/artifacts/api-server/dist/index.mjs'
+0|api-serv | }
+0|api-serv | Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/opt/skiarea/artifacts/api-server/dist/index.mjs' imported from /usr/lib/node_modules/pm2/lib/ProcessContainerFork.js
+0|api-serv |     at finalizeResolution (node:internal/modules/esm/resolve:271:11)
+0|api-serv |     at moduleResolve (node:internal/modules/esm/resolve:861:10)
+0|api-serv |     at defaultResolve (node:internal/modules/esm/resolve:988:11)
+0|api-serv |     at #cachedDefaultResolve (node:internal/modules/esm/loader:697:20)
+0|api-serv |     at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:714:38)
+0|api-serv |     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:746:52)
+0|api-serv |     at #resolve (node:internal/modules/esm/loader:679:17)
+0|api-serv |     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:599:35)
+0|api-serv |     at node:internal/modules/esm/loader:628:32
+0|api-serv |     at TracingChannel.tracePromise (node:diagnostics_channel:362:14) {
+0|api-serv |   code: 'ERR_MODULE_NOT_FOUND',
+0|api-serv |   url: 'file:///opt/skiarea/artifacts/api-server/dist/index.mjs'
+0|api-serv | }
+0|api-serv | Error [ERR_MODULE_NOT_FOUND]: Cannot find module '/opt/skiarea/artifacts/api-server/dist/index.mjs' imported from /usr/lib/node_modules/pm2/lib/ProcessContainerFork.js
+0|api-serv |     at finalizeResolution (node:internal/modules/esm/resolve:271:11)
+0|api-serv |     at moduleResolve (node:internal/modules/esm/resolve:861:10)
+0|api-serv |     at defaultResolve (node:internal/modules/esm/resolve:988:11)
+0|api-serv |     at #cachedDefaultResolve (node:internal/modules/esm/loader:697:20)
+0|api-serv |     at #resolveAndMaybeBlockOnLoaderThread (node:internal/modules/esm/loader:714:38)
+0|api-serv |     at ModuleLoader.resolveSync (node:internal/modules/esm/loader:746:52)
+0|api-serv |     at #resolve (node:internal/modules/esm/loader:679:17)
+0|api-serv |     at ModuleLoader.getOrCreateModuleJob (node:internal/modules/esm/loader:599:35)
+0|api-serv |     at node:internal/modules/esm/loader:628:32
+0|api-serv |     at TracingChannel.tracePromise (node:diagnostics_channel:362:14) {
+0|api-serv |   code: 'ERR_MODULE_NOT_FOUND',
+0|api-serv |   url: 'file:///opt/skiarea/artifacts/api-server/dist/index.mjs'
+0|api-serv | }
+
+/root/.pm2/logs/api-server-out.log last 30 lines:
+0|api-serv | {"level":30,"time":1783089864309,"pid":859665,"hostname":"srv1468395","req":{"id":2194,"method":"GET","url":"/api/lifts/summary"},"res":{"statusCode":401},"responseTime":0,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089864310,"pid":859665,"hostname":"srv1468395","req":{"id":2195,"method":"GET","url":"/api/lifts/extractions"},"res":{"statusCode":401},"responseTime":0,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089864310,"pid":859665,"hostname":"srv1468395","req":{"id":2196,"method":"GET","url":"/api/lifts/latest"},"res":{"statusCode":401},"responseTime":0,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089942569,"pid":859665,"hostname":"srv1468395","req":{"id":2197,"method":"GET","url":"/api/lifts/latest"},"res":{"statusCode":401},"responseTime":0,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089942572,"pid":859665,"hostname":"srv1468395","req":{"id":2198,"method":"GET","url":"/api/lifts/summary"},"res":{"statusCode":401},"responseTime":2,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089942575,"pid":859665,"hostname":"srv1468395","req":{"id":2199,"method":"GET","url":"/api/lifts/dates"},"res":{"statusCode":401},"responseTime":2,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089942577,"pid":859665,"hostname":"srv1468395","req":{"id":2200,"method":"GET","url":"/api/lifts/extractions"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089942578,"pid":859665,"hostname":"srv1468395","req":{"id":2201,"method":"GET","url":"/api/seasons"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089948932,"pid":859665,"hostname":"srv1468395","req":{"id":2202,"method":"GET","url":"/api/lifts/extractions"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089948933,"pid":859665,"hostname":"srv1468395","req":{"id":2203,"method":"GET","url":"/api/lifts/dates"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089948935,"pid":859665,"hostname":"srv1468395","req":{"id":2204,"method":"GET","url":"/api/lifts/latest"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089949972,"pid":859665,"hostname":"srv1468395","req":{"id":2205,"method":"GET","url":"/api/lifts/extractions"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089949973,"pid":859665,"hostname":"srv1468395","req":{"id":2206,"method":"GET","url":"/api/lifts/dates"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089949973,"pid":859665,"hostname":"srv1468395","req":{"id":2207,"method":"GET","url":"/api/lifts/latest"},"res":{"statusCode":401},"responseTime":0,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089951993,"pid":859665,"hostname":"srv1468395","req":{"id":2208,"method":"GET","url":"/api/lifts/extractions"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089952002,"pid":859665,"hostname":"srv1468395","req":{"id":2209,"method":"GET","url":"/api/lifts/latest"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089952003,"pid":859665,"hostname":"srv1468395","req":{"id":2210,"method":"GET","url":"/api/lifts/dates"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089954191,"pid":859665,"hostname":"srv1468395","req":{"id":2211,"method":"GET","url":"/api/seasons"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089954195,"pid":859665,"hostname":"srv1468395","req":{"id":2212,"method":"GET","url":"/api/lifts/period"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089955219,"pid":859665,"hostname":"srv1468395","req":{"id":2213,"method":"GET","url":"/api/lifts/period"},"res":{"statusCode":401},"responseTime":0,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089955220,"pid":859665,"hostname":"srv1468395","req":{"id":2214,"method":"GET","url":"/api/seasons"},"res":{"statusCode":401},"responseTime":0,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089956022,"pid":859665,"hostname":"srv1468395","req":{"id":2215,"method":"GET","url":"/api/lifts/extractions"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089956023,"pid":859665,"hostname":"srv1468395","req":{"id":2216,"method":"GET","url":"/api/lifts/latest"},"res":{"statusCode":401},"responseTime":0,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089956036,"pid":859665,"hostname":"srv1468395","req":{"id":2217,"method":"GET","url":"/api/lifts/dates"},"res":{"statusCode":401},"responseTime":0,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089957253,"pid":859665,"hostname":"srv1468395","req":{"id":2218,"method":"GET","url":"/api/seasons"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089957254,"pid":859665,"hostname":"srv1468395","req":{"id":2219,"method":"GET","url":"/api/lifts/period"},"res":{"statusCode":401},"responseTime":0,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089961277,"pid":859665,"hostname":"srv1468395","req":{"id":2220,"method":"GET","url":"/api/seasons"},"res":{"statusCode":401},"responseTime":1,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783089961278,"pid":859665,"hostname":"srv1468395","req":{"id":2221,"method":"GET","url":"/api/lifts/period"},"res":{"statusCode":401},"responseTime":0,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783090377779,"pid":859665,"hostname":"srv1468395","req":{"id":2222,"method":"POST","url":"/api/auth/login"},"res":{"statusCode":200},"responseTime":19,"msg":"request completed"}
+0|api-serv | {"level":30,"time":1783090378054,"pid":859665,"hostname":"srv1468395","req":{"id":2223,"method":"GET","url":"/api/healthz"},"res":{"statusCode":200},"responseTime":1,"msg":"request completed"}
+
+root@srv1468395:~# 

@@ -54,9 +54,9 @@ log "Building Expo web app"
 cd "$REPO_DIR/artifacts/skiarea-dashboard"
 EXPO_PUBLIC_DOMAIN="$DOMAIN" pnpm exec expo export --platform web
 
-log "Publishing static build to $WEB_ROOT"
-sudo mkdir -p "$WEB_ROOT"
-sudo rsync -a --delete "$REPO_DIR/artifacts/skiarea-dashboard/dist/" "$WEB_ROOT/"
+log "Publishing static build to $WEB_ROOT/dist"
+sudo mkdir -p "$WEB_ROOT/dist"
+sudo rsync -a --delete "$REPO_DIR/artifacts/skiarea-dashboard/dist/" "$WEB_ROOT/dist/"
 
 log "Verifying API health"
 sleep 2
