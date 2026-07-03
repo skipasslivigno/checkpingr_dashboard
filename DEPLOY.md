@@ -174,37 +174,55 @@ EXEC sp_OAMethod @http, 'setRequestHeader', NULL, 'X-Api-Key', 'your-secret-key'
 
 ## Redeployment (subsequent updates)
 
-### Workflow: Replit → VPS
+### Workflow: Replit → GitHub → VPS (automatic)
 
-Develop and test on Replit, then deploy to the VPS manually.
+Deployment to the VPS is now automated with GitHub Actions. Push to `main`
+and the VPS updates itself within a minute or two — no manual SSH session
+required.
+
+```
+Replit (push) → GitHub (main branch) → GitHub Actions → SSH → VPS runs scripts/deploy.sh
+```
 
 > **Important:** changes made on Replit are NOT automatically pushed to GitHub.
-> You must push from Replit (or your local machine) before running `git pull` on the VPS.
+> You still need to push from Replit (or your local machine) to `main` — that
+> push is what triggers the deploy.
 
-### Redeployment checklist
+`scripts/deploy.sh` runs on the VPS and performs every step that used to be
+done by hand: pulls `main`, installs dependencies, applies DB schema changes,
+rebuilds the API server, reloads it with pm2 (via `ecosystem.config.cjs`),
+re-exports the Expo web build, and syncs it into the nginx web root. It is
+safe to run on every push — steps are no-ops when nothing relevant changed.
 
-Run only the steps that match what changed:
+### One-time setup
+
+1. **On the VPS**, make sure the repo is cloned at `/opt/skiarea` (see steps
+   1–4 above) and that `ecosystem.config.cjs` and `scripts/deploy.sh` exist
+   there (they ship with the repo — just `git pull` once manually the first
+   time). Generate a dedicated SSH keypair for CI and add the public key to
+   `~/.ssh/authorized_keys` on the VPS:
+   ```bash
+   ssh-keygen -t ed25519 -f ./deploy_key -N "" -C "github-actions-deploy"
+   # copy deploy_key.pub to the VPS user's ~/.ssh/authorized_keys
+   ```
+2. **In the GitHub repo settings** (Settings → Secrets and variables →
+   Actions), add:
+   - `VPS_HOST` — the VPS hostname or IP
+   - `VPS_USER` — the SSH user (must be able to run `git`, `pnpm`, `pm2`,
+     `sudo rsync` on `/opt/skiarea` and `/var/www/skiarea` without a password
+     prompt)
+   - `VPS_SSH_KEY` — the private half of the keypair generated above
+   - `VPS_SSH_PORT` — optional, only if SSH runs on a non-default port
+3. That's it. The workflow at `.github/workflows/deploy.yml` triggers on every
+   push to `main`, and can also be run manually from the GitHub Actions tab
+   (`workflow_dispatch`).
+
+### Manual redeploy (fallback)
+
+If GitHub Actions isn't available, SSH in and run the same script directly:
 
 ```bash
-cd /opt/skiarea
-
-# 1. Pull latest code (only after pushing from Replit/local)
-git pull
-pnpm install --ignore-scripts
-
-# 2. Rebuild API server (only if routes/logic changed)
-pnpm --filter @workspace/api-server run build
-pm2 restart api-server
-
-# 3. Rebuild web app (only if UI/screens changed)
-cd /opt/skiarea/artifacts/skiarea-dashboard
-EXPO_PUBLIC_DOMAIN=dashboard.skipasslivigno.com pnpm exec expo export --platform web
-sudo rm -rf /var/www/skiarea/dist/*
-sudo cp -r dist/* /var/www/skiarea/dist/
-
-# 4. Run DB migrations (only if schema changed)
-export $(grep -v '^#' /opt/skiarea/.env.production | xargs)
-pnpm --filter @workspace/db run push
+ssh deploy@vps '/opt/skiarea/scripts/deploy.sh'
 ```
 
 ### Quick verify after deploy
@@ -214,6 +232,10 @@ pm2 status                                                      # API running?
 curl -s https://dashboard.skipasslivigno.com/api/healthz        # API reachable?
 sudo -u postgres psql -d skiarea -c "SELECT COUNT(*) FROM lift_snapshots;"  # data ok?
 ```
+
+The deploy script itself also curls `/api/healthz` at the end and prints a
+warning if the API doesn't come back healthy, so a failed deploy is visible
+directly in the GitHub Actions log.
 
 ---
 
@@ -227,3 +249,7 @@ sudo -u postgres psql -d skiarea -c "SELECT COUNT(*) FROM lift_snapshots;"  # da
 - [ ] TLS certificate active (`certbot`)
 - [ ] SQL Server Agent job URL updated to `https://yourdomain.com/api/lifts/sync`
 - [ ] Test sync: run the Agent job manually and verify data appears in the app
+- [ ] GitHub Actions secrets configured (`VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`)
+- [ ] Deploy key added to VPS `~/.ssh/authorized_keys`
+- [ ] Test the pipeline: push a trivial commit to `main` and watch the
+      "Deploy to VPS" workflow run in the GitHub Actions tab

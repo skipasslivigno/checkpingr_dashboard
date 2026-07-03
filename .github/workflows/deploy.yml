@@ -1,0 +1,29 @@
+name: Deploy to VPS
+
+# Automates the manual "git pull, pnpm build, pm2 reload, expo export, copy
+# to nginx" steps documented in DEPLOY.md. Runs scripts/deploy.sh on the VPS
+# over SSH whenever main is updated (i.e. after code is pushed from Replit).
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch: {}
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy over SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_SSH_PORT || 22 }}
+          script_stop: true
+          script: |
+            /opt/skiarea/scripts/deploy.sh

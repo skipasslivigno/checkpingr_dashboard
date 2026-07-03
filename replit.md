@@ -62,3 +62,4 @@ _Populate as you build — explicit user instructions worth remembering across s
 ## Pointers
 
 - See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- See `DEPLOY.md` for production deployment to the VPS. Deploys to the VPS are automated: pushing to `main` triggers `.github/workflows/deploy.yml`, which SSHes in and runs `scripts/deploy.sh` (build, pm2 reload via `ecosystem.config.cjs`, Expo web export, nginx sync). Requires `VPS_HOST`/`VPS_USER`/`VPS_SSH_KEY` GitHub Actions secrets.
