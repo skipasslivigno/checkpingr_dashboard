@@ -458,7 +458,7 @@ const styles = StyleSheet.create({
   subtotalItem: { flex: 1, alignItems: "center", gap: 2 },
   subtotalValue: { fontSize: 15, fontFamily: "Inter_700Bold" },
   subtotalValueSmall: { fontSize: 12, fontFamily: "Inter_400Regular" },
-  subtotalLabel: { fontSize: 9, fontFamily: "Inter_400Regular", letterSpacing: 0.3 },
+  subtotalLabel: { fontSize: 9, fontFamily: "Inter_400Regular", letterSpacing: 0.3, textAlign: "center" },
   subtotalDivider: { width: 1, height: 28, marginHorizontal: 2 },
   liftList: { borderTopWidth: 1, paddingHorizontal: 12, paddingVertical: 4 },
   tableHeader: {
