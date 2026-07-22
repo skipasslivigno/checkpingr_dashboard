@@ -287,16 +287,36 @@ export default function PeriodScreen() {
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
 
-  const [fromInput, setFromInput] = useState(offsetDays(-7));
-  const [toInput, setToInput] = useState(todayIso());
-  const [appliedFrom, setAppliedFrom] = useState(offsetDays(-7));
-  const [appliedTo, setAppliedTo] = useState(todayIso());
+  const defaultFrom = offsetDays(-7);
+  const defaultTo = todayIso();
+
+  const [fromInput, setFromInput] = useState(defaultFrom);
+  const [toInput, setToInput] = useState(defaultTo);
+  const [appliedFrom, setAppliedFrom] = useState(defaultFrom);
+  const [appliedTo, setAppliedTo] = useState(defaultTo);
   const [selectedSeason, setSelectedSeason] = useState<string | undefined>(undefined);
   const [compareEnabled, setCompareEnabled] = useState(false);
 
   useEffect(() => {
-    AsyncStorage.getItem("compare_enabled").then((stored) => {
-      if (stored === "true") setCompareEnabled(true);
+    const isoPattern = /^\d{4}-\d{2}-\d{2}$/;
+    Promise.all([
+      AsyncStorage.getItem("compare_enabled"),
+      AsyncStorage.getItem("period_from"),
+      AsyncStorage.getItem("period_to"),
+    ]).then(([compare, storedFrom, storedTo]) => {
+      if (compare === "true") setCompareEnabled(true);
+      if (
+        storedFrom &&
+        storedTo &&
+        isoPattern.test(storedFrom) &&
+        isoPattern.test(storedTo) &&
+        storedFrom <= storedTo
+      ) {
+        setFromInput(storedFrom);
+        setToInput(storedTo);
+        setAppliedFrom(storedFrom);
+        setAppliedTo(storedTo);
+      }
     });
   }, []);
 
@@ -360,6 +380,8 @@ export default function PeriodScreen() {
     if (fromOk && toOk && fromInput <= toInput) {
       setAppliedFrom(fromInput);
       setAppliedTo(toInput);
+      AsyncStorage.setItem("period_from", fromInput);
+      AsyncStorage.setItem("period_to", toInput);
     }
   }
 
@@ -378,6 +400,8 @@ export default function PeriodScreen() {
       setToInput(newTo);
       setAppliedFrom(newFrom);
       setAppliedTo(newTo);
+      AsyncStorage.setItem("period_from", newFrom);
+      AsyncStorage.setItem("period_to", newTo);
       setCalendarVisible(false);
     }
   }
@@ -585,6 +609,8 @@ export default function PeriodScreen() {
                   setToInput(pTo);
                   setAppliedFrom(pFrom);
                   setAppliedTo(pTo);
+                  AsyncStorage.setItem("period_from", pFrom);
+                  AsyncStorage.setItem("period_to", pTo);
                 }}
               >
                 <Text
