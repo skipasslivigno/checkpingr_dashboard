@@ -60,44 +60,15 @@ function GroupSection({
   visibleLifts,
   expanded,
   onToggle,
-  maxPassages,
-  index,
 }: {
   group: GroupData;
   visibleLifts: GroupData["lifts"];
   expanded: boolean;
   onToggle: () => void;
-  maxPassages: number;
-  index: number;
 }) {
   const colors = useColors();
   const { t } = useTranslation();
   const router = useRouter();
-
-  const targetFill = maxPassages > 0
-    ? Math.round((group.totalPassages / maxPassages) * 100)
-    : 0;
-
-  const animatedFill = useRef(new Animated.Value(0)).current;
-  const lastTargetRef = useRef<number>(-1);
-
-  useEffect(() => {
-    if (lastTargetRef.current === targetFill) return;
-    lastTargetRef.current = targetFill;
-    animatedFill.setValue(0);
-    Animated.timing(animatedFill, {
-      toValue: targetFill,
-      duration: 500,
-      delay: index * 60,
-      useNativeDriver: false,
-    }).start();
-  }, [targetFill, index]);
-
-  const animatedWidth = animatedFill.interpolate({
-    inputRange: [0, 100],
-    outputRange: ["0%", "100%"],
-    extrapolate: "clamp",
-  });
 
   return (
     <View style={[groupStyles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -150,9 +121,6 @@ function GroupSection({
           </View>
         </View>
 
-        <View style={[groupStyles.barTrack, { backgroundColor: colors.border }]}>
-          <Animated.View style={[groupStyles.barFill, { backgroundColor: colors.primary, width: animatedWidth }]} />
-        </View>
       </TouchableOpacity>
 
       {expanded && (
@@ -255,8 +223,6 @@ export default function DashboardScreen() {
     for (const g of map.values()) g.lifts.sort((a, b) => (a.nsoc ?? 9999) - (b.nsoc ?? 9999));
     return Array.from(map.values()).filter((g) => g.totalLifts > 0).sort((a, b) => a.minNsoc - b.minNsoc);
   }, [lifts]);
-
-  const maxPassages = useMemo(() => groups.reduce((max, g) => Math.max(max, g.totalPassages), 0), [groups]);
 
   const isSearching = searchQuery.trim().length > 0;
 
@@ -466,8 +432,6 @@ export default function DashboardScreen() {
                 visibleLifts={item.group.visibleLifts}
                 expanded={isGroupExpanded(item.group.name)}
                 onToggle={isSearching ? () => undefined : () => toggleGroup(item.group.name)}
-                maxPassages={maxPassages}
-                index={item.idx}
               />
             );
           }}
@@ -538,8 +502,6 @@ const groupStyles = StyleSheet.create({
   subtotalSmall: { fontSize: 12, fontFamily: "Inter_400Regular" },
   subtotalLabel: { fontSize: 9, fontFamily: "Inter_400Regular", letterSpacing: 0.3 },
   divider: { width: 1, height: 28, marginHorizontal: 2 },
-  barTrack: { height: 3, borderRadius: 2, overflow: "hidden", marginTop: 2 },
-  barFill: { height: 3, borderRadius: 2 },
   liftList: { borderTopWidth: 1, paddingHorizontal: 12, paddingVertical: 4 },
   tableHeader: {
     flexDirection: "row",
