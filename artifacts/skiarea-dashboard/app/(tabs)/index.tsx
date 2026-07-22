@@ -121,19 +121,19 @@ function GroupSection({
           <View style={[groupStyles.divider, { backgroundColor: colors.border }]} />
           <View style={groupStyles.subtotalItem}>
             <Text style={[groupStyles.subtotalValue, { color: colors.warning }]}>
-              {group.totalGuests}
-            </Text>
-            <Text style={[groupStyles.subtotalLabel, { color: colors.mutedForeground }]}>
-              {t.onLiftLabel.toUpperCase()}
-            </Text>
-          </View>
-          <View style={[groupStyles.divider, { backgroundColor: colors.border }]} />
-          <View style={groupStyles.subtotalItem}>
-            <Text style={[groupStyles.subtotalValue, { color: colors.foreground }]}>
               {group.totalFirstPassages.toLocaleString()}
             </Text>
             <Text style={[groupStyles.subtotalLabel, { color: colors.mutedForeground }]}>
               {t.firstPassages.toUpperCase()}
+            </Text>
+          </View>
+          <View style={[groupStyles.divider, { backgroundColor: colors.border }]} />
+          <View style={groupStyles.subtotalItem}>
+            <Text style={[groupStyles.subtotalValue, { color: colors.mutedForeground }]}>
+              {group.totalGuests}
+            </Text>
+            <Text style={[groupStyles.subtotalLabel, { color: colors.mutedForeground }]}>
+              {t.onLiftLabel.toUpperCase()}
             </Text>
           </View>
           <View style={[groupStyles.divider, { backgroundColor: colors.border }]} />
