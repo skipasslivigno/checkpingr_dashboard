@@ -17,6 +17,7 @@ import { setBaseUrl } from "@workspace/api-client-react";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { LanguageProvider } from "@/contexts/LanguageContext";
 import { SelectedDateProvider } from "@/contexts/SelectedDateContext";
+import { SeasonProvider } from "@/contexts/SeasonContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
 // Configure API base URL for Expo (runs outside the shared proxy)
@@ -79,6 +80,7 @@ export default function RootLayout() {
           <QueryClientProvider client={queryClient}>
             <AuthProvider>
               <SelectedDateProvider>
+                <SeasonProvider>
                 <GestureHandlerRootView>
                   <KeyboardProvider>
                     <AuthGuard>
@@ -86,6 +88,7 @@ export default function RootLayout() {
                     </AuthGuard>
                   </KeyboardProvider>
                 </GestureHandlerRootView>
+                </SeasonProvider>
               </SelectedDateProvider>
             </AuthProvider>
           </QueryClientProvider>

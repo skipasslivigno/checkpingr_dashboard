@@ -17,7 +17,6 @@ import {
 import {
   useGetDashboardSummary,
   useGetLatestLifts,
-  useGetSeasons,
   getGetDashboardSummaryQueryKey,
   getGetLatestLiftsQueryKey,
 } from "@workspace/api-client-react";
@@ -27,6 +26,7 @@ import { StatCard } from "@/components/StatCard";
 import { useColors } from "@/hooks/useColors";
 import { useResponsive, CONTENT_MAX_WIDTH } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { useSeason, formatSeason } from "@/contexts/SeasonContext";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
 
 function todayIso(): string {
@@ -171,12 +171,11 @@ export default function DashboardScreen() {
   const queryClient = useQueryClient();
   const { t, language, setLanguage } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
-  const [selectedSeason, setSelectedSeason] = useState<string | undefined>(undefined);
+  const { seasons, selectedSeason, setSelectedSeason } = useSeason();
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const { selectedDate, setSelectedDate, selectedExtraction, setSelectedExtraction } = useSelectedDate();
 
-  const { data: seasons } = useGetSeasons();
 
   const queryParams = {
     date: selectedDate,
@@ -240,8 +239,6 @@ export default function DashboardScreen() {
   }, [groups, searchQuery, isSearching]);
 
   const isGroupExpanded = (name: string) => isSearching || expandedGroups.has(name);
-
-  const formatSeason = (s: string) => s.replace(/^(\d{4})-\d{2}(\d{2})$/, "$1-$2");
 
   const topPadding = Platform.OS === "web" ? 16 : 0;
   const isToday = selectedDate === todayIso();

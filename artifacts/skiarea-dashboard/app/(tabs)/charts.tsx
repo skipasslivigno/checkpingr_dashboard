@@ -21,6 +21,7 @@ import {
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { useSeason, formatSeason } from "@/contexts/SeasonContext";
 
 const SEASON_COLORS = ["#4B9FE1", "#E67E22", "#2ECC71", "#E74C3C"];
 
@@ -602,8 +603,19 @@ export default function ChartsScreen() {
   const [refreshing, setRefreshing] = useState(false);
 
   const { data: allSeasons } = useGetSeasons();
+  const { selectedSeason: contextSeason } = useSeason();
 
   const [selectedSeasons, setSelectedSeasons] = useState<string[]>([]);
+
+  // Sync context season into the chart selection when it changes
+  React.useEffect(() => {
+    if (!contextSeason || !allSeasons) return;
+    setSelectedSeasons((prev) => {
+      const base = prev.length > 0 ? prev : (allSeasons.slice(0, 2));
+      if (base.includes(contextSeason)) return base;
+      return [contextSeason, ...base.filter((s) => s !== contextSeason)].slice(0, 3);
+    });
+  }, [contextSeason, allSeasons]);
 
   const resolvedSeasons = useMemo(() => {
     if (selectedSeasons.length > 0) return selectedSeasons;
@@ -697,7 +709,7 @@ export default function ChartsScreen() {
                   onPress={() => toggleSeason(s)}
                 >
                   {active && <View style={[styles.colorDot, { backgroundColor: color }]} />}
-                  <Text style={[styles.seasonText, { color: active ? color : colors.mutedForeground }]}>{s}</Text>
+                  <Text style={[styles.seasonText, { color: active ? color : colors.mutedForeground }]}>{formatSeason(s)}</Text>
                 </TouchableOpacity>
               );
             })}

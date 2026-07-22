@@ -23,6 +23,7 @@ import { useColors } from "@/hooks/useColors";
 import { useResponsive, CONTENT_MAX_WIDTH } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
+import { useSeason, formatSeason } from "@/contexts/SeasonContext";
 
 interface GroupData {
   name: string;
@@ -221,6 +222,7 @@ export default function GroupsScreen() {
   const { t } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
   const { selectedDate, setSelectedDate, selectedExtraction, setSelectedExtraction } = useSelectedDate();
+  const { seasons, selectedSeason, setSelectedSeason } = useSeason();
   // Default expanded: track collapsed groups (opt-out)
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
@@ -228,6 +230,7 @@ export default function GroupsScreen() {
   const queryParams = {
     date: selectedDate,
     ...(selectedExtraction ? { extraction: selectedExtraction } : {}),
+    ...(selectedSeason ? { season: selectedSeason } : {}),
   };
 
   const { data: lifts, isLoading } = useGetLatestLifts(queryParams);
@@ -295,7 +298,7 @@ export default function GroupsScreen() {
   // Expanded = NOT in collapsedGroups (unless searching, always expand)
   const isGroupExpanded = (name: string) => isSearching || !collapsedGroups.has(name);
 
-  const topPadding = Platform.OS === "web" ? 67 : 0;
+  const topPadding = Platform.OS === "web" ? 16 : 0;
   const { isWide } = useResponsive();
 
   type ListItem =
@@ -328,6 +331,26 @@ export default function GroupsScreen() {
       <View style={[styles.header, { paddingTop: topPadding + 16 }]}>
         <View style={[styles.inner, isWide && styles.innerWide]}>
           <Text style={[styles.title, { color: colors.foreground }]}>{t.groups}</Text>
+          {seasons.length > 1 && (
+            <View style={[styles.seasonSegment, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+              <Feather name="layers" size={13} color={colors.mutedForeground} style={styles.seasonIcon} />
+              {seasons.map((s) => {
+                const active = (selectedSeason ?? seasons[0]) === s;
+                return (
+                  <TouchableOpacity
+                    key={s}
+                    style={[styles.seasonTab, active && { backgroundColor: colors.primary }]}
+                    onPress={() => setSelectedSeason(s)}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.seasonText, { color: active ? colors.primaryForeground : colors.mutedForeground }]}>
+                      {formatSeason(s)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
+          )}
         </View>
       </View>
 
@@ -452,4 +475,11 @@ const styles = StyleSheet.create({
   tableHeaderColPassages: { width: 48, textAlign: "right" },
   emptyState: { alignItems: "center", paddingTop: 60, gap: 12 },
   emptyText: { fontSize: 15, fontFamily: "Inter_500Medium", textAlign: "center" },
+  seasonSegment: {
+    flexDirection: "row", alignItems: "center", borderRadius: 10, borderWidth: 1,
+    padding: 3, gap: 2, marginTop: 8,
+  },
+  seasonIcon: { marginLeft: 4, marginRight: 2 },
+  seasonTab: { flex: 1, alignItems: "center", paddingVertical: 6, borderRadius: 8 },
+  seasonText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
 });
