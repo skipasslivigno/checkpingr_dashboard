@@ -139,7 +139,7 @@ const it: Translations = {
   dashboard: "Dashboard",
   lastSync: "Ultima sincronizzazione",
   passages: "Passaggi",
-  guestsOnLifts: "Ospiti sugli impianti",
+  guestsOnLifts: "Primi ingressi",
   activeLifts: "Impianti attivi",
   season: "Stagione",
   topLiftsToday: "Top Impianti Oggi",

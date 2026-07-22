@@ -2,7 +2,6 @@ import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
-import { useTranslation } from "@/contexts/LanguageContext";
 
 interface LiftRowProps {
   name: string;
@@ -16,7 +15,6 @@ interface LiftRowProps {
 
 export function LiftRow({ name, passages, guests, firstPassage, company, group, onPress }: LiftRowProps) {
   const colors = useColors();
-  const { t } = useTranslation();
 
   const isActive = (passages ?? 0) > 0;
 
@@ -44,15 +42,23 @@ export function LiftRow({ name, passages, guests, firstPassage, company, group, 
         ) : null}
       </View>
 
-      {/* Guests — amber */}
-      <View style={styles.guestBlock}>
-        <Feather name="users" size={11} color={isActive ? colors.warning : colors.border} />
-        <Text style={[styles.guestCount, { color: isActive ? colors.warning : colors.border }]}>
+      {/* Primi ingressi — amber */}
+      <View style={styles.metricBlock}>
+        <Feather name="log-in" size={11} color={isActive ? colors.warning : colors.border} />
+        <Text style={[styles.metricCount, { color: isActive ? colors.warning : colors.border }]}>
+          {(firstPassage ?? 0).toLocaleString()}
+        </Text>
+      </View>
+
+      {/* Presenze — muted */}
+      <View style={styles.metricBlock}>
+        <Feather name="users" size={11} color={isActive ? colors.mutedForeground : colors.border} />
+        <Text style={[styles.metricCount, { color: isActive ? colors.mutedForeground : colors.border }]}>
           {guests ?? 0}
         </Text>
       </View>
 
-      {/* Passages — teal/primary */}
+      {/* Passaggi totali — primary */}
       <Text style={[styles.passageCount, { color: isActive ? colors.primary : colors.border }]}>
         {(passages ?? 0).toLocaleString()}
       </Text>
@@ -66,11 +72,11 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: "row",
     alignItems: "center",
-    paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 11,
     borderRadius: 12,
     borderWidth: 1,
-    gap: 10,
+    gap: 8,
     marginBottom: 8,
   },
   statusDot: {
@@ -82,6 +88,7 @@ const styles = StyleSheet.create({
   info: {
     flex: 1,
     gap: 2,
+    minWidth: 0,
   },
   name: {
     fontSize: 14,
@@ -91,20 +98,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: "Inter_400Regular",
   },
-  guestBlock: {
-    alignItems: "center",
+  metricBlock: {
     flexDirection: "row",
+    alignItems: "center",
     gap: 3,
-    minWidth: 36,
+    minWidth: 34,
   },
-  guestCount: {
+  metricCount: {
     fontSize: 13,
     fontFamily: "Inter_600SemiBold",
   },
   passageCount: {
     fontSize: 16,
     fontFamily: "Inter_700Bold",
-    minWidth: 52,
+    minWidth: 48,
     textAlign: "right",
   },
 });
