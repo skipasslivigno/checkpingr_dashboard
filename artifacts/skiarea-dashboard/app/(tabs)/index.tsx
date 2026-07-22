@@ -275,6 +275,8 @@ export default function DashboardScreen() {
 
   const isGroupExpanded = (name: string) => isSearching || expandedGroups.has(name);
 
+  const formatSeason = (s: string) => s.replace(/^(\d{4})-\d{2}(\d{2})$/, "$1-$2");
+
   const topPadding = Platform.OS === "web" ? 16 : 0;
   const isToday = selectedDate === todayIso();
   const { isWide } = useResponsive();
@@ -351,7 +353,7 @@ export default function DashboardScreen() {
                 activeOpacity={0.8}
               >
                 <Text style={[styles.seasonText, { color: active ? colors.primaryForeground : colors.mutedForeground }]}>
-                  {s}
+                  {formatSeason(s)}
                 </Text>
               </TouchableOpacity>
             );
@@ -378,7 +380,7 @@ export default function DashboardScreen() {
               <StatCard compact accent label={t.passages} value={(summary?.totalPassages ?? 0).toLocaleString()} />
               <StatCard compact secondaryAccent label={t.guestsOnLifts} value={(summary?.totalGuests ?? 0).toLocaleString()} />
               <StatCard compact label={t.activeLifts} value={`${summary?.activeLifts ?? 0} / ${summary?.totalLifts ?? 0}`} />
-              <StatCard compact label={t.season} value={summary?.season ?? "—"} />
+              <StatCard compact label={t.season} value={summary?.season ? formatSeason(summary.season) : "—"} />
             </>
           )}
         </View>
@@ -400,7 +402,7 @@ export default function DashboardScreen() {
             ) : (
               <>
                 <StatCard label={t.activeLifts} value={`${summary?.activeLifts ?? 0} / ${summary?.totalLifts ?? 0}`} />
-                <StatCard label={t.season} value={summary?.season ?? "—"} />
+                <StatCard label={t.season} value={summary?.season ? formatSeason(summary.season) : "—"} />
               </>
             )}
           </View>
