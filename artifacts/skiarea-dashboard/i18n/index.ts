@@ -80,6 +80,7 @@ export interface Translations {
   periodPrior: string;
   periodVs: string;
   periodNoPriorSeason: string;
+  periodShareComparison: string;
 
   calendarSelectFrom: string;
   calendarSelectTo: string;
@@ -213,6 +214,7 @@ const it: Translations = {
   periodPrior: "Precedente",
   periodVs: "vs",
   periodNoPriorSeason: "Nessuna stagione precedente disponibile",
+  periodShareComparison: "Condividi confronto",
 
   calendarSelectFrom: "Seleziona data inizio",
   calendarSelectTo: "Seleziona data fine",
@@ -346,6 +348,7 @@ const en: Translations = {
   periodPrior: "Prior",
   periodVs: "vs",
   periodNoPriorSeason: "No prior season available",
+  periodShareComparison: "Share comparison",
 
   calendarSelectFrom: "Select start date",
   calendarSelectTo: "Select end date",
