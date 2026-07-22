@@ -21,7 +21,6 @@ import {
   getGetLatestLiftsQueryKey,
 } from "@workspace/api-client-react";
 import { DateExtractionPicker } from "@/components/DateExtractionPicker";
-import { LiftRow } from "@/components/LiftRow";
 import { LiftRowSkeleton, StatCardSkeleton } from "@/components/SkeletonLoader";
 import { StatCard } from "@/components/StatCard";
 import { useColors } from "@/hooks/useColors";
@@ -157,19 +156,39 @@ function GroupSection({
 
       {expanded && (
         <View style={[groupStyles.liftList, { borderTopColor: colors.border }]}>
-          {visibleLifts.map((lift) => (
-            <LiftRow
-              key={lift.ggnr}
-              name={lift.ggbz}
-              passages={lift.npas ?? null}
-              guests={lift.nuin ?? null}
-              firstPassage={lift.npin ?? null}
-              company={lift.nomeSocieta}
-              onPress={() =>
-                router.push({ pathname: "/lift/[ggnr]", params: { ggnr: lift.ggnr, name: lift.ggbz } })
-              }
-            />
-          ))}
+          {/* Column header */}
+          <View style={[groupStyles.tableHeader, { borderBottomColor: colors.border }]}>
+            <View style={groupStyles.tableHeaderName} />
+            <Feather name="log-in" size={12} color={colors.warning} style={groupStyles.tableHeaderCol} />
+            <Feather name="users" size={12} color={colors.mutedForeground} style={groupStyles.tableHeaderCol} />
+            <Feather name="repeat" size={12} color={colors.primary} style={groupStyles.tableHeaderColPassages} />
+            <View style={{ width: 17 }} />
+          </View>
+          {visibleLifts.map((lift) => {
+            const isActive = (lift.npas ?? 0) > 0;
+            return (
+              <TouchableOpacity
+                key={lift.ggnr}
+                style={[groupStyles.tableRow, { borderBottomColor: colors.border, opacity: isActive ? 1 : 0.4 }]}
+                onPress={() => router.push({ pathname: "/lift/[ggnr]", params: { ggnr: lift.ggnr, name: lift.ggbz } })}
+                activeOpacity={0.7}
+              >
+                <Text style={[groupStyles.tableRowName, { color: colors.foreground }]} numberOfLines={1}>
+                  {lift.ggbz}
+                </Text>
+                <Text style={[groupStyles.tableCol, { color: isActive ? colors.warning : colors.mutedForeground }]}>
+                  {(lift.npin ?? 0).toLocaleString()}
+                </Text>
+                <Text style={[groupStyles.tableCol, { color: isActive ? colors.mutedForeground : colors.border }]}>
+                  {(lift.nuin ?? 0).toLocaleString()}
+                </Text>
+                <Text style={[groupStyles.tableColPassages, { color: isActive ? colors.primary : colors.border }]}>
+                  {(lift.npas ?? 0).toLocaleString()}
+                </Text>
+                <Feather name="chevron-right" size={13} color={colors.border} />
+              </TouchableOpacity>
+            );
+          })}
         </View>
       )}
     </View>
@@ -528,5 +547,28 @@ const groupStyles = StyleSheet.create({
   divider: { width: 1, height: 28, marginHorizontal: 2 },
   barTrack: { height: 3, borderRadius: 2, overflow: "hidden", marginTop: 2 },
   barFill: { height: 3, borderRadius: 2 },
-  liftList: { borderTopWidth: 1, padding: 10, paddingTop: 8 },
+  liftList: { borderTopWidth: 1, paddingHorizontal: 12, paddingVertical: 4 },
+  tableHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 5,
+    paddingHorizontal: 4,
+    gap: 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginBottom: 2,
+  },
+  tableHeaderName: { flex: 1 },
+  tableHeaderCol: { width: 40, textAlign: "right" },
+  tableHeaderColPassages: { width: 48, textAlign: "right" },
+  tableRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 7,
+    paddingHorizontal: 4,
+    gap: 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+  },
+  tableRowName: { flex: 1, fontSize: 12, fontFamily: "Inter_500Medium", minWidth: 0 },
+  tableCol: { fontSize: 12, fontFamily: "Inter_600SemiBold", width: 40, textAlign: "right" },
+  tableColPassages: { fontSize: 13, fontFamily: "Inter_700Bold", width: 48, textAlign: "right" },
 });

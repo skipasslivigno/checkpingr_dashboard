@@ -194,7 +194,7 @@ const it: Translations = {
 
   tabDashboard: "Dashboard",
   tabLifts: "Impianti",
-  tabGroups: "Gruppi",
+  tabGroups: "Impianti",
   tabPeriod: "Periodo",
   tabCharts: "Grafici",
   tabIntegration: "Integrazione",
@@ -333,7 +333,7 @@ const en: Translations = {
 
   tabDashboard: "Dashboard",
   tabLifts: "Lifts",
-  tabGroups: "Groups",
+  tabGroups: "Lifts",
   tabPeriod: "Period",
   tabCharts: "Charts",
   tabIntegration: "Integration",
