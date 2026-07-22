@@ -409,7 +409,7 @@ export default function DashboardScreen() {
             if (item.type === "emptySearch") return "emptySearch";
             return `group-${item.group.name}`;
           }}
-          contentContainerStyle={[styles.list, { paddingBottom: Platform.OS === "web" ? 34 : 100 }]}
+          contentContainerStyle={[styles.list, { paddingBottom: Platform.OS === "web" ? 100 : 100 }]}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }
