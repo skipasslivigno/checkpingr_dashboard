@@ -1,6 +1,6 @@
+import { Feather } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
 import {
-  LayoutChangeEvent,
   ScrollView,
   StyleSheet,
   Text,
@@ -43,12 +43,7 @@ export function DateExtractionPicker({
 }: DateExtractionPickerProps) {
   const colors = useColors();
   const { t, language } = useTranslation();
-  const scrollRef = useRef<ScrollView>(null);
   const prevSeasonRef = useRef(season);
-  // Map date string → { x, width } measured by onLayout on each chip
-  const chipLayoutRef = useRef<Record<string, { x: number; width: number }>>({});
-  // Visible width of the ScrollView container
-  const containerWidthRef = useRef<number>(0);
 
   const { data: dates } = useGetLiftDates(season ? { season } : {});
 
@@ -58,8 +53,6 @@ export function DateExtractionPicker({
     { query: { enabled: !!selectedDate } as any }
   );
 
-  // Auto-select the most recent date when dates load or the season changes.
-  // API returns dates DESC so dates[0] is always the most recent.
   useEffect(() => {
     if (!dates || dates.length === 0) return;
     const seasonChanged = prevSeasonRef.current !== season;
@@ -70,7 +63,6 @@ export function DateExtractionPicker({
     }
   }, [dates, season]);
 
-  // Auto-select last extraction when date changes
   useEffect(() => {
     if (!extractions) return;
     if (extractions.length === 0) {
@@ -83,92 +75,77 @@ export function DateExtractionPicker({
     }
   }, [extractions, selectedDate]);
 
-  // Scroll the selected date chip into the center of the visible area.
-  // Uses measured chip positions so the scroll offset is always exact,
-  // regardless of variable chip widths or the row's horizontal padding.
-  useEffect(() => {
-    if (!selectedDate || !scrollRef.current) return;
-    const layout = chipLayoutRef.current[selectedDate];
-    if (!layout) return;
-    const containerW = containerWidthRef.current;
-    const targetX = layout.x - containerW / 2 + layout.width / 2;
-    scrollRef.current.scrollTo({ x: Math.max(0, targetX), animated: true });
-  }, [selectedDate, dates]);
-
   const locale = language === "it" ? "it-IT" : "en-GB";
 
-  function dateChipLabel(dateStr: string): string {
+  function dateLabel(dateStr: string): string {
     const today = todayIso();
     const yesterday = yesterdayIso();
     if (dateStr === today) return t.today;
     if (dateStr === yesterday) return t.yesterday;
-
     const d = new Date(dateStr + "T12:00:00Z");
-    const now = new Date();
-    const diffDays = Math.floor((now.getTime() - d.getTime()) / 86400000);
-
-    if (diffDays <= 6) {
-      return d.toLocaleDateString(locale, { weekday: "short", day: "numeric" });
-    }
-    return d.toLocaleDateString(locale, { day: "numeric", month: "short" });
+    return d.toLocaleDateString(locale, { weekday: "short", day: "numeric", month: "short" });
   }
 
   if (!dates || dates.length === 0) return null;
 
-  return (
-    <View style={styles.wrapper}>
-      {/* Date chips — most recent first (API returns DESC) */}
-      <ScrollView
-        ref={scrollRef}
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.row}
-        onLayout={(e: LayoutChangeEvent) => {
-          containerWidthRef.current = e.nativeEvent.layout.width;
-        }}
-      >
-        {dates.map((d) => {
-          const active = d === selectedDate;
-          return (
-            <TouchableOpacity
-              key={d}
-              style={[
-                styles.chip,
-                {
-                  backgroundColor: active ? colors.primary : colors.card,
-                  borderColor: active ? colors.primary : colors.border,
-                },
-              ]}
-              onLayout={(e: LayoutChangeEvent) => {
-                chipLayoutRef.current[d] = {
-                  x: e.nativeEvent.layout.x,
-                  width: e.nativeEvent.layout.width,
-                };
-              }}
-              onPress={() => {
-                onDateChange(d);
-                onExtractionChange(undefined);
-              }}
-            >
-              <Text
-                style={[
-                  styles.chipText,
-                  { color: active ? colors.primaryForeground : colors.mutedForeground },
-                ]}
-              >
-                {dateChipLabel(d)}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+  // dates are DESC — index 0 is most recent, last index is oldest
+  const currentIdx = dates.indexOf(selectedDate);
+  const canGoNewer = currentIdx > 0;
+  const canGoOlder = currentIdx < dates.length - 1;
 
-      {/* Extraction time chips */}
+  function goNewer() {
+    if (canGoNewer) {
+      onDateChange(dates![currentIdx - 1]);
+      onExtractionChange(undefined);
+    }
+  }
+
+  function goOlder() {
+    if (canGoOlder) {
+      onDateChange(dates![currentIdx + 1]);
+      onExtractionChange(undefined);
+    }
+  }
+
+  return (
+    <View style={[styles.wrapper, { borderColor: colors.border }]}>
+      {/* Date navigator */}
+      <View style={[styles.dateRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <TouchableOpacity
+          onPress={goOlder}
+          disabled={!canGoOlder}
+          style={[styles.arrowBtn, !canGoOlder && styles.arrowDisabled]}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Feather name="chevron-left" size={20} color={canGoOlder ? colors.primary : colors.border} />
+        </TouchableOpacity>
+
+        <View style={styles.dateLabelBlock}>
+          <Feather name="calendar" size={13} color={colors.primary} style={styles.calIcon} />
+          <Text style={[styles.dateText, { color: colors.foreground }]}>
+            {dateLabel(selectedDate)}
+          </Text>
+          <Text style={[styles.dateIso, { color: colors.mutedForeground }]}>
+            {selectedDate}
+          </Text>
+        </View>
+
+        <TouchableOpacity
+          onPress={goNewer}
+          disabled={!canGoNewer}
+          style={[styles.arrowBtn, !canGoNewer && styles.arrowDisabled]}
+          hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+        >
+          <Feather name="chevron-right" size={20} color={canGoNewer ? colors.primary : colors.border} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Extraction time slots */}
       {extractions && extractions.length > 0 && (
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.row}
+          contentContainerStyle={styles.timeRow}
         >
           {extractions.map((ex) => {
             const active = ex === selectedExtraction;
@@ -177,25 +154,25 @@ export function DateExtractionPicker({
               <TouchableOpacity
                 key={ex}
                 style={[
-                  styles.chip,
-                  styles.timeChip,
+                  styles.timeSlot,
                   {
-                    backgroundColor: active ? colors.accent : colors.card,
-                    borderColor: active ? colors.accent : colors.border,
+                    backgroundColor: active ? colors.primaryLight : colors.card,
+                    borderColor: active ? colors.primary : colors.border,
                   },
                 ]}
                 onPress={() => onExtractionChange(ex)}
               >
-                <Text
-                  style={[
-                    styles.chipText,
-                    styles.timeText,
-                    { color: active ? colors.primaryForeground : colors.mutedForeground },
-                  ]}
-                >
+                <Feather
+                  name="clock"
+                  size={10}
+                  color={active ? colors.primary : colors.mutedForeground}
+                />
+                <Text style={[styles.timeText, { color: active ? colors.primary : colors.mutedForeground }]}>
                   {dupdToTime(ex)}
-                  {isLast ? " ★" : ""}
                 </Text>
+                {isLast && (
+                  <View style={[styles.liveDot, { backgroundColor: colors.primary }]} />
+                )}
               </TouchableOpacity>
             );
           })}
@@ -207,30 +184,66 @@ export function DateExtractionPicker({
 
 const styles = StyleSheet.create({
   wrapper: {
-    gap: 6,
+    gap: 8,
     marginBottom: 16,
+    marginHorizontal: 16,
   },
-  row: {
+  dateRow: {
     flexDirection: "row",
-    paddingHorizontal: 16,
+    alignItems: "center",
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+  },
+  arrowBtn: {
+    padding: 6,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  arrowDisabled: {
+    opacity: 0.35,
+  },
+  dateLabelBlock: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
     gap: 6,
   },
-  chip: {
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderWidth: 1,
+  calIcon: {
+    marginTop: 1,
   },
-  timeChip: {
+  dateText: {
+    fontSize: 15,
+    fontFamily: "Inter_600SemiBold",
+    textTransform: "capitalize",
+  },
+  dateIso: {
+    fontSize: 11,
+    fontFamily: "Inter_400Regular",
+  },
+  timeRow: {
+    flexDirection: "row",
+    gap: 6,
+  },
+  timeSlot: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 5,
+    borderWidth: 1,
   },
-  chipText: {
+  timeText: {
     fontSize: 12,
     fontFamily: "Inter_600SemiBold",
   },
-  timeText: {
-    fontSize: 11,
-    fontFamily: "Inter_500Medium",
+  liveDot: {
+    width: 5,
+    height: 5,
+    borderRadius: 3,
   },
 });

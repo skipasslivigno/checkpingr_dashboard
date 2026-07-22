@@ -116,43 +116,29 @@ export default function DashboardScreen() {
         </View>
       </View>
 
-      {/* Season selector — its own row so it never crowds the title */}
+      {/* Season selector — segmented control */}
       {seasons && seasons.length > 1 && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.seasonRow}
-          contentContainerStyle={styles.seasonRowContent}
-        >
-          {seasons.map((s) => (
-            <TouchableOpacity
-              key={s}
-              style={[
-                styles.seasonChip,
-                {
-                  backgroundColor:
-                    (selectedSeason ?? seasons[0]) === s ? colors.primary : colors.secondary,
-                  borderColor: colors.border,
-                },
-              ]}
-              onPress={() => setSelectedSeason(s === seasons[0] ? undefined : s)}
-            >
-              <Text
+        <View style={[styles.seasonSegment, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+          <Feather name="layers" size={13} color={colors.mutedForeground} style={styles.seasonIcon} />
+          {seasons.map((s) => {
+            const active = (selectedSeason ?? seasons[0]) === s;
+            return (
+              <TouchableOpacity
+                key={s}
                 style={[
-                  styles.seasonText,
-                  {
-                    color:
-                      (selectedSeason ?? seasons[0]) === s
-                        ? colors.primaryForeground
-                        : colors.foreground,
-                  },
+                  styles.seasonTab,
+                  active && { backgroundColor: colors.primary, shadowColor: colors.primary },
                 ]}
+                onPress={() => setSelectedSeason(s === seasons[0] ? undefined : s)}
+                activeOpacity={0.8}
               >
-                {s}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+                <Text style={[styles.seasonText, { color: active ? colors.primaryForeground : colors.mutedForeground }]}>
+                  {s}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
       )}
 
       {/* Date + extraction picker */}
@@ -338,13 +324,22 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     letterSpacing: 0.5,
   },
-  seasonRow: { marginBottom: 10 },
-  seasonRowContent: { paddingHorizontal: 16, gap: 6, flexDirection: "row" },
-  seasonChip: {
-    borderRadius: 20,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+  seasonSegment: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginHorizontal: 16,
+    marginBottom: 10,
+    borderRadius: 10,
     borderWidth: 1,
+    padding: 3,
+    gap: 2,
+  },
+  seasonIcon: { marginLeft: 4, marginRight: 2 },
+  seasonTab: {
+    flex: 1,
+    alignItems: "center",
+    paddingVertical: 6,
+    borderRadius: 8,
   },
   seasonText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
   syncRow: {
