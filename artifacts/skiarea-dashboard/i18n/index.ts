@@ -86,6 +86,11 @@ export interface Translations {
   calendarSelectTo: string;
   calendarHasData: string;
 
+  allCompanies: string;
+  sortBy: string;
+  sortById: string;
+  sortByName: string;
+
   groups: string;
   noGroupData: string;
   noGroupsMatchSearch: string;
@@ -220,6 +225,11 @@ const it: Translations = {
   calendarSelectTo: "Seleziona data fine",
   calendarHasData: "Giorni con dati disponibili",
 
+  allCompanies: "Tutte le società",
+  sortBy: "Ordina per",
+  sortById: "ID",
+  sortByName: "Nome",
+
   groups: "Gruppi",
   noGroupData: "Nessun dato per questo gruppo",
   noGroupsMatchSearch: "Nessun gruppo o impianto corrisponde alla ricerca",
@@ -353,6 +363,11 @@ const en: Translations = {
   calendarSelectFrom: "Select start date",
   calendarSelectTo: "Select end date",
   calendarHasData: "Days with available data",
+
+  allCompanies: "All companies",
+  sortBy: "Sort by",
+  sortById: "ID",
+  sortByName: "Name",
 
   groups: "Groups",
   noGroupData: "No data for this group",
