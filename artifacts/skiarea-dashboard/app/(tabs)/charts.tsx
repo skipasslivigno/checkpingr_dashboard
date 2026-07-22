@@ -23,7 +23,7 @@ import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSeason, formatSeason } from "@/contexts/SeasonContext";
 
-const SEASON_COLORS = ["#4B9FE1", "#E67E22", "#2ECC71", "#E74C3C"];
+const SEASON_COLORS = ["#0070BA", "#E6007E", "#4E82A0", "#4E82A0"];
 
 function formatBigNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
