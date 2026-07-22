@@ -19,27 +19,44 @@ export function LiftRow({ name, passages, guests, firstPassage, company, group, 
   const { t } = useTranslation();
 
   const isActive = (passages ?? 0) > 0;
-  const subtitle = company ?? group ?? `${firstPassage ?? 0} ${t.guestsToday}`;
 
   return (
     <TouchableOpacity
-      style={[styles.row, { backgroundColor: colors.card, borderColor: colors.border }]}
+      style={[
+        styles.row,
+        {
+          backgroundColor: isActive ? colors.card : "transparent",
+          borderColor: colors.border,
+          opacity: isActive ? 1 : 0.5,
+        },
+      ]}
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <View style={[styles.statusDot, { backgroundColor: isActive ? colors.success : colors.mutedForeground }]} />
+      <View style={[styles.statusDot, { backgroundColor: isActive ? colors.success : colors.border }]} />
+
       <View style={styles.info}>
         <Text style={[styles.name, { color: colors.foreground }]} numberOfLines={1}>{name}</Text>
-        <Text style={[styles.sub, { color: colors.mutedForeground }]} numberOfLines={1}>{subtitle}</Text>
+        {(company ?? group) ? (
+          <Text style={[styles.sub, { color: colors.mutedForeground }]} numberOfLines={1}>
+            {company ?? group}
+          </Text>
+        ) : null}
       </View>
-      <View style={styles.stats}>
-        <Text style={[styles.passageCount, { color: colors.primary }]}>{(passages ?? 0).toLocaleString()}</Text>
-        <Text style={[styles.passageLabel, { color: colors.mutedForeground }]}>{t.passages.toUpperCase()}</Text>
-      </View>
+
+      {/* Guests — amber */}
       <View style={styles.guestBlock}>
-        <Text style={[styles.guestCount, { color: colors.foreground }]}>{guests ?? 0}</Text>
-        <Text style={[styles.guestLabel, { color: colors.mutedForeground }]}>{t.onLiftLabel.toUpperCase()}</Text>
+        <Feather name="users" size={11} color={isActive ? colors.warning : colors.border} />
+        <Text style={[styles.guestCount, { color: isActive ? colors.warning : colors.border }]}>
+          {guests ?? 0}
+        </Text>
       </View>
+
+      {/* Passages — teal/primary */}
+      <Text style={[styles.passageCount, { color: isActive ? colors.primary : colors.border }]}>
+        {(passages ?? 0).toLocaleString()}
+      </Text>
+
       {onPress ? <Feather name="chevron-right" size={16} color={colors.mutedForeground} /> : null}
     </TouchableOpacity>
   );
@@ -60,6 +77,7 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
+    flexShrink: 0,
   },
   info: {
     flex: 1,
@@ -73,30 +91,20 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: "Inter_400Regular",
   },
-  stats: {
+  guestBlock: {
     alignItems: "center",
-    minWidth: 52,
+    flexDirection: "row",
+    gap: 3,
+    minWidth: 36,
+  },
+  guestCount: {
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
   },
   passageCount: {
     fontSize: 16,
     fontFamily: "Inter_700Bold",
-  },
-  passageLabel: {
-    fontSize: 10,
-    fontFamily: "Inter_400Regular",
-    letterSpacing: 0.3,
-  },
-  guestBlock: {
-    alignItems: "center",
-    minWidth: 40,
-  },
-  guestCount: {
-    fontSize: 14,
-    fontFamily: "Inter_600SemiBold",
-  },
-  guestLabel: {
-    fontSize: 10,
-    fontFamily: "Inter_400Regular",
-    letterSpacing: 0.3,
+    minWidth: 52,
+    textAlign: "right",
   },
 });

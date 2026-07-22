@@ -7,22 +7,48 @@ interface StatCardProps {
   value: string | number;
   sub?: string;
   accent?: boolean;
+  secondaryAccent?: boolean;
   compact?: boolean;
 }
 
-export function StatCard({ label, value, sub, accent, compact }: StatCardProps) {
+export function StatCard({ label, value, sub, accent, secondaryAccent, compact }: StatCardProps) {
   const colors = useColors();
+
+  const bg = accent
+    ? colors.primaryLight
+    : secondaryAccent
+    ? colors.warningLight
+    : colors.card;
+
+  const borderColor = accent
+    ? colors.primaryBorder
+    : secondaryAccent
+    ? colors.warningBorder
+    : colors.border;
+
+  const valueColor = accent
+    ? colors.primary
+    : secondaryAccent
+    ? colors.warning
+    : colors.foreground;
+
+  const labelColor = accent
+    ? colors.primary
+    : secondaryAccent
+    ? colors.warning
+    : colors.mutedForeground;
+
   return (
     <View
       style={[
         styles.card,
         compact && styles.cardCompact,
-        { backgroundColor: accent ? colors.primary : colors.card, borderColor: colors.border },
+        { backgroundColor: bg, borderColor },
       ]}
     >
-      <Text style={[styles.value, { color: accent ? colors.primaryForeground : colors.foreground }]}>{value}</Text>
-      <Text style={[styles.label, { color: accent ? colors.primaryForeground : colors.mutedForeground }]}>{label}</Text>
-      {sub ? <Text style={[styles.sub, { color: accent ? colors.primaryForeground : colors.mutedForeground }]}>{sub}</Text> : null}
+      <Text style={[styles.value, { color: valueColor }]}>{value}</Text>
+      <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
+      {sub ? <Text style={[styles.sub, { color: labelColor }]}>{sub}</Text> : null}
     </View>
   );
 }

@@ -59,7 +59,7 @@ export default function DashboardScreen() {
   };
 
   const topLifts = lifts
-    ? [...lifts].sort((a, b) => (b.npas ?? 0) - (a.npas ?? 0)).slice(0, 5)
+    ? [...lifts].sort((a, b) => (b.npas ?? 0) - (a.npas ?? 0))
     : [];
 
   const topPadding = Platform.OS === "web" ? 67 : 0;
@@ -197,6 +197,7 @@ export default function DashboardScreen() {
               />
               <StatCard
                 compact
+                secondaryAccent
                 label={t.guestsOnLifts}
                 value={(summary?.totalGuests ?? 0).toLocaleString()}
               />
@@ -225,6 +226,7 @@ export default function DashboardScreen() {
                   accent
                 />
                 <StatCard
+                  secondaryAccent
                   label={t.guestsOnLifts}
                   value={(summary?.totalGuests ?? 0).toLocaleString()}
                 />
@@ -251,13 +253,13 @@ export default function DashboardScreen() {
         </>
       )}
 
-      {/* Top lifts */}
+      {/* All lifts */}
       <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
         {isToday ? t.topLiftsToday : `${t.topLiftsDate} — ${selectedDate}`}
       </Text>
 
       {liftsLoading ? (
-        Array.from({ length: 5 }).map((_, i) => <LiftRowSkeleton key={i} />)
+        Array.from({ length: 8 }).map((_, i) => <LiftRowSkeleton key={i} />)
       ) : topLifts.length === 0 ? (
         <View style={[styles.emptyState, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Feather name="wind" size={32} color={colors.mutedForeground} />
