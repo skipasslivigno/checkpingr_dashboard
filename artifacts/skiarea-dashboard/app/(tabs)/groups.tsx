@@ -222,6 +222,14 @@ function GroupSection({
 
       {expanded && (
         <View style={[styles.liftList, { borderTopColor: colors.border }]}>
+          {/* Column header */}
+          <View style={[styles.tableHeader, { borderBottomColor: colors.border }]}>
+            <View style={styles.tableHeaderName} />
+            <Feather name="log-in" size={12} color={colors.warning} style={styles.tableHeaderCol} />
+            <Feather name="users" size={12} color={colors.mutedForeground} style={styles.tableHeaderCol} />
+            <Feather name="repeat" size={12} color={colors.primary} style={styles.tableHeaderColPassages} />
+            <View style={{ width: 17 }} />
+          </View>
           {visibleLifts.map((lift) => (
             <GroupLiftRow
               key={lift.ggnr}
@@ -471,6 +479,18 @@ const styles = StyleSheet.create({
   passageBarTrack: { height: 3, borderRadius: 2, overflow: "hidden", marginTop: 2 },
   passageBarFill: { height: 3, borderRadius: 2 },
   liftList: { borderTopWidth: 1, paddingHorizontal: 12, paddingVertical: 4 },
+  tableHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 5,
+    paddingHorizontal: 4,
+    gap: 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    marginBottom: 2,
+  },
+  tableHeaderName: { flex: 1 },
+  tableHeaderCol: { width: 40, textAlign: "right" },
+  tableHeaderColPassages: { width: 48, textAlign: "right" },
   emptyState: { alignItems: "center", paddingTop: 60, gap: 12 },
   emptyText: { fontSize: 15, fontFamily: "Inter_500Medium", textAlign: "center" },
 });
