@@ -275,7 +275,7 @@ export default function DashboardScreen() {
 
   const isGroupExpanded = (name: string) => isSearching || expandedGroups.has(name);
 
-  const topPadding = Platform.OS === "web" ? 67 : 0;
+  const topPadding = Platform.OS === "web" ? 16 : 0;
   const isToday = selectedDate === todayIso();
   const { isWide } = useResponsive();
 
@@ -310,7 +310,7 @@ export default function DashboardScreen() {
       <View style={styles.headerRow}>
         <Image
           source={require("@/assets/images/logo.png")}
-          style={styles.logoImage}
+          style={[styles.logoImage, isWide && styles.logoImageWide]}
           resizeMode="contain"
         />
         <View style={styles.titleBlock}>
@@ -367,16 +367,6 @@ export default function DashboardScreen() {
         onDateChange={(d) => { setSelectedDate(d); setSelectedExtraction(undefined); }}
         onExtractionChange={setSelectedExtraction}
       />
-
-      {/* Last sync */}
-      {summary?.lastSyncAt && (
-        <View style={[styles.syncRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <Feather name="clock" size={12} color={colors.mutedForeground} />
-          <Text style={[styles.syncText, { color: colors.mutedForeground }]}>
-            {t.lastSync}: {summary.lastSyncAt}
-          </Text>
-        </View>
-      )}
 
       {/* Stat cards */}
       {isWide ? (
@@ -500,6 +490,7 @@ const styles = StyleSheet.create({
     minHeight: 56,
   },
   logoImage: { width: 110, height: 44, flexShrink: 0 },
+  logoImageWide: { width: 180, height: 64 },
   titleBlock: { flex: 1, justifyContent: "center" },
   dateText: { fontSize: 11, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
   title: { fontSize: 26, fontFamily: "Inter_700Bold", letterSpacing: -0.5, marginTop: 1 },
