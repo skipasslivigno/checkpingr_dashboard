@@ -58,98 +58,53 @@ function GroupLiftRow({
 
   return (
     <TouchableOpacity
-      style={[
-        liftRowStyles.row,
-        {
-          backgroundColor: isActive ? colors.background : "transparent",
-          borderColor: colors.border,
-          opacity: isActive ? 1 : 0.45,
-        },
-      ]}
+      style={[liftRowStyles.row, { opacity: isActive ? 1 : 0.4 }]}
       onPress={onPress}
       activeOpacity={0.7}
     >
-      {/* Top line: dot + name + chevron */}
-      <View style={liftRowStyles.topLine}>
-        <View style={[liftRowStyles.dot, { backgroundColor: isActive ? colors.success : colors.border }]} />
-        <Text style={[liftRowStyles.name, { color: colors.foreground }]} numberOfLines={2}>
-          {lift.ggbz}
-        </Text>
-        <Feather name="chevron-right" size={14} color={colors.mutedForeground} style={liftRowStyles.chevron} />
-      </View>
-
-      {/* Bottom line: metrics aligned under name */}
-      <View style={liftRowStyles.metricsLine}>
-        <View style={liftRowStyles.metric}>
-          <Feather name="log-in" size={11} color={isActive ? colors.warning : colors.border} />
-          <Text style={[liftRowStyles.metricVal, { color: isActive ? colors.warning : colors.border }]}>
-            {(lift.npin ?? 0).toLocaleString()}
-          </Text>
-        </View>
-        <View style={liftRowStyles.metric}>
-          <Feather name="users" size={11} color={isActive ? colors.mutedForeground : colors.border} />
-          <Text style={[liftRowStyles.metricVal, { color: isActive ? colors.mutedForeground : colors.border }]}>
-            {lift.nuin ?? 0}
-          </Text>
-        </View>
-        <Text style={[liftRowStyles.passages, { color: isActive ? colors.primary : colors.border }]}>
-          {(lift.npas ?? 0).toLocaleString()}
-        </Text>
-      </View>
+      <Text style={[liftRowStyles.name, { color: colors.foreground }]} numberOfLines={1}>
+        {lift.ggbz}
+      </Text>
+      <Text style={[liftRowStyles.col, { color: isActive ? colors.warning : colors.mutedForeground }]}>
+        {(lift.npin ?? 0).toLocaleString()}
+      </Text>
+      <Text style={[liftRowStyles.col, { color: isActive ? colors.mutedForeground : colors.border }]}>
+        {(lift.nuin ?? 0).toLocaleString()}
+      </Text>
+      <Text style={[liftRowStyles.colPassages, { color: isActive ? colors.primary : colors.border }]}>
+        {(lift.npas ?? 0).toLocaleString()}
+      </Text>
+      <Feather name="chevron-right" size={13} color={colors.border} />
     </TouchableOpacity>
   );
 }
 
 const liftRowStyles = StyleSheet.create({
   row: {
-    borderRadius: 10,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    marginBottom: 6,
-    gap: 5,
-  },
-  topLine: {
     flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-  },
-  dot: {
-    width: 7,
-    height: 7,
-    borderRadius: 3.5,
-    marginTop: 4,
-    flexShrink: 0,
+    alignItems: "center",
+    paddingVertical: 7,
+    paddingHorizontal: 4,
+    gap: 4,
+    borderBottomWidth: StyleSheet.hairlineWidth,
   },
   name: {
     flex: 1,
-    fontSize: 13,
-    fontFamily: "Inter_600SemiBold",
-    lineHeight: 18,
+    fontSize: 12,
+    fontFamily: "Inter_500Medium",
+    minWidth: 0,
   },
-  chevron: {
-    marginTop: 2,
-    flexShrink: 0,
-  },
-  metricsLine: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-    paddingLeft: 15,
-  },
-  metric: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  metricVal: {
+  col: {
     fontSize: 12,
     fontFamily: "Inter_600SemiBold",
+    width: 40,
+    textAlign: "right",
   },
-  passages: {
-    fontSize: 14,
+  colPassages: {
+    fontSize: 13,
     fontFamily: "Inter_700Bold",
-    marginLeft: "auto",
+    width: 48,
+    textAlign: "right",
   },
 });
 
@@ -515,7 +470,7 @@ const styles = StyleSheet.create({
   subtotalDivider: { width: 1, height: 28, marginHorizontal: 2 },
   passageBarTrack: { height: 3, borderRadius: 2, overflow: "hidden", marginTop: 2 },
   passageBarFill: { height: 3, borderRadius: 2 },
-  liftList: { borderTopWidth: 1, padding: 10, paddingTop: 8 },
+  liftList: { borderTopWidth: 1, paddingHorizontal: 12, paddingVertical: 4 },
   emptyState: { alignItems: "center", paddingTop: 60, gap: 12 },
   emptyText: { fontSize: 15, fontFamily: "Inter_500Medium", textAlign: "center" },
 });
