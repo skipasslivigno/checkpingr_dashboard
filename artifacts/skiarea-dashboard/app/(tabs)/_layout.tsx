@@ -18,10 +18,6 @@ function NativeTabLayout() {
         <Icon sf={{ default: "chart.bar", selected: "chart.bar.fill" }} />
         <Label>{t.tabDashboard}</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="lifts">
-        <Icon sf={{ default: "tram.fill.tunnel", selected: "tram.fill.tunnel" }} />
-        <Label>{t.tabLifts}</Label>
-      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="groups">
         <Icon sf={{ default: "rectangle.3.group", selected: "rectangle.3.group.fill" }} />
         <Label>{t.tabGroups}</Label>
@@ -95,15 +91,7 @@ function ClassicTabLayout() {
       />
       <Tabs.Screen
         name="lifts"
-        options={{
-          title: t.tabLifts,
-          tabBarIcon: ({ color }) =>
-            isIOS ? (
-              <SymbolView name="tram.fill.tunnel" tintColor={color} size={22} />
-            ) : (
-              <Feather name="list" size={22} color={color} />
-            ),
-        }}
+        options={{ href: null }}
       />
       <Tabs.Screen
         name="groups"

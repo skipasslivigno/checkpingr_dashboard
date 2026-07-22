@@ -18,7 +18,6 @@ import {
   getGetLatestLiftsQueryKey,
 } from "@workspace/api-client-react";
 import { DateExtractionPicker } from "@/components/DateExtractionPicker";
-import { LiftRow } from "@/components/LiftRow";
 import { LiftRowSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
 import { useResponsive, CONTENT_MAX_WIDTH } from "@/hooks/useResponsive";
@@ -44,6 +43,117 @@ interface GroupData {
     descrGrp: string | null;
   }>;
 }
+
+// ── Compact 2-line lift row used inside group cards ──────────────────────────
+
+function GroupLiftRow({
+  lift,
+  onPress,
+}: {
+  lift: GroupData["lifts"][number];
+  onPress: () => void;
+}) {
+  const colors = useColors();
+  const isActive = (lift.npas ?? 0) > 0;
+
+  return (
+    <TouchableOpacity
+      style={[
+        liftRowStyles.row,
+        {
+          backgroundColor: isActive ? colors.background : "transparent",
+          borderColor: colors.border,
+          opacity: isActive ? 1 : 0.45,
+        },
+      ]}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
+      {/* Top line: dot + name + chevron */}
+      <View style={liftRowStyles.topLine}>
+        <View style={[liftRowStyles.dot, { backgroundColor: isActive ? colors.success : colors.border }]} />
+        <Text style={[liftRowStyles.name, { color: colors.foreground }]} numberOfLines={2}>
+          {lift.ggbz}
+        </Text>
+        <Feather name="chevron-right" size={14} color={colors.mutedForeground} style={liftRowStyles.chevron} />
+      </View>
+
+      {/* Bottom line: metrics aligned under name */}
+      <View style={liftRowStyles.metricsLine}>
+        <View style={liftRowStyles.metric}>
+          <Feather name="log-in" size={11} color={isActive ? colors.warning : colors.border} />
+          <Text style={[liftRowStyles.metricVal, { color: isActive ? colors.warning : colors.border }]}>
+            {(lift.npin ?? 0).toLocaleString()}
+          </Text>
+        </View>
+        <View style={liftRowStyles.metric}>
+          <Feather name="users" size={11} color={isActive ? colors.mutedForeground : colors.border} />
+          <Text style={[liftRowStyles.metricVal, { color: isActive ? colors.mutedForeground : colors.border }]}>
+            {lift.nuin ?? 0}
+          </Text>
+        </View>
+        <Text style={[liftRowStyles.passages, { color: isActive ? colors.primary : colors.border }]}>
+          {(lift.npas ?? 0).toLocaleString()}
+        </Text>
+      </View>
+    </TouchableOpacity>
+  );
+}
+
+const liftRowStyles = StyleSheet.create({
+  row: {
+    borderRadius: 10,
+    borderWidth: 1,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    marginBottom: 6,
+    gap: 5,
+  },
+  topLine: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 8,
+  },
+  dot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    marginTop: 4,
+    flexShrink: 0,
+  },
+  name: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+    lineHeight: 18,
+  },
+  chevron: {
+    marginTop: 2,
+    flexShrink: 0,
+  },
+  metricsLine: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingLeft: 15,
+  },
+  metric: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+  },
+  metricVal: {
+    fontSize: 12,
+    fontFamily: "Inter_600SemiBold",
+  },
+  passages: {
+    fontSize: 14,
+    fontFamily: "Inter_700Bold",
+    marginLeft: "auto",
+  },
+});
+
+// ── Group card ───────────────────────────────────────────────────────────────
 
 function GroupSection({
   group,
@@ -91,11 +201,7 @@ function GroupSection({
 
   return (
     <View style={[styles.groupCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-      <TouchableOpacity
-        style={styles.groupHeader}
-        onPress={onToggle}
-        activeOpacity={0.7}
-      >
+      <TouchableOpacity style={styles.groupHeader} onPress={onToggle} activeOpacity={0.7}>
         <View style={styles.groupTitleRow}>
           <Text style={[styles.groupName, { color: colors.foreground }]} numberOfLines={1}>
             {group.name}
@@ -155,28 +261,16 @@ function GroupSection({
         </View>
 
         <View style={[styles.passageBarTrack, { backgroundColor: colors.border }]}>
-          <Animated.View
-            style={[
-              styles.passageBarFill,
-              {
-                backgroundColor: colors.primary,
-                width: animatedWidth,
-              },
-            ]}
-          />
+          <Animated.View style={[styles.passageBarFill, { backgroundColor: colors.primary, width: animatedWidth }]} />
         </View>
       </TouchableOpacity>
 
       {expanded && (
         <View style={[styles.liftList, { borderTopColor: colors.border }]}>
           {visibleLifts.map((lift) => (
-            <LiftRow
+            <GroupLiftRow
               key={lift.ggnr}
-              name={lift.ggbz}
-              passages={lift.npas ?? null}
-              guests={lift.nuin ?? null}
-              firstPassage={lift.npin ?? null}
-              company={lift.nomeSocieta}
+              lift={lift}
               onPress={() =>
                 router.push({ pathname: "/lift/[ggnr]", params: { ggnr: lift.ggnr, name: lift.ggbz } })
               }
@@ -188,13 +282,16 @@ function GroupSection({
   );
 }
 
+// ── Screen ───────────────────────────────────────────────────────────────────
+
 export default function GroupsScreen() {
   const colors = useColors();
   const queryClient = useQueryClient();
   const { t } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
   const { selectedDate, setSelectedDate, selectedExtraction, setSelectedExtraction } = useSelectedDate();
-  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
+  // Default expanded: track collapsed groups (opt-out)
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");
 
   const queryParams = {
@@ -211,35 +308,21 @@ export default function GroupsScreen() {
   };
 
   const toggleGroup = (name: string) => {
-    setExpandedGroups((prev) => {
+    setCollapsedGroups((prev) => {
       const next = new Set(prev);
-      if (next.has(name)) {
-        next.delete(name);
-      } else {
-        next.add(name);
-      }
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
       return next;
     });
   };
 
   const groups = useMemo<GroupData[]>(() => {
     if (!lifts) return [];
-
     const map = new Map<string, GroupData>();
-
     for (const lift of lifts) {
       const key = lift.descrGrp ?? "(no group)";
       if (!map.has(key)) {
-        map.set(key, {
-          name: key,
-          minNsoc: lift.nsoc ?? 9999,
-          totalPassages: 0,
-          totalGuests: 0,
-          totalFirstPassages: 0,
-          activeLifts: 0,
-          totalLifts: 0,
-          lifts: [],
-        });
+        map.set(key, { name: key, minNsoc: lift.nsoc ?? 9999, totalPassages: 0, totalGuests: 0, totalFirstPassages: 0, activeLifts: 0, totalLifts: 0, lifts: [] });
       }
       const g = map.get(key)!;
       g.minNsoc = Math.min(g.minNsoc, lift.nsoc ?? 9999);
@@ -259,14 +342,8 @@ export default function GroupsScreen() {
         descrGrp: lift.descrGrp ?? null,
       });
     }
-
-    for (const g of map.values()) {
-      g.lifts.sort((a, b) => (a.nsoc ?? 9999) - (b.nsoc ?? 9999));
-    }
-
-    return Array.from(map.values())
-      .filter((g) => g.totalLifts > 0)
-      .sort((a, b) => a.minNsoc - b.minNsoc);
+    for (const g of map.values()) g.lifts.sort((a, b) => (a.nsoc ?? 9999) - (b.nsoc ?? 9999));
+    return Array.from(map.values()).filter((g) => g.totalLifts > 0).sort((a, b) => a.minNsoc - b.minNsoc);
   }, [lifts]);
 
   const maxPassages = useMemo(
@@ -277,27 +354,20 @@ export default function GroupsScreen() {
   const isSearching = searchQuery.trim().length > 0;
 
   const filteredGroups = useMemo<Array<GroupData & { visibleLifts: GroupData["lifts"] }>>(() => {
-    if (!isSearching) {
-      return groups.map((g) => ({ ...g, visibleLifts: g.lifts }));
-    }
+    if (!isSearching) return groups.map((g) => ({ ...g, visibleLifts: g.lifts }));
     const q = searchQuery.trim().toLowerCase();
     const result: Array<GroupData & { visibleLifts: GroupData["lifts"] }> = [];
     for (const g of groups) {
       const groupNameMatches = g.name.toLowerCase().includes(q);
       const matchingLifts = g.lifts.filter((l) => l.ggbz.toLowerCase().includes(q));
-      if (groupNameMatches) {
-        result.push({ ...g, visibleLifts: g.lifts });
-      } else if (matchingLifts.length > 0) {
-        result.push({ ...g, visibleLifts: matchingLifts });
-      }
+      if (groupNameMatches) result.push({ ...g, visibleLifts: g.lifts });
+      else if (matchingLifts.length > 0) result.push({ ...g, visibleLifts: matchingLifts });
     }
     return result;
   }, [groups, searchQuery, isSearching]);
 
-  const isGroupExpanded = (name: string) => {
-    if (isSearching) return true;
-    return expandedGroups.has(name);
-  };
+  // Expanded = NOT in collapsedGroups (unless searching, always expand)
+  const isGroupExpanded = (name: string) => isSearching || !collapsedGroups.has(name);
 
   const topPadding = Platform.OS === "web" ? 67 : 0;
   const { isWide } = useResponsive();
@@ -318,11 +388,7 @@ export default function GroupsScreen() {
       ];
     }
     if (isSearching && filteredGroups.length === 0) {
-      return [
-        { type: "picker" },
-        { type: "search" },
-        { type: "emptySearch" },
-      ];
+      return [{ type: "picker" }, { type: "search" }, { type: "emptySearch" }];
     }
     return [
       { type: "picker" },
@@ -334,94 +400,89 @@ export default function GroupsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: topPadding + 16 }]}>
-       <View style={[styles.inner, isWide && styles.innerWide]}>
-        <Text style={[styles.title, { color: colors.foreground }]}>{t.groups}</Text>
-       </View>
+        <View style={[styles.inner, isWide && styles.innerWide]}>
+          <Text style={[styles.title, { color: colors.foreground }]}>{t.groups}</Text>
+        </View>
       </View>
 
       <View style={[styles.listWrap, isWide && styles.listWrapWide]}>
-      <FlatList
-        data={listData}
-        keyExtractor={(item) => {
-          if (item.type === "picker") return "picker";
-          if (item.type === "search") return "search";
-          if (item.type === "skeleton") return `skeleton-${item.key}`;
-          if (item.type === "emptySearch") return "emptySearch";
-          return `group-${item.group.name}`;
-        }}
-        contentContainerStyle={[styles.list, { paddingBottom: Platform.OS === "web" ? 34 : 100 }]}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
-        }
-        ListEmptyComponent={
-          !isLoading ? (
-            <View style={styles.emptyState}>
-              <Feather name="alert-circle" size={32} color={colors.mutedForeground} />
-              <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-                {t.noLiftDataAvailable}
-              </Text>
-            </View>
-          ) : null
-        }
-        renderItem={({ item, index: flatIndex }) => {
-          if (item.type === "picker") {
-            return (
-              <DateExtractionPicker
-                selectedDate={selectedDate}
-                selectedExtraction={selectedExtraction}
-                onDateChange={(d) => {
-                  setSelectedDate(d);
-                  setSelectedExtraction(undefined);
-                }}
-                onExtractionChange={setSelectedExtraction}
-              />
-            );
+        <FlatList
+          data={listData}
+          keyExtractor={(item) => {
+            if (item.type === "picker") return "picker";
+            if (item.type === "search") return "search";
+            if (item.type === "skeleton") return `skeleton-${item.key}`;
+            if (item.type === "emptySearch") return "emptySearch";
+            return `group-${item.group.name}`;
+          }}
+          contentContainerStyle={[styles.list, { paddingBottom: Platform.OS === "web" ? 100 : 100 }]}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }
-          if (item.type === "search") {
-            return (
-              <View style={[styles.searchBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                <Feather name="search" size={16} color={colors.mutedForeground} />
-                <TextInput
-                  style={[styles.searchInput, { color: colors.foreground }]}
-                  placeholder={t.searchGroup}
-                  placeholderTextColor={colors.mutedForeground}
-                  value={searchQuery}
-                  onChangeText={setSearchQuery}
-                  clearButtonMode="while-editing"
-                />
-                {searchQuery.length > 0 && Platform.OS !== "ios" && (
-                  <TouchableOpacity onPress={() => setSearchQuery("")} hitSlop={8}>
-                    <Feather name="x" size={15} color={colors.mutedForeground} />
-                  </TouchableOpacity>
-                )}
-              </View>
-            );
-          }
-          if (item.type === "skeleton") {
-            return <LiftRowSkeleton />;
-          }
-          if (item.type === "emptySearch") {
-            return (
+          ListEmptyComponent={
+            !isLoading ? (
               <View style={styles.emptyState}>
-                <Feather name="search" size={32} color={colors.mutedForeground} />
+                <Feather name="alert-circle" size={32} color={colors.mutedForeground} />
                 <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-                  {t.noGroupsMatchSearch}
+                  {t.noLiftDataAvailable}
                 </Text>
               </View>
-            );
+            ) : null
           }
-          return (
-            <GroupSection
-              group={item.group}
-              visibleLifts={item.group.visibleLifts}
-              expanded={isGroupExpanded(item.group.name)}
-              onToggle={isSearching ? () => undefined : () => toggleGroup(item.group.name)}
-              maxPassages={maxPassages}
-              index={Math.max(0, flatIndex - 2)}
-            />
-          );
-        }}
-      />
+          renderItem={({ item, index: flatIndex }) => {
+            if (item.type === "picker") {
+              return (
+                <DateExtractionPicker
+                  selectedDate={selectedDate}
+                  selectedExtraction={selectedExtraction}
+                  onDateChange={(d) => { setSelectedDate(d); setSelectedExtraction(undefined); }}
+                  onExtractionChange={setSelectedExtraction}
+                />
+              );
+            }
+            if (item.type === "search") {
+              return (
+                <View style={[styles.searchBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
+                  <Feather name="search" size={16} color={colors.mutedForeground} />
+                  <TextInput
+                    style={[styles.searchInput, { color: colors.foreground }]}
+                    placeholder={t.searchGroup}
+                    placeholderTextColor={colors.mutedForeground}
+                    value={searchQuery}
+                    onChangeText={setSearchQuery}
+                    clearButtonMode="while-editing"
+                  />
+                  {searchQuery.length > 0 && Platform.OS !== "ios" && (
+                    <TouchableOpacity onPress={() => setSearchQuery("")} hitSlop={8}>
+                      <Feather name="x" size={15} color={colors.mutedForeground} />
+                    </TouchableOpacity>
+                  )}
+                </View>
+              );
+            }
+            if (item.type === "skeleton") return <LiftRowSkeleton />;
+            if (item.type === "emptySearch") {
+              return (
+                <View style={styles.emptyState}>
+                  <Feather name="search" size={32} color={colors.mutedForeground} />
+                  <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+                    {t.noGroupsMatchSearch}
+                  </Text>
+                </View>
+              );
+            }
+            return (
+              <GroupSection
+                group={item.group}
+                visibleLifts={item.group.visibleLifts}
+                expanded={isGroupExpanded(item.group.name)}
+                onToggle={isSearching ? () => undefined : () => toggleGroup(item.group.name)}
+                maxPassages={maxPassages}
+                index={Math.max(0, flatIndex - 2)}
+              />
+            );
+          }}
+        />
       </View>
     </View>
   );
@@ -429,112 +490,32 @@ export default function GroupsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: {
-    paddingBottom: 4,
-    paddingHorizontal: 16,
-  },
+  header: { paddingBottom: 4, paddingHorizontal: 16 },
   inner: { width: "100%" },
   innerWide: { maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" },
   listWrap: { flex: 1, width: "100%" },
   listWrapWide: { maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" },
-  title: {
-    fontSize: 28,
-    fontFamily: "Inter_700Bold",
-    letterSpacing: -0.5,
-    marginBottom: 4,
-  },
-  list: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-    gap: 10,
-  },
+  title: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: -0.5, marginBottom: 4 },
+  list: { paddingHorizontal: 16, paddingTop: 8, gap: 10 },
   searchBox: {
-    flexDirection: "row",
-    alignItems: "center",
-    borderRadius: 10,
-    borderWidth: 1,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    gap: 8,
+    flexDirection: "row", alignItems: "center",
+    borderRadius: 10, borderWidth: 1,
+    paddingHorizontal: 10, paddingVertical: 8, gap: 8,
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 15,
-    fontFamily: "Inter_400Regular",
-    paddingVertical: 0,
-  },
-  groupCard: {
-    borderRadius: 14,
-    borderWidth: 1,
-    overflow: "hidden",
-  },
-  groupHeader: {
-    padding: 14,
-    gap: 10,
-  },
-  groupTitleRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    gap: 8,
-  },
-  groupName: {
-    fontSize: 15,
-    fontFamily: "Inter_700Bold",
-    flex: 1,
-  },
-  subtotalsRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 0,
-  },
-  subtotalItem: {
-    flex: 1,
-    alignItems: "center",
-    gap: 2,
-  },
-  subtotalValue: {
-    fontSize: 15,
-    fontFamily: "Inter_700Bold",
-  },
-  subtotalValueSmall: {
-    fontSize: 12,
-    fontFamily: "Inter_400Regular",
-  },
-  subtotalLabel: {
-    fontSize: 9,
-    fontFamily: "Inter_400Regular",
-    letterSpacing: 0.3,
-  },
-  subtotalDivider: {
-    width: 1,
-    height: 28,
-    marginHorizontal: 2,
-  },
-  passageBarTrack: {
-    height: 3,
-    borderRadius: 2,
-    overflow: "hidden",
-    marginTop: 2,
-  },
-  passageBarFill: {
-    height: 3,
-    borderRadius: 2,
-  },
-  liftList: {
-    borderTopWidth: 1,
-    padding: 10,
-    paddingTop: 8,
-    gap: 0,
-  },
-  emptyState: {
-    alignItems: "center",
-    paddingTop: 60,
-    gap: 12,
-  },
-  emptyText: {
-    fontSize: 15,
-    fontFamily: "Inter_500Medium",
-    textAlign: "center",
-  },
+  searchInput: { flex: 1, fontSize: 15, fontFamily: "Inter_400Regular", paddingVertical: 0 },
+  groupCard: { borderRadius: 14, borderWidth: 1, overflow: "hidden" },
+  groupHeader: { padding: 14, gap: 10 },
+  groupTitleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
+  groupName: { fontSize: 15, fontFamily: "Inter_700Bold", flex: 1 },
+  subtotalsRow: { flexDirection: "row", alignItems: "center" },
+  subtotalItem: { flex: 1, alignItems: "center", gap: 2 },
+  subtotalValue: { fontSize: 15, fontFamily: "Inter_700Bold" },
+  subtotalValueSmall: { fontSize: 12, fontFamily: "Inter_400Regular" },
+  subtotalLabel: { fontSize: 9, fontFamily: "Inter_400Regular", letterSpacing: 0.3 },
+  subtotalDivider: { width: 1, height: 28, marginHorizontal: 2 },
+  passageBarTrack: { height: 3, borderRadius: 2, overflow: "hidden", marginTop: 2 },
+  passageBarFill: { height: 3, borderRadius: 2 },
+  liftList: { borderTopWidth: 1, padding: 10, paddingTop: 8 },
+  emptyState: { alignItems: "center", paddingTop: 60, gap: 12 },
+  emptyText: { fontSize: 15, fontFamily: "Inter_500Medium", textAlign: "center" },
 });
