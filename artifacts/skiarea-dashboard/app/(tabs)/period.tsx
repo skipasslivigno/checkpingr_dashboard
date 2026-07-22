@@ -1,8 +1,9 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Feather } from "@expo/vector-icons";
 import { useQuery, useQueryClient, skipToken } from "@tanstack/react-query";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Platform,
   RefreshControl,
@@ -126,6 +127,12 @@ export default function PeriodScreen() {
   const [appliedTo, setAppliedTo] = useState(todayIso());
   const [selectedSeason, setSelectedSeason] = useState<string | undefined>(undefined);
   const [compareEnabled, setCompareEnabled] = useState(false);
+
+  useEffect(() => {
+    AsyncStorage.getItem("compare_enabled").then((stored) => {
+      if (stored === "true") setCompareEnabled(true);
+    });
+  }, []);
 
   const [calendarVisible, setCalendarVisible] = useState(false);
   const [calendarMode, setCalendarMode] = useState<"from" | "to">("from");
@@ -285,7 +292,11 @@ export default function PeriodScreen() {
               borderColor: compareEnabled ? colors.primary : colors.border,
             },
           ]}
-          onPress={() => setCompareEnabled((v) => !v)}
+          onPress={() => setCompareEnabled((v) => {
+            const next = !v;
+            AsyncStorage.setItem("compare_enabled", next ? "true" : "false");
+            return next;
+          })}
           activeOpacity={0.7}
         >
           <Feather
