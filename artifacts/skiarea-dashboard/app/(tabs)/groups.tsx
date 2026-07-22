@@ -215,17 +215,6 @@ function GroupSection({
 
         <View style={styles.subtotalsRow}>
           <View style={styles.subtotalItem}>
-            <Text style={[styles.subtotalValue, { color: colors.primary }]}>
-              {group.totalPassages.toLocaleString()}
-            </Text>
-            <Text style={[styles.subtotalLabel, { color: colors.mutedForeground }]}>
-              {t.passages.toUpperCase()}
-            </Text>
-          </View>
-
-          <View style={[styles.subtotalDivider, { backgroundColor: colors.border }]} />
-
-          <View style={styles.subtotalItem}>
             <Text style={[styles.subtotalValue, { color: colors.warning }]}>
               {group.totalFirstPassages.toLocaleString()}
             </Text>
@@ -242,6 +231,17 @@ function GroupSection({
             </Text>
             <Text style={[styles.subtotalLabel, { color: colors.mutedForeground }]}>
               {t.onLiftLabel.toUpperCase()}
+            </Text>
+          </View>
+
+          <View style={[styles.subtotalDivider, { backgroundColor: colors.border }]} />
+
+          <View style={styles.subtotalItem}>
+            <Text style={[styles.subtotalValue, { color: colors.primary }]}>
+              {group.totalPassages.toLocaleString()}
+            </Text>
+            <Text style={[styles.subtotalLabel, { color: colors.mutedForeground }]}>
+              {t.passages.toUpperCase()}
             </Text>
           </View>
 
