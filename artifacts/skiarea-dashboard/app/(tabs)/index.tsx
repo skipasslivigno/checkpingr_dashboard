@@ -5,6 +5,7 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   FlatList,
+  Image,
   Platform,
   RefreshControl,
   StyleSheet,
@@ -307,9 +308,11 @@ export default function DashboardScreen() {
     <View style={[styles.headerBlock, { paddingTop: topPadding + 16 }]}>
       {/* Logo / title / lang */}
       <View style={styles.headerRow}>
-        <View style={[styles.logoBox, { backgroundColor: colors.primaryLight, borderColor: colors.primaryBorder }]}>
-          <Feather name="wind" size={20} color={colors.primary} />
-        </View>
+        <Image
+          source={require("@/assets/images/logo.png")}
+          style={styles.logoImage}
+          resizeMode="contain"
+        />
         <View style={styles.titleBlock}>
           <Text style={[styles.dateText, { color: colors.mutedForeground }]} numberOfLines={1}>
             {isToday ? t.today : selectedDate}
@@ -496,10 +499,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     minHeight: 56,
   },
-  logoBox: {
-    width: 44, height: 44, borderRadius: 12, borderWidth: 1,
-    alignItems: "center", justifyContent: "center", flexShrink: 0,
-  },
+  logoImage: { width: 110, height: 44, flexShrink: 0 },
   titleBlock: { flex: 1, justifyContent: "center" },
   dateText: { fontSize: 11, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
   title: { fontSize: 26, fontFamily: "Inter_700Bold", letterSpacing: -0.5, marginTop: 1 },
