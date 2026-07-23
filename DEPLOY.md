@@ -62,7 +62,7 @@ NODE_ENV=production
 
 ```bash
 source /opt/skiarea/.env.production
-pnpm --filter @workspace/db run push
+pnpm --filter @workspace/db run push   # risponde 'y' se chiede conferma
 ```
 
 This creates all tables: `lift_snapshots`, `tenants`, `users`.

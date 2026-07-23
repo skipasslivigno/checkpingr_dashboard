@@ -41,7 +41,7 @@ if [ -f "$ENV_FILE" ]; then
 else
   echo "WARNING: $ENV_FILE not found; skipping DB push. Create it before first deploy (see DEPLOY.md)." >&2
 fi
-pnpm --filter @workspace/db run push -- --force || echo "WARNING: db push failed or requires manual confirmation; check schema drift manually."
+pnpm --filter @workspace/db run push || echo "WARNING: db push failed; check schema drift manually."
 
 log "Building API server"
 pnpm --filter @workspace/api-server run build
