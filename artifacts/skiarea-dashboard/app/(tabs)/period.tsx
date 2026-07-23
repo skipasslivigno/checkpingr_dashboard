@@ -28,6 +28,7 @@ import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSeason, formatSeason } from "@/contexts/SeasonContext";
 import { useTenantSettings } from "@/contexts/TenantSettingsContext";
+import { useMetricColors } from "@/hooks/useMetricColors";
 import { CalendarRangePicker } from "@/components/CalendarRangePicker";
 
 function todayIso(): string {
@@ -298,6 +299,7 @@ export default function PeriodScreen() {
   const [appliedTo, setAppliedTo] = useState(defaultTo);
   const { seasons: allSeasons, selectedSeason, setSelectedSeason } = useSeason();
   const { maxSeasons } = useTenantSettings();
+  const metrics = useMetricColors();
   const seasons = allSeasons.slice(0, maxSeasons);
   const [compareEnabled, setCompareEnabled] = useState(false);
 
@@ -669,7 +671,7 @@ export default function PeriodScreen() {
                     })()
                   : undefined
               }
-              accent
+              accentColor={metrics.passages.color}
             />
             <StatCard
               label={t.periodTotalGuests}
@@ -682,6 +684,7 @@ export default function PeriodScreen() {
                     })()
                   : undefined
               }
+              accentColor={metrics.presenze.color}
             />
           </>
         )}

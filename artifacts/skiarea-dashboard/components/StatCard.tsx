@@ -2,41 +2,27 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 
+function withAlpha(hex: string, alpha: number): string {
+  const a = Math.round(alpha * 255).toString(16).padStart(2, "0");
+  return `${hex}${a}`;
+}
+
 interface StatCardProps {
   label: string;
   value: string | number;
   sub?: string;
-  accent?: boolean;
-  secondaryAccent?: boolean;
+  /** Hex color (#RRGGBB) — derives tinted bg, border, and text automatically. */
+  accentColor?: string;
   compact?: boolean;
 }
 
-export function StatCard({ label, value, sub, accent, secondaryAccent, compact }: StatCardProps) {
+export function StatCard({ label, value, sub, accentColor, compact }: StatCardProps) {
   const colors = useColors();
 
-  const bg = accent
-    ? colors.primaryLight
-    : secondaryAccent
-    ? colors.warningLight
-    : colors.card;
-
-  const borderColor = accent
-    ? colors.primaryBorder
-    : secondaryAccent
-    ? colors.warningBorder
-    : colors.border;
-
-  const valueColor = accent
-    ? colors.primary
-    : secondaryAccent
-    ? colors.warning
-    : colors.foreground;
-
-  const labelColor = accent
-    ? colors.primary
-    : secondaryAccent
-    ? colors.warning
-    : colors.mutedForeground;
+  const bg          = accentColor ? withAlpha(accentColor, 0.12) : colors.card;
+  const borderColor = accentColor ? withAlpha(accentColor, 0.4)  : colors.border;
+  const valueColor  = accentColor ?? colors.foreground;
+  const labelColor  = accentColor ?? colors.mutedForeground;
 
   return (
     <View

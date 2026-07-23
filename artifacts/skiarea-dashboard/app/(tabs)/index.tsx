@@ -30,6 +30,7 @@ import { useTranslation } from "@/contexts/LanguageContext";
 import { useSeason, formatSeason } from "@/contexts/SeasonContext";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
 import { useTenantSettings } from "@/contexts/TenantSettingsContext";
+import { useMetricColors } from "@/hooks/useMetricColors";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -170,6 +171,7 @@ function GroupSection({
 
 export default function DashboardScreen() {
   const colors = useColors();
+  const metrics = useMetricColors();
   const queryClient = useQueryClient();
   const { t, language, setLanguage } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
@@ -348,8 +350,8 @@ export default function DashboardScreen() {
             <><StatCardSkeleton /><StatCardSkeleton /><StatCardSkeleton /><StatCardSkeleton /></>
           ) : (
             <>
-              <StatCard compact accent label={t.passages} value={(summary?.totalPassages ?? 0).toLocaleString()} />
-              <StatCard compact secondaryAccent label={t.guestsOnLifts} value={(summary?.totalGuests ?? 0).toLocaleString()} />
+              <StatCard compact accentColor={metrics.passages.color} label={t.passages} value={(summary?.totalPassages ?? 0).toLocaleString()} />
+              <StatCard compact accentColor={metrics.presenze.color} label={t.guestsOnLifts} value={(summary?.totalGuests ?? 0).toLocaleString()} />
               <StatCard compact label={t.activeLifts} value={`${summary?.activeLifts ?? 0} / ${summary?.totalLifts ?? 0}`} />
               <StatCard compact label={t.season} value={summary?.season ? formatSeason(summary.season) : "—"} />
             </>
@@ -362,8 +364,8 @@ export default function DashboardScreen() {
               <><StatCardSkeleton /><StatCardSkeleton /></>
             ) : (
               <>
-                <StatCard accent label={t.passages} value={(summary?.totalPassages ?? 0).toLocaleString()} />
-                <StatCard secondaryAccent label={t.guestsOnLifts} value={(summary?.totalGuests ?? 0).toLocaleString()} />
+                <StatCard accentColor={metrics.passages.color} label={t.passages} value={(summary?.totalPassages ?? 0).toLocaleString()} />
+                <StatCard accentColor={metrics.presenze.color} label={t.guestsOnLifts} value={(summary?.totalGuests ?? 0).toLocaleString()} />
               </>
             )}
           </View>

@@ -14,12 +14,14 @@ import { useGetLiftHistory } from "@workspace/api-client-react";
 import { LiftRowSkeleton } from "@/components/SkeletonLoader";
 import { StatCard } from "@/components/StatCard";
 import { useColors } from "@/hooks/useColors";
+import { useMetricColors } from "@/hooks/useMetricColors";
 import { useResponsive, CONTENT_MAX_WIDTH } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
 
 export default function LiftDetailScreen() {
   const colors = useColors();
+  const metrics = useMetricColors();
   const router = useRouter();
   const { t } = useTranslation();
   const { ggnr, name } = useLocalSearchParams<{ ggnr: string; name: string }>();
@@ -75,11 +77,11 @@ export default function LiftDetailScreen() {
 
         {/* Current stats */}
         <View style={styles.statsRow}>
-          <StatCard label={t.passages} value={(latest?.npas ?? 0).toLocaleString()} accent />
-          <StatCard label={t.onLiftsNow} value={latest?.nuin ?? "—"} />
+          <StatCard label={t.passages} value={(latest?.npas ?? 0).toLocaleString()} accentColor={metrics.passages.color} />
+          <StatCard label={t.onLiftsNow} value={latest?.nuin ?? "—"} accentColor={metrics.presenze.color} />
         </View>
         <View style={styles.statsRow}>
-          <StatCard label={t.firstPassage} value={latest?.npin ?? "—"} />
+          <StatCard label={t.firstPassage} value={latest?.npin ?? "—"} accentColor={metrics.primiIngressi.color} />
           <StatCard label={t.secondPassage} value={latest?.npic ?? "—"} />
         </View>
 
@@ -113,19 +115,19 @@ export default function LiftDetailScreen() {
               </View>
               <View style={styles.histStats}>
                 <View style={styles.histStat}>
-                  <Text style={[styles.histVal, { color: colors.primary }]}>
+                  <Text style={[styles.histVal, { color: metrics.passages.color }]}>
                     {(snap.npas ?? 0).toLocaleString()}
                   </Text>
                   <Text style={[styles.histLabel, { color: colors.mutedForeground }]}>{t.passagesRowLabel}</Text>
                 </View>
                 <View style={styles.histStat}>
-                  <Text style={[styles.histVal, { color: colors.foreground }]}>
+                  <Text style={[styles.histVal, { color: metrics.presenze.color }]}>
                     {snap.nuin ?? "—"}
                   </Text>
                   <Text style={[styles.histLabel, { color: colors.mutedForeground }]}>{t.onLiftLabel}</Text>
                 </View>
                 <View style={styles.histStat}>
-                  <Text style={[styles.histVal, { color: colors.foreground }]}>
+                  <Text style={[styles.histVal, { color: metrics.primiIngressi.color }]}>
                     {snap.npin ?? "—"}
                   </Text>
                   <Text style={[styles.histLabel, { color: colors.mutedForeground }]}>{t.firstPassLabel}</Text>

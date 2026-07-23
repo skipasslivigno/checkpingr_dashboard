@@ -25,6 +25,7 @@ import { useTranslation } from "@/contexts/LanguageContext";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
 import { useSeason, formatSeason } from "@/contexts/SeasonContext";
 import { useTenantSettings } from "@/contexts/TenantSettingsContext";
+import { useMetricColors } from "@/hooks/useMetricColors";
 
 interface GroupData {
   name: string;
@@ -56,6 +57,7 @@ function GroupLiftRow({
   onPress: () => void;
 }) {
   const colors = useColors();
+  const metrics = useMetricColors();
   const isActive = (lift.npas ?? 0) > 0;
 
   return (
@@ -67,13 +69,13 @@ function GroupLiftRow({
       <Text style={[liftRowStyles.name, { color: colors.foreground }]} numberOfLines={1}>
         {lift.ggbz}
       </Text>
-      <Text style={[liftRowStyles.col, { color: isActive ? colors.warning : colors.mutedForeground }]}>
+      <Text style={[liftRowStyles.col, { color: isActive ? metrics.primiIngressi.color : colors.mutedForeground }]}>
         {(lift.npin ?? 0).toLocaleString()}
       </Text>
-      <Text style={[liftRowStyles.col, { color: isActive ? colors.mutedForeground : colors.border }]}>
+      <Text style={[liftRowStyles.col, { color: isActive ? metrics.presenze.color : colors.border }]}>
         {(lift.nuin ?? 0).toLocaleString()}
       </Text>
-      <Text style={[liftRowStyles.colPassages, { color: isActive ? colors.primary : colors.border }]}>
+      <Text style={[liftRowStyles.colPassages, { color: isActive ? metrics.passages.color : colors.border }]}>
         {(lift.npas ?? 0).toLocaleString()}
       </Text>
       <Feather name="chevron-right" size={13} color={colors.border} />
@@ -124,6 +126,7 @@ function GroupSection({
   onToggle: () => void;
 }) {
   const colors = useColors();
+  const metrics = useMetricColors();
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -143,7 +146,7 @@ function GroupSection({
 
         <View style={styles.subtotalsRow}>
           <View style={styles.subtotalItem}>
-            <Text style={[styles.subtotalValue, { color: colors.warning }]}>
+            <Text style={[styles.subtotalValue, { color: metrics.primiIngressi.color }]}>
               {group.totalFirstPassages.toLocaleString()}
             </Text>
             <Text style={[styles.subtotalLabel, { color: colors.mutedForeground }]}>
@@ -154,7 +157,7 @@ function GroupSection({
           <View style={[styles.subtotalDivider, { backgroundColor: colors.border }]} />
 
           <View style={styles.subtotalItem}>
-            <Text style={[styles.subtotalValue, { color: colors.mutedForeground }]}>
+            <Text style={[styles.subtotalValue, { color: metrics.presenze.color }]}>
               {group.totalGuests}
             </Text>
             <Text style={[styles.subtotalLabel, { color: colors.mutedForeground }]}>
@@ -165,7 +168,7 @@ function GroupSection({
           <View style={[styles.subtotalDivider, { backgroundColor: colors.border }]} />
 
           <View style={styles.subtotalItem}>
-            <Text style={[styles.subtotalValue, { color: colors.primary }]}>
+            <Text style={[styles.subtotalValue, { color: metrics.passages.color }]}>
               {group.totalPassages.toLocaleString()}
             </Text>
             <Text style={[styles.subtotalLabel, { color: colors.mutedForeground }]}>
@@ -195,9 +198,9 @@ function GroupSection({
           {/* Column header */}
           <View style={[styles.tableHeader, { borderBottomColor: colors.border }]}>
             <View style={styles.tableHeaderName} />
-            <Feather name="log-in" size={12} color={colors.warning} style={styles.tableHeaderCol} />
-            <Feather name="users" size={12} color={colors.mutedForeground} style={styles.tableHeaderCol} />
-            <Feather name="repeat" size={12} color={colors.primary} style={styles.tableHeaderColPassages} />
+            <Feather name="log-in" size={12} color={metrics.primiIngressi.color} style={styles.tableHeaderCol} />
+            <Feather name="users" size={12} color={metrics.presenze.color} style={styles.tableHeaderCol} />
+            <Feather name="repeat" size={12} color={metrics.passages.color} style={styles.tableHeaderColPassages} />
             <View style={{ width: 17 }} />
           </View>
           {visibleLifts.map((lift) => (

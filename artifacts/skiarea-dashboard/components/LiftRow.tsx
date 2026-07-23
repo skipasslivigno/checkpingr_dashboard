@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import { useMetricColors } from "@/hooks/useMetricColors";
 
 interface LiftRowProps {
   name: string;
@@ -15,6 +16,7 @@ interface LiftRowProps {
 
 export function LiftRow({ name, passages, guests, firstPassage, company, group, onPress }: LiftRowProps) {
   const colors = useColors();
+  const metrics = useMetricColors();
 
   const isActive = (passages ?? 0) > 0;
 
@@ -42,24 +44,24 @@ export function LiftRow({ name, passages, guests, firstPassage, company, group, 
         ) : null}
       </View>
 
-      {/* Primi ingressi — amber */}
+      {/* Primi ingressi */}
       <View style={styles.metricBlock}>
-        <Feather name="log-in" size={11} color={isActive ? colors.warning : colors.border} />
-        <Text style={[styles.metricCount, { color: isActive ? colors.warning : colors.border }]}>
+        <Feather name="log-in" size={11} color={isActive ? metrics.primiIngressi.color : colors.border} />
+        <Text style={[styles.metricCount, { color: isActive ? metrics.primiIngressi.color : colors.border }]}>
           {(firstPassage ?? 0).toLocaleString()}
         </Text>
       </View>
 
-      {/* Presenze — muted */}
+      {/* Presenze */}
       <View style={styles.metricBlock}>
-        <Feather name="users" size={11} color={isActive ? colors.mutedForeground : colors.border} />
-        <Text style={[styles.metricCount, { color: isActive ? colors.mutedForeground : colors.border }]}>
+        <Feather name="users" size={11} color={isActive ? metrics.presenze.color : colors.border} />
+        <Text style={[styles.metricCount, { color: isActive ? metrics.presenze.color : colors.border }]}>
           {guests ?? 0}
         </Text>
       </View>
 
-      {/* Passaggi totali — primary */}
-      <Text style={[styles.passageCount, { color: isActive ? colors.primary : colors.border }]}>
+      {/* Passaggi totali */}
+      <Text style={[styles.passageCount, { color: isActive ? metrics.passages.color : colors.border }]}>
         {(passages ?? 0).toLocaleString()}
       </Text>
 
