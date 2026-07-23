@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -157,6 +158,7 @@ export default function InfoScreen() {
   const colors = useColors();
   const { t } = useTranslation();
   const { logout, user } = useAuth();
+  const router = useRouter();
   const topPadding = Platform.OS === "web" ? 16 : 0;
 
   const sqlExample = useMemo(() => buildSqlExample(syncUrl, t), [t]);
@@ -185,13 +187,24 @@ export default function InfoScreen() {
               </Text>
             </View>
           </View>
-          <TouchableOpacity
-            style={[styles.logoutBtnInline, { borderColor: colors.destructive + "60" }]}
-            onPress={logout}
-            activeOpacity={0.7}
-          >
-            <Feather name="log-out" size={16} color={colors.destructive} />
-          </TouchableOpacity>
+          <View style={styles.profileActions}>
+            {user?.role === "admin" && (
+              <TouchableOpacity
+                style={[styles.profileActionBtn, { borderColor: colors.primary + "60" }]}
+                onPress={() => router.push("/settings")}
+                activeOpacity={0.7}
+              >
+                <Feather name="settings" size={16} color={colors.primary} />
+              </TouchableOpacity>
+            )}
+            <TouchableOpacity
+              style={[styles.profileActionBtn, { borderColor: colors.destructive + "60" }]}
+              onPress={logout}
+              activeOpacity={0.7}
+            >
+              <Feather name="log-out" size={16} color={colors.destructive} />
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 
@@ -299,6 +312,15 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   noteText: { flex: 1, fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 20 },
+  profileActions: { flexDirection: "row", gap: 8 },
+  profileActionBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   logoutBtnInline: {
     width: 36,
     height: 36,

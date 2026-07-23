@@ -8,6 +8,7 @@ import {
   Image,
   Platform,
   RefreshControl,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
@@ -28,6 +29,7 @@ import { useResponsive, CONTENT_MAX_WIDTH } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSeason, formatSeason } from "@/contexts/SeasonContext";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
+import { useTenantSettings } from "@/contexts/TenantSettingsContext";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -171,7 +173,9 @@ export default function DashboardScreen() {
   const queryClient = useQueryClient();
   const { t, language, setLanguage } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
-  const { seasons, selectedSeason, setSelectedSeason } = useSeason();
+  const { seasons: allSeasons, selectedSeason, setSelectedSeason } = useSeason();
+  const { maxSeasons } = useTenantSettings();
+  const seasons = allSeasons.slice(0, maxSeasons);
   const [searchQuery, setSearchQuery] = useState("");
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const { selectedDate, setSelectedDate, selectedExtraction, setSelectedExtraction } = useSelectedDate();
@@ -306,21 +310,23 @@ export default function DashboardScreen() {
       {seasons && seasons.length > 1 && (
         <View style={[styles.seasonSegment, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
           <Feather name="layers" size={13} color={colors.mutedForeground} style={styles.seasonIcon} />
-          {seasons.map((s) => {
-            const active = (selectedSeason ?? seasons[0]) === s;
-            return (
-              <TouchableOpacity
-                key={s}
-                style={[styles.seasonTab, active && { backgroundColor: colors.primary }]}
-                onPress={() => setSelectedSeason(s === seasons[0] ? undefined : s)}
-                activeOpacity={0.8}
-              >
-                <Text style={[styles.seasonText, { color: active ? colors.primaryForeground : colors.mutedForeground }]}>
-                  {formatSeason(s)}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.seasonScrollContent}>
+            {seasons.map((s) => {
+              const active = (selectedSeason ?? seasons[0]) === s;
+              return (
+                <TouchableOpacity
+                  key={s}
+                  style={[styles.seasonTab, active && { backgroundColor: colors.primary }]}
+                  onPress={() => setSelectedSeason(s === seasons[0] ? undefined : s)}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.seasonText, { color: active ? colors.primaryForeground : colors.mutedForeground }]}>
+                    {formatSeason(s)}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
         </View>
       )}
 
@@ -468,7 +474,8 @@ const styles = StyleSheet.create({
     borderRadius: 10, borderWidth: 1, padding: 3, gap: 2,
   },
   seasonIcon: { marginLeft: 4, marginRight: 2 },
-  seasonTab: { flex: 1, alignItems: "center", paddingVertical: 6, borderRadius: 8 },
+  seasonScrollContent: { flexDirection: "row", gap: 2 },
+  seasonTab: { alignItems: "center", paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 },
   seasonText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
   syncRow: {
     flexDirection: "row", alignItems: "center", gap: 6,

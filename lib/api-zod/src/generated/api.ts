@@ -9,6 +9,73 @@ import * as zod from 'zod';
 
 
 /**
+ * Returns the current tenant's configuration settings
+ * @summary Get tenant settings
+ */
+export const getSettingsResponseColorsMax = 10;
+
+export const getSettingsResponseMaxSeasonsMax = 20;
+
+
+
+export const GetSettingsResponse = zod.object({
+  "tenantId": zod.string(),
+  "logoBase64": zod.string().nullish(),
+  "colors": zod.array(zod.string()).max(getSettingsResponseColorsMax),
+  "maxSeasons": zod.number().min(1).max(getSettingsResponseMaxSeasonsMax)
+})
+
+
+/**
+ * @summary Update tenant settings (admin only)
+ */
+export const updateSettingsBodyColorsMax = 10;
+
+export const updateSettingsBodyMaxSeasonsMax = 20;
+
+
+
+export const UpdateSettingsBody = zod.object({
+  "colors": zod.array(zod.string()).max(updateSettingsBodyColorsMax).optional(),
+  "maxSeasons": zod.number().min(1).max(updateSettingsBodyMaxSeasonsMax).optional()
+})
+
+export const updateSettingsResponseColorsMax = 10;
+
+export const updateSettingsResponseMaxSeasonsMax = 20;
+
+
+
+export const UpdateSettingsResponse = zod.object({
+  "tenantId": zod.string(),
+  "logoBase64": zod.string().nullish(),
+  "colors": zod.array(zod.string()).max(updateSettingsResponseColorsMax),
+  "maxSeasons": zod.number().min(1).max(updateSettingsResponseMaxSeasonsMax)
+})
+
+
+/**
+ * @summary Upload tenant logo as base64 (admin only)
+ */
+export const UploadLogoBody = zod.object({
+  "logoBase64": zod.string().nullable()
+})
+
+export const uploadLogoResponseColorsMax = 10;
+
+export const uploadLogoResponseMaxSeasonsMax = 20;
+
+
+
+export const UploadLogoResponse = zod.object({
+  "tenantId": zod.string(),
+  "logoBase64": zod.string().nullish(),
+  "colors": zod.array(zod.string()).max(uploadLogoResponseColorsMax),
+  "maxSeasons": zod.number().min(1).max(uploadLogoResponseMaxSeasonsMax)
+})
+
+
+/**
  * Returns server health status
  * @summary Health check
  */

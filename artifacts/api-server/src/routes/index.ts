@@ -5,6 +5,7 @@ import liftsRouter from "./lifts";
 import authRouter from "./auth";
 import usersRouter from "./users";
 import setupRouter from "./setup";
+import settingsRouter from "./settings";
 
 const router: IRouter = Router();
 
@@ -14,5 +15,6 @@ router.use(healthRouter);
 router.use(liftsRouter);
 router.use(usersRouter);
 router.use(setupRouter);
+router.use(settingsRouter);
 
 export default router;

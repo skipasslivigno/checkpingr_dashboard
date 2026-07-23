@@ -142,6 +142,25 @@ export interface Translations {
   roleAdmin: string;
   roleOperator: string;
   roleViewer: string;
+
+  settingsTitle: string;
+  settingsSave: string;
+  settingsSaveError: string;
+  settingsLogo: string;
+  settingsNoLogo: string;
+  settingsUploadLogo: string;
+  settingsRemoveLogo: string;
+  settingsLogoPermission: string;
+  settingsColors: string;
+  settingsColorsHint: string;
+  settingsColorPrimary: string;
+  settingsColorSecondary: string;
+  settingsColor: string;
+  settingsAddColor: string;
+  settingsMaxSeasons: string;
+  settingsMaxSeasonsHint: string;
+  settingsMaxSeasonsError: string;
+  settingsOpen: string;
 }
 
 const it: Translations = {
@@ -286,6 +305,25 @@ const it: Translations = {
   roleAdmin: "Amministratore",
   roleOperator: "Operatore",
   roleViewer: "Visualizzatore",
+
+  settingsTitle: "Impostazioni",
+  settingsSave: "Salva",
+  settingsSaveError: "Errore durante il salvataggio. Riprova.",
+  settingsLogo: "Logo",
+  settingsNoLogo: "Nessun logo",
+  settingsUploadLogo: "Carica logo",
+  settingsRemoveLogo: "Rimuovi",
+  settingsLogoPermission: "Permesso alla libreria fotografica richiesto.",
+  settingsColors: "Colori",
+  settingsColorsHint: "Definisci fino a 10 colori personalizzati (esadecimale #RRGGBB). Il primo è il colore primario, il secondo il secondario.",
+  settingsColorPrimary: "Primario",
+  settingsColorSecondary: "Secondario",
+  settingsColor: "Colore",
+  settingsAddColor: "Aggiungi colore",
+  settingsMaxSeasons: "Stagioni visualizzabili",
+  settingsMaxSeasonsHint: "Numero massimo di stagioni mostrate nel selettore (default: 3).",
+  settingsMaxSeasonsError: "Inserisci un numero tra 1 e 20.",
+  settingsOpen: "Impostazioni",
 };
 
 const en: Translations = {
@@ -430,6 +468,25 @@ const en: Translations = {
   roleAdmin: "Administrator",
   roleOperator: "Operator",
   roleViewer: "Viewer",
+
+  settingsTitle: "Settings",
+  settingsSave: "Save",
+  settingsSaveError: "Failed to save. Please try again.",
+  settingsLogo: "Logo",
+  settingsNoLogo: "No logo",
+  settingsUploadLogo: "Upload logo",
+  settingsRemoveLogo: "Remove",
+  settingsLogoPermission: "Photo library permission required.",
+  settingsColors: "Colors",
+  settingsColorsHint: "Define up to 10 custom colors (hex #RRGGBB). The first is the primary color, the second is the secondary.",
+  settingsColorPrimary: "Primary",
+  settingsColorSecondary: "Secondary",
+  settingsColor: "Color",
+  settingsAddColor: "Add color",
+  settingsMaxSeasons: "Visible seasons",
+  settingsMaxSeasonsHint: "Maximum number of seasons shown in the selector (default: 3).",
+  settingsMaxSeasonsError: "Enter a number between 1 and 20.",
+  settingsOpen: "Settings",
 };
 
 export const translations: Record<Language, Translations> = { it, en };

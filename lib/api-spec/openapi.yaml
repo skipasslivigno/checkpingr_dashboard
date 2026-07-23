@@ -14,7 +14,59 @@ tags:
     description: Lift passage operations
   - name: dashboard
     description: Dashboard summary operations
+  - name: settings
+    description: Tenant settings operations
 paths:
+  /settings:
+    get:
+      operationId: getSettings
+      tags: [settings]
+      summary: Get tenant settings
+      description: Returns the current tenant's configuration settings
+      responses:
+        "200":
+          description: Tenant settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantSettings"
+    patch:
+      operationId: updateSettings
+      tags: [settings]
+      summary: Update tenant settings (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SettingsPatch"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantSettings"
+
+  /settings/logo:
+    post:
+      operationId: uploadLogo
+      tags: [settings]
+      summary: Upload tenant logo as base64 (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LogoUpload"
+      responses:
+        "200":
+          description: Updated settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TenantSettings"
+
   /healthz:
     get:
       operationId: healthCheck
@@ -527,6 +579,44 @@ components:
         totalFirstPassages:
           type: integer
           description: Sum of npin (first daily entries) across all lifts during this week
+
+    TenantSettings:
+      type: object
+      required: [tenantId, colors, maxSeasons]
+      properties:
+        tenantId:
+          type: string
+        logoBase64:
+          type: ["string", "null"]
+        colors:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+        maxSeasons:
+          type: integer
+          minimum: 1
+          maximum: 20
+
+    SettingsPatch:
+      type: object
+      properties:
+        colors:
+          type: array
+          items:
+            type: string
+          maxItems: 10
+        maxSeasons:
+          type: integer
+          minimum: 1
+          maximum: 20
+
+    LogoUpload:
+      type: object
+      required: [logoBase64]
+      properties:
+        logoBase64:
+          type: ["string", "null"]
 
     WeekTrend:
       type: object

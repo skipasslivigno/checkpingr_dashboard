@@ -20,6 +20,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { SelectedDateProvider } from "@/contexts/SelectedDateContext";
 import { SeasonProvider } from "@/contexts/SeasonContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { TenantSettingsProvider } from "@/contexts/TenantSettingsContext";
 
 // Configure API base URL for Expo (runs outside the shared proxy)
 if (process.env.EXPO_PUBLIC_DOMAIN) {
@@ -58,6 +59,7 @@ function RootLayoutNav() {
     <Stack screenOptions={{ headerShown: false }}>
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="lift/[ggnr]" />
+      <Stack.Screen name="settings" />
       <Stack.Screen name="login" />
     </Stack>
   );
@@ -86,6 +88,7 @@ export default function RootLayout() {
           <QueryClientProvider client={queryClient}>
             <AuthProvider>
               <SelectedDateProvider>
+                <TenantSettingsProvider>
                 <SeasonProvider>
                 <GestureHandlerRootView>
                   <KeyboardProvider>
@@ -95,6 +98,7 @@ export default function RootLayout() {
                   </KeyboardProvider>
                 </GestureHandlerRootView>
                 </SeasonProvider>
+                </TenantSettingsProvider>
               </SelectedDateProvider>
             </AuthProvider>
           </QueryClientProvider>

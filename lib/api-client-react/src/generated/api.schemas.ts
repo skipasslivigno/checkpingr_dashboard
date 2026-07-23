@@ -190,6 +190,34 @@ export interface WeekTrendPoint {
   totalFirstPassages: number;
 }
 
+export interface TenantSettings {
+  tenantId: string;
+  /** @nullable */
+  logoBase64?: string | null;
+  /** @maxItems 10 */
+  colors: string[];
+  /**
+     * @minimum 1
+     * @maximum 20
+     */
+  maxSeasons: number;
+}
+
+export interface SettingsPatch {
+  /** @maxItems 10 */
+  colors?: string[];
+  /**
+     * @minimum 1
+     * @maximum 20
+     */
+  maxSeasons?: number;
+}
+
+export interface LogoUpload {
+  /** @nullable */
+  logoBase64: string | null;
+}
+
 export interface WeekTrend {
   /** Season identifier e.g. "2024-2025" */
   season: string;
