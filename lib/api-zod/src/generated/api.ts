@@ -80,6 +80,63 @@ export const UploadLogoResponse = zod.object({
 
 
 /**
+ * @summary List all users in the tenant (admin only)
+ */
+export const GetUsersResponseItem = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "role": zod.enum(['admin', 'operator', 'viewer']),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string().nullish()
+})
+export const GetUsersResponse = zod.array(GetUsersResponseItem)
+
+
+/**
+ * @summary Create a new user (admin only)
+ */
+export const CreateUserBody = zod.object({
+  "email": zod.string().email(),
+  "name": zod.string(),
+  "password": zod.string(),
+  "role": zod.enum(['admin', 'operator', 'viewer']).optional()
+})
+
+
+/**
+ * @summary Update a user (admin only)
+ */
+export const UpdateUserParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateUserBody = zod.object({
+  "name": zod.string().optional(),
+  "role": zod.enum(['admin', 'operator', 'viewer']).optional(),
+  "password": zod.string().optional(),
+  "isActive": zod.boolean().optional()
+})
+
+export const UpdateUserResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "role": zod.enum(['admin', 'operator', 'viewer']),
+  "isActive": zod.boolean(),
+  "createdAt": zod.string().nullish()
+})
+
+
+/**
+ * @summary Delete a user (admin only)
+ */
+export const DeleteUserParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+
+/**
  * Returns server health status
  * @summary Health check
  */

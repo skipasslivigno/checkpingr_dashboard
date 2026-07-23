@@ -191,6 +191,15 @@ export default function InfoScreen() {
             {user?.role === "admin" && (
               <TouchableOpacity
                 style={[styles.profileActionBtn, { borderColor: colors.primary + "60" }]}
+                onPress={() => router.push("/admin")}
+                activeOpacity={0.7}
+              >
+                <Feather name="users" size={16} color={colors.primary} />
+              </TouchableOpacity>
+            )}
+            {user?.role === "admin" && (
+              <TouchableOpacity
+                style={[styles.profileActionBtn, { borderColor: colors.primary + "60" }]}
                 onPress={() => router.push("/settings")}
                 activeOpacity={0.7}
               >

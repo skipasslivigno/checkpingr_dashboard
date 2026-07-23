@@ -6,6 +6,8 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './createUserRequest';
+export * from './createUserRequestRole';
 export * from './dashboardSummary';
 export * from './getDashboardSummaryParams';
 export * from './getLatestLiftsParams';
@@ -27,5 +29,9 @@ export * from './snapshotInput';
 export * from './syncInput';
 export * from './syncResult';
 export * from './tenantSettings';
+export * from './updateUserRequest';
+export * from './updateUserRequestRole';
+export * from './user';
+export * from './userRole';
 export * from './weekTrend';
 export * from './weekTrendPoint';

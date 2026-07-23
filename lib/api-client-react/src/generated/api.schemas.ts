@@ -241,6 +241,57 @@ export interface WeekTrend {
   weeks: WeekTrendPoint[];
 }
 
+export type UserRole = typeof UserRole[keyof typeof UserRole];
+
+
+export const UserRole = {
+  admin: 'admin',
+  operator: 'operator',
+  viewer: 'viewer',
+} as const;
+
+export interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: UserRole;
+  isActive: boolean;
+  /** @nullable */
+  createdAt?: string | null;
+}
+
+export type CreateUserRequestRole = typeof CreateUserRequestRole[keyof typeof CreateUserRequestRole];
+
+
+export const CreateUserRequestRole = {
+  admin: 'admin',
+  operator: 'operator',
+  viewer: 'viewer',
+} as const;
+
+export interface CreateUserRequest {
+  email: string;
+  name: string;
+  password: string;
+  role?: CreateUserRequestRole;
+}
+
+export type UpdateUserRequestRole = typeof UpdateUserRequestRole[keyof typeof UpdateUserRequestRole];
+
+
+export const UpdateUserRequestRole = {
+  admin: 'admin',
+  operator: 'operator',
+  viewer: 'viewer',
+} as const;
+
+export interface UpdateUserRequest {
+  name?: string;
+  role?: UpdateUserRequestRole;
+  password?: string;
+  isActive?: boolean;
+}
+
 export interface PeriodResult {
   /** Start date YYYY-MM-DD */
   from: string;

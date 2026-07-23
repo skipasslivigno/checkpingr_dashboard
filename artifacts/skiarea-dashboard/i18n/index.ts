@@ -162,6 +162,29 @@ export interface Translations {
   settingsMaxSeasonsHint: string;
   settingsMaxSeasonsError: string;
   settingsOpen: string;
+
+  adminTitle: string;
+  adminNoUsers: string;
+  adminCreateUser: string;
+  adminEditUser: string;
+  adminName: string;
+  adminEmail: string;
+  adminPassword: string;
+  adminPasswordHint: string;
+  adminRole: string;
+  adminSave: string;
+  adminCancel: string;
+  adminDelete: string;
+  adminDeleteConfirm: string;
+  adminDeactivate: string;
+  adminActivate: string;
+  adminActive: string;
+  adminInactive: string;
+  adminOpen: string;
+  adminErrorCreate: string;
+  adminErrorUpdate: string;
+  adminErrorDelete: string;
+  adminPasswordMin: string;
 }
 
 const it: Translations = {
@@ -326,6 +349,29 @@ const it: Translations = {
   settingsMaxSeasonsHint: "Numero massimo di stagioni mostrate nel selettore (default: 3).",
   settingsMaxSeasonsError: "Inserisci un numero tra 1 e 20.",
   settingsOpen: "Impostazioni",
+
+  adminTitle: "Gestione utenti",
+  adminNoUsers: "Nessun utente trovato",
+  adminCreateUser: "Nuovo utente",
+  adminEditUser: "Modifica utente",
+  adminName: "Nome",
+  adminEmail: "Email",
+  adminPassword: "Password",
+  adminPasswordHint: "Lascia vuoto per non modificarla",
+  adminRole: "Ruolo",
+  adminSave: "Salva",
+  adminCancel: "Annulla",
+  adminDelete: "Elimina",
+  adminDeleteConfirm: "Eliminare questo utente? L'operazione non è reversibile.",
+  adminDeactivate: "Disattiva",
+  adminActivate: "Attiva",
+  adminActive: "Attivo",
+  adminInactive: "Inattivo",
+  adminOpen: "Amministrazione",
+  adminErrorCreate: "Errore nella creazione dell'utente.",
+  adminErrorUpdate: "Errore nell'aggiornamento dell'utente.",
+  adminErrorDelete: "Errore nell'eliminazione dell'utente.",
+  adminPasswordMin: "La password deve essere di almeno 8 caratteri.",
 };
 
 const en: Translations = {
@@ -490,6 +536,29 @@ const en: Translations = {
   settingsMaxSeasonsHint: "Maximum number of seasons shown in the selector (default: 3).",
   settingsMaxSeasonsError: "Enter a number between 1 and 20.",
   settingsOpen: "Settings",
+
+  adminTitle: "User Management",
+  adminNoUsers: "No users found",
+  adminCreateUser: "New User",
+  adminEditUser: "Edit User",
+  adminName: "Name",
+  adminEmail: "Email",
+  adminPassword: "Password",
+  adminPasswordHint: "Leave blank to keep current password",
+  adminRole: "Role",
+  adminSave: "Save",
+  adminCancel: "Cancel",
+  adminDelete: "Delete",
+  adminDeleteConfirm: "Delete this user? This action cannot be undone.",
+  adminDeactivate: "Deactivate",
+  adminActivate: "Activate",
+  adminActive: "Active",
+  adminInactive: "Inactive",
+  adminOpen: "Administration",
+  adminErrorCreate: "Failed to create user.",
+  adminErrorUpdate: "Failed to update user.",
+  adminErrorDelete: "Failed to delete user.",
+  adminPasswordMin: "Password must be at least 8 characters.",
 };
 
 export const translations: Record<Language, Translations> = { it, en };

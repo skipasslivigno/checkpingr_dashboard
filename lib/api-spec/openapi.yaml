@@ -16,6 +16,8 @@ tags:
     description: Dashboard summary operations
   - name: settings
     description: Tenant settings operations
+  - name: users
+    description: User management operations (admin only)
 paths:
   /settings:
     get:
@@ -66,6 +68,76 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/TenantSettings"
+
+  /users:
+    get:
+      operationId: getUsers
+      tags: [users]
+      summary: List all users in the tenant (admin only)
+      responses:
+        "200":
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/User"
+    post:
+      operationId: createUser
+      tags: [users]
+      summary: Create a new user (admin only)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        "201":
+          description: Created user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+
+  /users/{id}:
+    patch:
+      operationId: updateUser
+      tags: [users]
+      summary: Update a user (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdateUserRequest"
+      responses:
+        "200":
+          description: Updated user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+    delete:
+      operationId: deleteUser
+      tags: [users]
+      summary: Delete a user (admin only)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Deleted
 
   /healthz:
     get:
@@ -638,6 +710,52 @@ components:
           items:
             $ref: "#/components/schemas/WeekTrendPoint"
           description: Weekly data points ordered by week number
+
+    User:
+      type: object
+      required: [id, email, name, role, isActive]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, operator, viewer]
+        isActive:
+          type: boolean
+        createdAt:
+          type: ["string", "null"]
+
+    CreateUserRequest:
+      type: object
+      required: [email, name, password]
+      properties:
+        email:
+          type: string
+          format: email
+        name:
+          type: string
+        password:
+          type: string
+        role:
+          type: string
+          enum: [admin, operator, viewer]
+
+    UpdateUserRequest:
+      type: object
+      properties:
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, operator, viewer]
+        password:
+          type: string
+        isActive:
+          type: boolean
 
     PeriodResult:
       type: object
