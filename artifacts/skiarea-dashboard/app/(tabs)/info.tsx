@@ -171,6 +171,30 @@ export default function InfoScreen() {
         {t.integrationSubtitle}
       </Text>
 
+      {user && (
+        <View style={[styles.profileCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.profileAvatar, { backgroundColor: colors.primary + "20" }]}>
+            <Feather name="user" size={22} color={colors.primary} />
+          </View>
+          <View style={styles.profileInfo}>
+            <Text style={[styles.profileName, { color: colors.foreground }]}>{user.name}</Text>
+            <Text style={[styles.profileEmail, { color: colors.mutedForeground }]}>{user.email}</Text>
+            <View style={[styles.roleBadge, { backgroundColor: colors.primary + "18" }]}>
+              <Text style={[styles.roleText, { color: colors.primary }]}>
+                {user.role === "admin" ? t.roleAdmin : user.role === "operator" ? t.roleOperator : t.roleViewer}
+              </Text>
+            </View>
+          </View>
+          <TouchableOpacity
+            style={[styles.logoutBtnInline, { borderColor: colors.destructive + "60" }]}
+            onPress={logout}
+            activeOpacity={0.7}
+          >
+            <Feather name="log-out" size={16} color={colors.destructive} />
+          </TouchableOpacity>
+        </View>
+      )}
+
       <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
         <View style={styles.stepRow}>
           <View style={[styles.stepNum, { backgroundColor: colors.primary }]}>
@@ -217,31 +241,6 @@ export default function InfoScreen() {
         </Text>
       </View>
 
-      {user && (
-        <View style={[styles.profileCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
-          <View style={[styles.profileAvatar, { backgroundColor: colors.primary + "20" }]}>
-            <Feather name="user" size={22} color={colors.primary} />
-          </View>
-          <View style={styles.profileInfo}>
-            <Text style={[styles.profileName, { color: colors.foreground }]}>{user.name}</Text>
-            <Text style={[styles.profileEmail, { color: colors.mutedForeground }]}>{user.email}</Text>
-            <View style={[styles.roleBadge, { backgroundColor: colors.primary + "18" }]}>
-              <Text style={[styles.roleText, { color: colors.primary }]}>
-                {user.role === "admin" ? t.roleAdmin : user.role === "operator" ? t.roleOperator : t.roleViewer}
-              </Text>
-            </View>
-          </View>
-        </View>
-      )}
-
-      <TouchableOpacity
-        style={[styles.logoutBtn, { borderColor: colors.destructive + "60" }]}
-        onPress={logout}
-        activeOpacity={0.7}
-      >
-        <Feather name="log-out" size={15} color={colors.destructive} />
-        <Text style={[styles.logoutText, { color: colors.destructive }]}>{t.logout}</Text>
-      </TouchableOpacity>
     </ScrollView>
   );
 }
@@ -300,16 +299,14 @@ const styles = StyleSheet.create({
     alignItems: "flex-start",
   },
   noteText: { flex: 1, fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 20 },
-  logoutBtn: {
-    flexDirection: "row",
+  logoutBtnInline: {
+    width: 36,
+    height: 36,
+    borderRadius: 8,
+    borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
-    gap: 8,
-    borderRadius: 10,
-    borderWidth: 1,
-    paddingVertical: 12,
   },
-  logoutText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
   profileCard: {
     flexDirection: "row",
     alignItems: "center",
