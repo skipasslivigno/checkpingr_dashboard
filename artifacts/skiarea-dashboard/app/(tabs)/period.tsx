@@ -27,6 +27,7 @@ import { StatCardSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSeason, formatSeason } from "@/contexts/SeasonContext";
+import { useTenantSettings } from "@/contexts/TenantSettingsContext";
 import { CalendarRangePicker } from "@/components/CalendarRangePicker";
 
 function todayIso(): string {
@@ -295,7 +296,9 @@ export default function PeriodScreen() {
   const [toInput, setToInput] = useState(defaultTo);
   const [appliedFrom, setAppliedFrom] = useState(defaultFrom);
   const [appliedTo, setAppliedTo] = useState(defaultTo);
-  const { seasons, selectedSeason, setSelectedSeason } = useSeason();
+  const { seasons: allSeasons, selectedSeason, setSelectedSeason } = useSeason();
+  const { maxSeasons } = useTenantSettings();
+  const seasons = allSeasons.slice(0, maxSeasons);
   const [compareEnabled, setCompareEnabled] = useState(false);
 
   useEffect(() => {

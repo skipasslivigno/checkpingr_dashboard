@@ -24,6 +24,7 @@ import { useResponsive, CONTENT_MAX_WIDTH } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
 import { useSeason, formatSeason } from "@/contexts/SeasonContext";
+import { useTenantSettings } from "@/contexts/TenantSettingsContext";
 
 interface GroupData {
   name: string;
@@ -222,7 +223,9 @@ export default function GroupsScreen() {
   const { t } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
   const { selectedDate, setSelectedDate, selectedExtraction, setSelectedExtraction } = useSelectedDate();
-  const { seasons, selectedSeason, setSelectedSeason } = useSeason();
+  const { seasons: allSeasons, selectedSeason, setSelectedSeason } = useSeason();
+  const { maxSeasons } = useTenantSettings();
+  const seasons = allSeasons.slice(0, maxSeasons);
   // Default expanded: track collapsed groups (opt-out)
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
   const [searchQuery, setSearchQuery] = useState("");

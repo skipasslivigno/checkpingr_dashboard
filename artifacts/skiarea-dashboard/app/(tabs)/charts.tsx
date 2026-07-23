@@ -602,32 +602,33 @@ export default function ChartsScreen() {
   const colors = useColors();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const { colors: tenantColors } = useTenantSettings();
+  const { colors: tenantColors, maxSeasons } = useTenantSettings();
   const seasonColors = tenantColors.length > 0
     ? [...tenantColors, ...DEFAULT_SEASON_COLORS].slice(0, Math.max(tenantColors.length, 4))
     : DEFAULT_SEASON_COLORS;
   const [refreshing, setRefreshing] = useState(false);
 
-  const { data: allSeasons } = useGetSeasons();
+  const { data: allSeasonsRaw } = useGetSeasons();
   const { selectedSeason: contextSeason } = useSeason();
+  const visibleSeasons = useMemo(() => allSeasonsRaw?.slice(0, maxSeasons) ?? [], [allSeasonsRaw, maxSeasons]);
 
   const [selectedSeasons, setSelectedSeasons] = useState<string[]>([]);
 
   // Sync context season into the chart selection when it changes
   React.useEffect(() => {
-    if (!contextSeason || !allSeasons) return;
+    if (!contextSeason || !visibleSeasons.length) return;
     setSelectedSeasons((prev) => {
-      const base = prev.length > 0 ? prev : (allSeasons.slice(0, 2));
+      const base = prev.length > 0 ? prev : visibleSeasons.slice(0, Math.min(2, maxSeasons));
       if (base.includes(contextSeason)) return base;
-      return [contextSeason, ...base.filter((s) => s !== contextSeason)].slice(0, 3);
+      return [contextSeason, ...base.filter((s) => s !== contextSeason)].slice(0, maxSeasons);
     });
-  }, [contextSeason, allSeasons]);
+  }, [contextSeason, visibleSeasons, maxSeasons]);
 
   const resolvedSeasons = useMemo(() => {
     if (selectedSeasons.length > 0) return selectedSeasons;
-    if (allSeasons && allSeasons.length > 0) return allSeasons.slice(0, 2);
+    if (visibleSeasons.length > 0) return visibleSeasons.slice(0, Math.min(2, maxSeasons));
     return [];
-  }, [selectedSeasons, allSeasons]);
+  }, [selectedSeasons, visibleSeasons, maxSeasons]);
 
   const seasonsParam = resolvedSeasons.join(",") || undefined;
 
@@ -670,12 +671,12 @@ export default function ChartsScreen() {
 
   function toggleSeason(s: string) {
     setSelectedSeasons((prev) => {
-      const current = prev.length > 0 ? prev : (allSeasons?.slice(0, 2) ?? []);
+      const current = prev.length > 0 ? prev : visibleSeasons.slice(0, Math.min(2, maxSeasons));
       if (current.includes(s)) {
         const next = current.filter((x) => x !== s);
         return next.length === 0 ? [] : next;
       }
-      if (current.length >= 3) return current;
+      if (current.length >= maxSeasons) return current;
       return [...current, s];
     });
   }
@@ -701,14 +702,14 @@ export default function ChartsScreen() {
       </View>
 
       {/* Season selector */}
-      {allSeasons && allSeasons.length > 0 && (
+      {visibleSeasons.length > 0 && (
         <View style={styles.selectorSection}>
           <Text style={[styles.selectorLabel, { color: colors.mutedForeground }]}>{t.chartsSeasonSelector}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.seasonRow}>
-            {allSeasons.map((s) => {
+            {visibleSeasons.map((s) => {
               const current = resolvedSeasons;
               const active = current.includes(s);
-              const color = seasonColors[allSeasons.indexOf(s) % seasonColors.length]!;
+              const color = seasonColors[visibleSeasons.indexOf(s) % seasonColors.length]!;
               return (
                 <TouchableOpacity
                   key={s}
