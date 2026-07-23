@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useMemo, useState } from "react";
 import { useGetSeasons } from "@workspace/api-client-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function formatSeason(s: string): string {
   return s.replace(/^(\d{4})-\d{2}(\d{2})$/, "$1-$2");
@@ -14,7 +15,9 @@ interface SeasonContextValue {
 const SeasonContext = createContext<SeasonContextValue | undefined>(undefined);
 
 export function SeasonProvider({ children }: { children: React.ReactNode }) {
-  const { data: seasons = [] } = useGetSeasons();
+  const { isAuthenticated } = useAuth();
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: seasons = [] } = useGetSeasons({ query: { enabled: isAuthenticated } as any });
   const [selectedSeason, setSelectedSeasonRaw] = useState<string | undefined>(undefined);
 
   const setSelectedSeason = useCallback(

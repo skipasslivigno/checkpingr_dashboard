@@ -9,6 +9,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import React, { useEffect } from "react";
+import { View } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { KeyboardProvider } from "react-native-keyboard-controller";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -34,15 +35,20 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   const segments = useSegments();
   const router = useRouter();
 
+  const onLoginScreen = segments[0] === "login";
+
   useEffect(() => {
     if (isLoading) return;
-    const onLoginScreen = segments[0] === "login";
     if (!isAuthenticated && !onLoginScreen) {
       router.replace("/login");
     } else if (isAuthenticated && onLoginScreen) {
       router.replace("/");
     }
-  }, [isAuthenticated, isLoading, segments]);
+  }, [isAuthenticated, isLoading, onLoginScreen]);
+
+  if (isLoading || (!isAuthenticated && !onLoginScreen)) {
+    return <View style={{ flex: 1, backgroundColor: "#F1F8FC" }} />;
+  }
 
   return <>{children}</>;
 }
