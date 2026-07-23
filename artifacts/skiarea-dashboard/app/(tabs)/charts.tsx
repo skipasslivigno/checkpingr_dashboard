@@ -22,8 +22,9 @@ import {
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSeason, formatSeason } from "@/contexts/SeasonContext";
+import { useTenantSettings } from "@/contexts/TenantSettingsContext";
 
-const SEASON_COLORS = ["#0070BA", "#E6007E", "#4E82A0", "#4E82A0"];
+const DEFAULT_SEASON_COLORS = ["#0070BA", "#E6007E", "#4E82A0", "#4E82A0"];
 
 function formatBigNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -54,6 +55,7 @@ interface SeasonLine {
 
 function buildSeasonLines(
   rawData: Array<{ season: string; data: Array<{ date: string; dayIndex: number; totalPassages: number; totalGuests: number; totalFirstPassages: number }> }>,
+  seasonColors: string[],
   colorOffset = 0
 ): SeasonLine[] {
   return rawData.map((s, i) => {
@@ -62,7 +64,7 @@ function buildSeasonLines(
       cum += d.totalFirstPassages;
       return { dayIndex: d.dayIndex, totalPassages: d.totalFirstPassages, cumulative: cum, date: d.date };
     });
-    return { season: s.season, color: SEASON_COLORS[(i + colorOffset) % SEASON_COLORS.length]!, points };
+    return { season: s.season, color: seasonColors[(i + colorOffset) % seasonColors.length]!, points };
   });
 }
 
@@ -600,6 +602,10 @@ export default function ChartsScreen() {
   const colors = useColors();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { colors: tenantColors } = useTenantSettings();
+  const seasonColors = tenantColors.length > 0
+    ? [...tenantColors, ...DEFAULT_SEASON_COLORS].slice(0, Math.max(tenantColors.length, 4))
+    : DEFAULT_SEASON_COLORS;
   const [refreshing, setRefreshing] = useState(false);
 
   const { data: allSeasons } = useGetSeasons();
@@ -635,14 +641,14 @@ export default function ChartsScreen() {
 
   const seasonLines = useMemo(() => {
     if (!trendData) return [];
-    return buildSeasonLines(trendData);
-  }, [trendData]);
+    return buildSeasonLines(trendData, seasonColors);
+  }, [trendData, seasonColors]);
 
   const weekBars = useMemo((): WeekBar[] => {
     if (!weekData) return [];
     return weekData.map((s, i) => ({
       season: s.season,
-      color: SEASON_COLORS[i % SEASON_COLORS.length]!,
+      color: seasonColors[i % seasonColors.length]!,
       weeks: s.weeks.map((w) => ({ weekNumber: w.weekNumber, totalPassages: w.totalFirstPassages })),
     }));
   }, [weekData]);
@@ -702,7 +708,7 @@ export default function ChartsScreen() {
             {allSeasons.map((s) => {
               const current = resolvedSeasons;
               const active = current.includes(s);
-              const color = SEASON_COLORS[allSeasons.indexOf(s) % SEASON_COLORS.length]!;
+              const color = seasonColors[allSeasons.indexOf(s) % seasonColors.length]!;
               return (
                 <TouchableOpacity
                   key={s}
