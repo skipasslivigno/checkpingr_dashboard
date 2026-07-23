@@ -1,3 +1,15 @@
 const { getDefaultConfig } = require("expo/metro-config");
 
-module.exports = getDefaultConfig(__dirname);
+const config = getDefaultConfig(__dirname);
+
+config.server = {
+  ...config.server,
+  enhanceMiddleware: (middleware) => {
+    return (req, res, next) => {
+      res.setHeader("Cache-Control", "no-store");
+      middleware(req, res, next);
+    };
+  },
+};
+
+module.exports = config;
