@@ -6,7 +6,7 @@ import { useTenantSettings } from "@/contexts/TenantSettingsContext";
 function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
   const m = /^#([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})([0-9A-Fa-f]{2})$/.exec(hex);
   if (!m) return null;
-  return { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) };
+  return { r: parseInt(m[1]!, 16), g: parseInt(m[2]!, 16), b: parseInt(m[3]!, 16) };
 }
 
 function withAlpha(hex: string, alpha: number): string {
@@ -24,13 +24,11 @@ function foregroundFor(hex: string): string {
 }
 
 /**
- * Returns the design tokens for the current color scheme, merged with
- * any tenant-configured colours (primary, warning/secondary, muted accent).
+ * Returns the design tokens for the current color scheme, optionally
+ * overriding the primary/accent colour with the tenant's configured primaryColor.
  *
- * Tenant color slots:
- *   [0] → primary  (azzurro default #0070BA)
- *   [1] → warning  (fuxia default #E6007E)
- *   [2] → mutedForeground / third accent
+ * Chart series colours (tenant colors[]) are NOT applied here —
+ * they are used directly in the charts screen via useTenantSettings().
  */
 export function useColors() {
   const scheme = useColorScheme();
@@ -39,35 +37,22 @@ export function useColors() {
       ? (colors as unknown as Record<string, typeof colors.light>).dark
       : colors.light;
 
-  const { colors: tenantColors } = useTenantSettings();
+  const { primaryColor } = useTenantSettings();
 
   const base = { ...palette, radius: colors.radius };
 
-  const primary = tenantColors[0] && /^#[0-9A-Fa-f]{6}$/.test(tenantColors[0]) ? tenantColors[0] : null;
-  const secondary = tenantColors[1] && /^#[0-9A-Fa-f]{6}$/.test(tenantColors[1]) ? tenantColors[1] : null;
-  const third = tenantColors[2] && /^#[0-9A-Fa-f]{6}$/.test(tenantColors[2]) ? tenantColors[2] : null;
-
-  if (!primary && !secondary && !third) return base;
+  const valid = primaryColor && /^#[0-9A-Fa-f]{6}$/.test(primaryColor);
+  if (!valid) return base;
 
   return {
     ...base,
-    ...(primary ? {
-      primary,
-      primaryForeground: foregroundFor(primary),
-      primaryLight: withAlpha(primary, 0.12),
-      primaryBorder: withAlpha(primary, 0.4),
-      accent: primary,
-      accentForeground: foregroundFor(primary),
-      tint: primary,
-      success: primary,
-    } : {}),
-    ...(secondary ? {
-      warning: secondary,
-      warningLight: withAlpha(secondary, 0.12),
-      warningBorder: withAlpha(secondary, 0.4),
-    } : {}),
-    ...(third ? {
-      mutedForeground: third,
-    } : {}),
+    primary: primaryColor,
+    primaryForeground: foregroundFor(primaryColor),
+    primaryLight: withAlpha(primaryColor, 0.12),
+    primaryBorder: withAlpha(primaryColor, 0.4),
+    accent: primaryColor,
+    accentForeground: foregroundFor(primaryColor),
+    tint: primaryColor,
+    success: primaryColor,
   };
 }

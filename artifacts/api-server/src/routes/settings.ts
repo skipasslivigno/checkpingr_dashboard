@@ -7,8 +7,9 @@ import { z } from "zod";
 const router = Router();
 
 const UpdateSettingsBody = z.object({
-  colors:     z.array(z.string().regex(/^#[0-9A-Fa-f]{6}$/)).max(10).optional(),
-  maxSeasons: z.number().int().min(1).max(20).optional(),
+  primaryColor: z.string().regex(/^#[0-9A-Fa-f]{6}$/).nullable().optional(),
+  colors:       z.array(z.string().regex(/^#[0-9A-Fa-f]{6}$/)).max(10).optional(),
+  maxSeasons:   z.number().int().min(1).max(20).optional(),
 });
 
 const LogoBody = z.object({
@@ -32,13 +33,14 @@ router.patch("/settings", requireRole("admin"), async (req, res): Promise<void> 
     return;
   }
   const tenantId = req.user!.tenantId;
-  const { colors, maxSeasons } = parsed.data;
+  const { primaryColor, colors, maxSeasons } = parsed.data;
   const existing = await db.select({ tenantId: tenantSettingsTable.tenantId }).from(tenantSettingsTable).where(eq(tenantSettingsTable.tenantId, tenantId));
   if (existing.length === 0) {
-    const [row] = await db.insert(tenantSettingsTable).values({ tenantId, colors: colors ?? [], maxSeasons: maxSeasons ?? 3, updatedAt: new Date() }).returning();
+    const [row] = await db.insert(tenantSettingsTable).values({ tenantId, primaryColor: primaryColor ?? null, colors: colors ?? [], maxSeasons: maxSeasons ?? 3, updatedAt: new Date() }).returning();
     res.json(row);
   } else {
     const update: Record<string, unknown> = { updatedAt: new Date() };
+    if (primaryColor !== undefined) update["primaryColor"] = primaryColor;
     if (colors !== undefined) update["colors"] = colors;
     if (maxSeasons !== undefined) update["maxSeasons"] = maxSeasons;
     const [row] = await db.update(tenantSettingsTable).set(update).where(eq(tenantSettingsTable.tenantId, tenantId)).returning();

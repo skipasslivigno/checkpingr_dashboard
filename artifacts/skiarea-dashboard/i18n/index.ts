@@ -151,10 +151,11 @@ export interface Translations {
   settingsUploadLogo: string;
   settingsRemoveLogo: string;
   settingsLogoPermission: string;
+  settingsPrimaryColor: string;
+  settingsPrimaryColorHint: string;
+  settingsPrimaryColorLabel: string;
   settingsColors: string;
   settingsColorsHint: string;
-  settingsColorPrimary: string;
-  settingsColorSecondary: string;
   settingsColor: string;
   settingsAddColor: string;
   settingsMaxSeasons: string;
@@ -314,10 +315,11 @@ const it: Translations = {
   settingsUploadLogo: "Carica logo",
   settingsRemoveLogo: "Rimuovi",
   settingsLogoPermission: "Permesso alla libreria fotografica richiesto.",
-  settingsColors: "Colori",
-  settingsColorsHint: "Definisci fino a 10 colori personalizzati (esadecimale #RRGGBB). Il primo è il colore primario, il secondo il secondario.",
-  settingsColorPrimary: "Primario",
-  settingsColorSecondary: "Secondario",
+  settingsPrimaryColor: "Colore predefinito testo",
+  settingsPrimaryColorHint: "Colore principale dell'interfaccia (pulsanti, icone attive). Formato esadecimale #RRGGBB.",
+  settingsPrimaryColorLabel: "Colore UI",
+  settingsColors: "Colori grafici",
+  settingsColorsHint: "Fino a 10 colori per le serie dei grafici (passaggi, primi ingressi, presenze). Formato #RRGGBB.",
   settingsColor: "Colore",
   settingsAddColor: "Aggiungi colore",
   settingsMaxSeasons: "Stagioni visualizzabili",
@@ -477,10 +479,11 @@ const en: Translations = {
   settingsUploadLogo: "Upload logo",
   settingsRemoveLogo: "Remove",
   settingsLogoPermission: "Photo library permission required.",
-  settingsColors: "Colors",
-  settingsColorsHint: "Define up to 10 custom colors (hex #RRGGBB). The first is the primary color, the second is the secondary.",
-  settingsColorPrimary: "Primary",
-  settingsColorSecondary: "Secondary",
+  settingsPrimaryColor: "Default text color",
+  settingsPrimaryColorHint: "Main UI color (buttons, active icons). Hex format #RRGGBB.",
+  settingsPrimaryColorLabel: "UI color",
+  settingsColors: "Chart colors",
+  settingsColorsHint: "Up to 10 colors for chart series (passages, first entries, presences). Format #RRGGBB.",
   settingsColor: "Color",
   settingsAddColor: "Add color",
   settingsMaxSeasons: "Visible seasons",

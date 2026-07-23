@@ -7,7 +7,15 @@
  */
 
 export interface SettingsPatch {
-  /** @maxItems 10 */
+  /**
+     * Hex color used for primary UI elements (e.g.
+     * @nullable
+     */
+  primaryColor?: string | null;
+  /**
+     * Chart series colors
+     * @maxItems 10
+     */
   colors?: string[];
   /**
      * @minimum 1

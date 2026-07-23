@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export interface TenantSettingsValue {
   logoBase64: string | null;
+  primaryColor: string | null;
   colors: string[];
   maxSeasons: number;
   isLoading: boolean;
@@ -12,6 +13,7 @@ export interface TenantSettingsValue {
 
 const DEFAULT: TenantSettingsValue = {
   logoBase64: null,
+  primaryColor: null,
   colors: [],
   maxSeasons: 3,
   isLoading: false,
@@ -28,6 +30,7 @@ export function TenantSettingsProvider({ children }: { children: React.ReactNode
   const value = useMemo<TenantSettingsValue>(
     () => ({
       logoBase64: data?.logoBase64 ?? null,
+      primaryColor: data?.primaryColor ?? null,
       colors: data?.colors ?? [],
       maxSeasons: data?.maxSeasons ?? 3,
       isLoading,

@@ -21,7 +21,8 @@ export const getSettingsResponseMaxSeasonsMax = 20;
 export const GetSettingsResponse = zod.object({
   "tenantId": zod.string(),
   "logoBase64": zod.string().nullish(),
-  "colors": zod.array(zod.string()).max(getSettingsResponseColorsMax),
+  "primaryColor": zod.string().nullish().describe('Hex color used for primary UI elements (e.g.'),
+  "colors": zod.array(zod.string()).max(getSettingsResponseColorsMax).describe('Chart series colors (passages, first entries, presences per season)'),
   "maxSeasons": zod.number().min(1).max(getSettingsResponseMaxSeasonsMax)
 })
 
@@ -36,7 +37,8 @@ export const updateSettingsBodyMaxSeasonsMax = 20;
 
 
 export const UpdateSettingsBody = zod.object({
-  "colors": zod.array(zod.string()).max(updateSettingsBodyColorsMax).optional(),
+  "primaryColor": zod.string().nullish().describe('Hex color used for primary UI elements (e.g.'),
+  "colors": zod.array(zod.string()).max(updateSettingsBodyColorsMax).optional().describe('Chart series colors'),
   "maxSeasons": zod.number().min(1).max(updateSettingsBodyMaxSeasonsMax).optional()
 })
 
@@ -49,7 +51,8 @@ export const updateSettingsResponseMaxSeasonsMax = 20;
 export const UpdateSettingsResponse = zod.object({
   "tenantId": zod.string(),
   "logoBase64": zod.string().nullish(),
-  "colors": zod.array(zod.string()).max(updateSettingsResponseColorsMax),
+  "primaryColor": zod.string().nullish().describe('Hex color used for primary UI elements (e.g.'),
+  "colors": zod.array(zod.string()).max(updateSettingsResponseColorsMax).describe('Chart series colors (passages, first entries, presences per season)'),
   "maxSeasons": zod.number().min(1).max(updateSettingsResponseMaxSeasonsMax)
 })
 
@@ -70,7 +73,8 @@ export const uploadLogoResponseMaxSeasonsMax = 20;
 export const UploadLogoResponse = zod.object({
   "tenantId": zod.string(),
   "logoBase64": zod.string().nullish(),
-  "colors": zod.array(zod.string()).max(uploadLogoResponseColorsMax),
+  "primaryColor": zod.string().nullish().describe('Hex color used for primary UI elements (e.g.'),
+  "colors": zod.array(zod.string()).max(uploadLogoResponseColorsMax).describe('Chart series colors (passages, first entries, presences per season)'),
   "maxSeasons": zod.number().min(1).max(uploadLogoResponseMaxSeasonsMax)
 })
 

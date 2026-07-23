@@ -28,6 +28,41 @@ function hexValid(s: string): boolean {
   return /^#[0-9A-Fa-f]{6}$/.test(s);
 }
 
+function ColorInput({
+  label,
+  value,
+  onChange,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const colors = useColors();
+  const [draft, setDraft] = useState(value);
+  const valid = hexValid(draft);
+
+  useEffect(() => { setDraft(value); }, [value]);
+
+  return (
+    <View style={styles.colorRow}>
+      <View style={[styles.colorSwatch, { backgroundColor: valid ? draft : colors.border }]} />
+      <Text style={[styles.colorIndex, { color: colors.mutedForeground }]}>{label}</Text>
+      <TextInput
+        style={[styles.colorInput, { color: colors.foreground, borderColor: valid ? colors.border : colors.destructive, backgroundColor: colors.card }]}
+        value={draft}
+        onChangeText={(v) => {
+          setDraft(v);
+          if (hexValid(v)) onChange(v);
+        }}
+        placeholder="#RRGGBB"
+        placeholderTextColor={colors.mutedForeground}
+        maxLength={7}
+        autoCapitalize="characters"
+      />
+    </View>
+  );
+}
+
 function ColorRow({
   index,
   value,
@@ -50,7 +85,7 @@ function ColorRow({
     <View style={styles.colorRow}>
       <View style={[styles.colorSwatch, { backgroundColor: valid ? draft : colors.border }]} />
       <Text style={[styles.colorIndex, { color: colors.mutedForeground }]}>
-        {index === 0 ? t.settingsColorPrimary : index === 1 ? t.settingsColorSecondary : `${t.settingsColor} ${index + 1}`}
+        {`${t.settingsColor} ${index + 1}`}
       </Text>
       <TextInput
         style={[styles.colorInput, { color: colors.foreground, borderColor: valid ? colors.border : colors.destructive, backgroundColor: colors.card }]}
@@ -77,13 +112,15 @@ export default function SettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
-  const { logoBase64, colors: savedColors, maxSeasons, queryKey } = useTenantSettings();
+  const { logoBase64, primaryColor: savedPrimaryColor, colors: savedColors, maxSeasons, queryKey } = useTenantSettings();
 
   const [localLogo, setLocalLogo] = useState<string | null>(null);
+  const [primaryColorInput, setPrimaryColorInput] = useState(savedPrimaryColor ?? "");
   const [colorList, setColorList] = useState<string[]>(savedColors.length ? savedColors : []);
   const [maxSeasonsInput, setMaxSeasonsInput] = useState(String(maxSeasons));
   const [saving, setSaving] = useState(false);
 
+  useEffect(() => { setPrimaryColorInput(savedPrimaryColor ?? ""); }, [savedPrimaryColor]);
   useEffect(() => { setColorList(savedColors.length ? savedColors : []); }, [savedColors]);
   useEffect(() => { setMaxSeasonsInput(String(maxSeasons)); }, [maxSeasons]);
 
@@ -137,6 +174,7 @@ export default function SettingsScreen() {
       Alert.alert(t.settingsMaxSeasonsError);
       return;
     }
+    const validPrimary = hexValid(primaryColorInput) ? primaryColorInput : null;
     const validColors = colorList.filter(hexValid);
     setSaving(true);
     try {
@@ -144,7 +182,7 @@ export default function SettingsScreen() {
         const logoBase64Val = localLogo === "__remove__" ? null : localLogo;
         await patchLogo({ data: { logoBase64: logoBase64Val } });
       }
-      await patchSettings({ data: { colors: validColors, maxSeasons: ms } });
+      await patchSettings({ data: { primaryColor: validPrimary, colors: validColors, maxSeasons: ms } });
       await qc.invalidateQueries({ queryKey });
       router.back();
     } catch {
@@ -199,7 +237,18 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* Colors */}
+        {/* Primary color */}
+        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t.settingsPrimaryColor}</Text>
+        <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Text style={[styles.cardHint, { color: colors.mutedForeground }]}>{t.settingsPrimaryColorHint}</Text>
+          <ColorInput
+            label={t.settingsPrimaryColorLabel}
+            value={primaryColorInput}
+            onChange={setPrimaryColorInput}
+          />
+        </View>
+
+        {/* Chart colors */}
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t.settingsColors}</Text>
         <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Text style={[styles.cardHint, { color: colors.mutedForeground }]}>{t.settingsColorsHint}</Text>
