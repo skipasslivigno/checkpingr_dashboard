@@ -437,7 +437,7 @@ function WeekBarChart({ bars, containerWidth, height, colors, weekLabel }: WeekB
                 <Line x1={cx + unitW / 2} y1={0} x2={cx + unitW / 2} y2={chartH} stroke={colors.border} strokeWidth={0.5} strokeDasharray="2,4" />
               )}
 
-              {bars.map((b, si) => {
+              {[...bars].reverse().map((b, si) => {
                 const wk = b.weeks.find((w) => w.weekNumber === weekNum);
                 const val = wk?.totalPassages ?? 0;
                 if (val === 0) return null;
@@ -650,7 +650,7 @@ export default function ChartsScreen() {
   const hasAnyData = seasonLines.some((l) => l.points.length > 0);
   const hasWeekData = weekBars.some((b) => b.weeks.length > 0);
 
-  const topPadding = Platform.OS === "web" ? 67 : 0;
+  const topPadding = Platform.OS === "web" ? 16 : 0;
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -681,6 +681,7 @@ export default function ChartsScreen() {
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={[styles.content, { paddingTop: topPadding + 16 }]}
+      showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
       }
