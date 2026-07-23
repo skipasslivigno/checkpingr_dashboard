@@ -652,7 +652,7 @@ export default function ChartsScreen() {
       color: seasonColors[i % seasonColors.length]!,
       weeks: s.weeks.map((w) => ({ weekNumber: w.weekNumber, totalPassages: w.totalFirstPassages })),
     }));
-  }, [weekData]);
+  }, [weekData, seasonColors]);
 
   const hasAnyData = seasonLines.some((l) => l.points.length > 0);
   const hasWeekData = weekBars.some((b) => b.weeks.length > 0);
