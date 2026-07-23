@@ -273,12 +273,14 @@ export default function DashboardScreen() {
     ];
   }, [liftsLoading, isSearching, filteredGroups, summaryLoading, selectedSeason, seasons, summary, selectedDate, selectedExtraction]);
 
+  const { logoBase64 } = useTenantSettings();
+
   const renderHeader = () => (
     <View style={[styles.headerBlock, { paddingTop: topPadding + 16 }]}>
       {/* Logo / title / lang */}
       <View style={styles.headerRow}>
         <Image
-          source={require("@/assets/images/logo.png")}
+          source={logoBase64 ? { uri: logoBase64 } : require("@/assets/images/logo.png")}
           style={[styles.logoImage, isWide && styles.logoImageWide]}
           resizeMode="contain"
         />
