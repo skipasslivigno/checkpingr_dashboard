@@ -48,10 +48,13 @@ Create `/opt/skiarea/.env.production`:
 
 ```env
 DATABASE_URL=postgresql://USER:PASSWORD@localhost:5432/skiarea
-SYNC_API_KEY=your-secret-key          # optional; protects POST /api/lifts/sync
+SESSION_SECRET=<random-64-char-hex>   # signs JWT tokens — generate with: openssl rand -hex 32
 PORT=5000
 NODE_ENV=production
 ```
+
+> **Note:** `SYNC_API_KEY` is no longer used. The sync endpoint now authenticates
+> via per-tenant API keys stored in the database (set up in step 4b below).
 
 ---
 
@@ -61,6 +64,27 @@ NODE_ENV=production
 source /opt/skiarea/.env.production
 pnpm --filter @workspace/db run push
 ```
+
+This creates all tables: `lift_snapshots`, `tenants`, `users`.
+
+### 4b — First-run tenant + admin setup (one-time only)
+
+After the API server is running (step 5), create the first tenant and admin user:
+
+```bash
+curl -s -X POST https://dashboard.skipasslivigno.com/api/setup/init \
+  -H "Content-Type: application/json" \
+  -d '{
+    "tenantName":  "SKIPASSion Livigno",
+    "tenantSlug":  "skipassion-livigno",
+    "adminEmail":  "admin@skipassion.it",
+    "adminName":   "Admin",
+    "adminPassword": "YOUR_ADMIN_PASSWORD"
+  }' | jq .
+```
+
+The response contains the tenant `apiKey` — copy it, you'll need it for the SQL Agent job (step 8).
+This endpoint returns 409 if the tenant/user already exist, so it is safe to call again.
 
 ---
 
@@ -158,16 +182,17 @@ sudo nginx -t && sudo systemctl reload nginx
 
 ## 8 — Update the SQL Server Agent job
 
-Change the sync URL in the T-SQL script to:
-
-```
-https://yourdomain.com/api/lifts/sync
-```
-
-If `SYNC_API_KEY` is set, add the header:
+Change the sync URL and API key in the T-SQL script:
 
 ```sql
-EXEC sp_OAMethod @http, 'setRequestHeader', NULL, 'X-Api-Key', 'your-secret-key'
+DECLARE @url     NVARCHAR(512) = N'https://dashboard.skipasslivigno.com/api/lifts/sync'
+DECLARE @api_key NVARCHAR(128) = N'<apiKey from step 4b>'
+```
+
+The `X-Api-Key` header is **required** — the sync endpoint rejects requests without a valid tenant API key:
+
+```sql
+EXEC sp_OAMethod @http, 'setRequestHeader', NULL, 'X-Api-Key', @api_key
 ```
 
 ---
@@ -242,12 +267,14 @@ directly in the GitHub Actions log.
 ## Checklist
 
 - [ ] VPS: Node.js 24, pnpm, pm2, PostgreSQL, nginx installed
-- [ ] `.env.production` created with `DATABASE_URL`, `SYNC_API_KEY`, `PORT=5000`
-- [ ] DB migration run (`pnpm --filter @workspace/db run push`)
+- [ ] `.env.production` created with `DATABASE_URL`, `SESSION_SECRET`, `PORT=5000`
+- [ ] Code pushed to GitHub → GitHub Actions deploys automatically
+- [ ] DB migration applied (`tenants`, `users`, `lift_snapshots.tenant_id`)
 - [ ] API server running (`pm2 status`)
+- [ ] `POST /api/setup/init` called → tenant + admin created, `apiKey` saved
 - [ ] nginx serving static files and proxying `/api/`
 - [ ] TLS certificate active (`certbot`)
-- [ ] SQL Server Agent job URL updated to `https://yourdomain.com/api/lifts/sync`
+- [ ] SQL Server Agent `@api_key` updated to tenant API key from setup
 - [ ] Test sync: run the Agent job manually and verify data appears in the app
 - [ ] GitHub Actions secrets configured (`VPS_HOST`, `VPS_USER`, `VPS_SSH_KEY`)
 - [ ] Deploy key added to VPS `~/.ssh/authorized_keys`

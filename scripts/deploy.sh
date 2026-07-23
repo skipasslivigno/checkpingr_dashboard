@@ -12,7 +12,7 @@
 #   ssh deploy@vps '/opt/skiarea/scripts/deploy.sh'
 #
 # Required environment (set in /opt/skiarea/.env.production, sourced below):
-#   DATABASE_URL, SYNC_API_KEY (optional), PORT, NODE_ENV
+#   DATABASE_URL, SESSION_SECRET, PORT, NODE_ENV
 # Required on PATH: git, pnpm, pm2, node, rsync/cp
 set -euo pipefail
 
