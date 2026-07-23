@@ -52,7 +52,7 @@ pm2 save
 
 log "Building Expo web app"
 cd "$REPO_DIR/artifacts/skiarea-dashboard"
-EXPO_PUBLIC_DOMAIN="$DOMAIN" pnpm exec expo export --platform web
+EXPO_PUBLIC_DOMAIN="$DOMAIN" pnpm exec expo export --clear --platform web
 
 log "Publishing static build to $WEB_ROOT/dist"
 sudo mkdir -p "$WEB_ROOT/dist"
