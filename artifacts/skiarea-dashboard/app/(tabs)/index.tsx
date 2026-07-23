@@ -70,6 +70,7 @@ function GroupSection({
   onToggle: () => void;
 }) {
   const colors = useColors();
+  const metrics = useMetricColors();
   const { t } = useTranslation();
   const router = useRouter();
 
@@ -85,7 +86,7 @@ function GroupSection({
 
         <View style={groupStyles.subtotalsRow}>
           <View style={groupStyles.subtotalItem}>
-            <Text style={[groupStyles.subtotalValue, { color: colors.warning }]}>
+            <Text style={[groupStyles.subtotalValue, { color: metrics.primiIngressi.color }]}>
               {group.totalFirstPassages.toLocaleString()}
             </Text>
             <Text style={[groupStyles.subtotalLabel, { color: colors.mutedForeground }]}>
@@ -94,7 +95,7 @@ function GroupSection({
           </View>
           <View style={[groupStyles.divider, { backgroundColor: colors.border }]} />
           <View style={groupStyles.subtotalItem}>
-            <Text style={[groupStyles.subtotalValue, { color: colors.mutedForeground }]}>
+            <Text style={[groupStyles.subtotalValue, { color: metrics.presenze.color }]}>
               {group.totalGuests}
             </Text>
             <Text style={[groupStyles.subtotalLabel, { color: colors.mutedForeground }]}>
@@ -103,7 +104,7 @@ function GroupSection({
           </View>
           <View style={[groupStyles.divider, { backgroundColor: colors.border }]} />
           <View style={groupStyles.subtotalItem}>
-            <Text style={[groupStyles.subtotalValue, { color: colors.primary }]}>
+            <Text style={[groupStyles.subtotalValue, { color: metrics.passages.color }]}>
               {group.totalPassages.toLocaleString()}
             </Text>
             <Text style={[groupStyles.subtotalLabel, { color: colors.mutedForeground }]}>
@@ -131,9 +132,9 @@ function GroupSection({
           {/* Column header */}
           <View style={[groupStyles.tableHeader, { borderBottomColor: colors.border }]}>
             <View style={groupStyles.tableHeaderName} />
-            <Feather name="log-in" size={12} color={colors.warning} style={groupStyles.tableHeaderCol} />
-            <Feather name="users" size={12} color={colors.mutedForeground} style={groupStyles.tableHeaderCol} />
-            <Feather name="repeat" size={12} color={colors.primary} style={groupStyles.tableHeaderColPassages} />
+            <Feather name="log-in" size={12} color={metrics.primiIngressi.color} style={groupStyles.tableHeaderCol} />
+            <Feather name="users" size={12} color={metrics.presenze.color} style={groupStyles.tableHeaderCol} />
+            <Feather name="repeat" size={12} color={metrics.passages.color} style={groupStyles.tableHeaderColPassages} />
             <View style={{ width: 17 }} />
           </View>
           {visibleLifts.map((lift) => {
@@ -148,13 +149,13 @@ function GroupSection({
                 <Text style={[groupStyles.tableRowName, { color: colors.foreground }]} numberOfLines={1}>
                   {lift.ggbz}
                 </Text>
-                <Text style={[groupStyles.tableCol, { color: isActive ? colors.warning : colors.mutedForeground }]}>
+                <Text style={[groupStyles.tableCol, { color: isActive ? metrics.primiIngressi.color : colors.mutedForeground }]}>
                   {(lift.npin ?? 0).toLocaleString()}
                 </Text>
-                <Text style={[groupStyles.tableCol, { color: isActive ? colors.mutedForeground : colors.border }]}>
+                <Text style={[groupStyles.tableCol, { color: isActive ? metrics.presenze.color : colors.border }]}>
                   {(lift.nuin ?? 0).toLocaleString()}
                 </Text>
-                <Text style={[groupStyles.tableColPassages, { color: isActive ? colors.primary : colors.border }]}>
+                <Text style={[groupStyles.tableColPassages, { color: isActive ? metrics.passages.color : colors.border }]}>
                   {(lift.npas ?? 0).toLocaleString()}
                 </Text>
                 <Feather name="chevron-right" size={13} color={colors.border} />
