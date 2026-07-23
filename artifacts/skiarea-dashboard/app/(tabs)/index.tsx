@@ -352,7 +352,7 @@ export default function DashboardScreen() {
           ) : (
             <>
               <StatCard compact accentColor={metrics.passages.color} label={t.passages} value={(summary?.totalPassages ?? 0).toLocaleString()} />
-              <StatCard compact accentColor={metrics.presenze.color} label={t.guestsOnLifts} value={(summary?.totalGuests ?? 0).toLocaleString()} />
+              <StatCard compact accentColor={metrics.primiIngressi.color} label={t.guestsOnLifts} value={(summary?.totalGuests ?? 0).toLocaleString()} />
               <StatCard compact label={t.activeLifts} value={`${summary?.activeLifts ?? 0} / ${summary?.totalLifts ?? 0}`} />
               <StatCard compact label={t.season} value={summary?.season ? formatSeason(summary.season) : "—"} />
             </>
@@ -366,7 +366,7 @@ export default function DashboardScreen() {
             ) : (
               <>
                 <StatCard accentColor={metrics.passages.color} label={t.passages} value={(summary?.totalPassages ?? 0).toLocaleString()} />
-                <StatCard accentColor={metrics.presenze.color} label={t.guestsOnLifts} value={(summary?.totalGuests ?? 0).toLocaleString()} />
+                <StatCard accentColor={metrics.primiIngressi.color} label={t.guestsOnLifts} value={(summary?.totalGuests ?? 0).toLocaleString()} />
               </>
             )}
           </View>
