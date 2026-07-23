@@ -3,6 +3,8 @@ import { requireAuth } from "../middleware/requireAuth";
 import healthRouter from "./health";
 import liftsRouter from "./lifts";
 import authRouter from "./auth";
+import usersRouter from "./users";
+import setupRouter from "./setup";
 
 const router: IRouter = Router();
 
@@ -10,5 +12,7 @@ router.use(requireAuth);
 router.use(authRouter);
 router.use(healthRouter);
 router.use(liftsRouter);
+router.use(usersRouter);
+router.use(setupRouter);
 
 export default router;

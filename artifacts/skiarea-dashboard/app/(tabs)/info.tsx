@@ -156,8 +156,8 @@ function CopyBlock({ label, content }: { label: string; content: string }) {
 export default function InfoScreen() {
   const colors = useColors();
   const { t } = useTranslation();
-  const { logout } = useAuth();
-  const topPadding = Platform.OS === "web" ? 67 : 0;
+  const { logout, user } = useAuth();
+  const topPadding = Platform.OS === "web" ? 16 : 0;
 
   const sqlExample = useMemo(() => buildSqlExample(syncUrl, t), [t]);
 
@@ -216,6 +216,23 @@ export default function InfoScreen() {
           {t.idempotentNote}
         </Text>
       </View>
+
+      {user && (
+        <View style={[styles.profileCard, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <View style={[styles.profileAvatar, { backgroundColor: colors.primary + "20" }]}>
+            <Feather name="user" size={22} color={colors.primary} />
+          </View>
+          <View style={styles.profileInfo}>
+            <Text style={[styles.profileName, { color: colors.foreground }]}>{user.name}</Text>
+            <Text style={[styles.profileEmail, { color: colors.mutedForeground }]}>{user.email}</Text>
+            <View style={[styles.roleBadge, { backgroundColor: colors.primary + "18" }]}>
+              <Text style={[styles.roleText, { color: colors.primary }]}>
+                {user.role === "admin" ? t.roleAdmin : user.role === "operator" ? t.roleOperator : t.roleViewer}
+              </Text>
+            </View>
+          </View>
+        </View>
+      )}
 
       <TouchableOpacity
         style={[styles.logoutBtn, { borderColor: colors.destructive + "60" }]}
@@ -293,4 +310,24 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
   },
   logoutText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
+  profileCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    padding: 14,
+  },
+  profileAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  profileInfo: { flex: 1, gap: 3 },
+  profileName: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
+  profileEmail: { fontSize: 12, fontFamily: "Inter_400Regular" },
+  roleBadge: { alignSelf: "flex-start", borderRadius: 6, paddingHorizontal: 8, paddingVertical: 2, marginTop: 4 },
+  roleText: { fontSize: 11, fontFamily: "Inter_600SemiBold", textTransform: "uppercase", letterSpacing: 0.4 },
 });

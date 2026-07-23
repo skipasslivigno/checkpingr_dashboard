@@ -1,39 +1,16 @@
 import { Router } from "express";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { eq, and } from "drizzle-orm";
+import { db, usersTable, tenantsTable } from "@workspace/db";
 
 const router = Router();
 
-function parseUsers(): Map<string, string> {
-  const raw = process.env.AUTH_USERS ?? "";
-  const map = new Map<string, string>();
-  for (const pair of raw.split(",")) {
-    const colonIdx = pair.indexOf(":");
-    if (colonIdx < 1) continue;
-    const user = pair.slice(0, colonIdx).trim();
-    const pass = pair.slice(colonIdx + 1).trim();
-    if (user && pass) map.set(user, pass);
-  }
-  return map;
-}
+router.post("/auth/login", async (req, res): Promise<void> => {
+  const { email, password } = req.body as { email?: string; password?: string };
 
-router.post("/auth/login", (req, res) => {
-  const { username, password } = req.body as { username?: string; password?: string };
-
-  if (!username || !password) {
-    res.status(400).json({ error: "Username and password required" });
-    return;
-  }
-
-  const users = parseUsers();
-
-  if (!users.size) {
-    res.status(503).json({ error: "No users configured. Set AUTH_USERS env var." });
-    return;
-  }
-
-  const expected = users.get(username);
-  if (!expected || expected !== password) {
-    res.status(401).json({ error: "Invalid credentials" });
+  if (!email || !password) {
+    res.status(400).json({ error: "Email and password required" });
     return;
   }
 
@@ -43,8 +20,59 @@ router.post("/auth/login", (req, res) => {
     return;
   }
 
-  const token = jwt.sign({ username }, secret, { expiresIn: "30d" });
-  res.json({ token });
+  const user = await db
+    .select()
+    .from(usersTable)
+    .where(and(eq(usersTable.email, email.toLowerCase().trim()), eq(usersTable.isActive, true)))
+    .limit(1)
+    .then((rows) => rows[0] ?? null);
+
+  if (!user || !user.passwordHash) {
+    res.status(401).json({ error: "Invalid credentials" });
+    return;
+  }
+
+  const valid = await bcrypt.compare(password, user.passwordHash);
+  if (!valid) {
+    res.status(401).json({ error: "Invalid credentials" });
+    return;
+  }
+
+  const token = jwt.sign(
+    { userId: user.id, tenantId: user.tenantId, role: user.role, email: user.email, name: user.name },
+    secret,
+    { expiresIn: "30d" },
+  );
+
+  res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role, tenantId: user.tenantId } });
+});
+
+router.get("/auth/me", async (req, res): Promise<void> => {
+  if (!req.user) {
+    res.status(401).json({ error: "Unauthorized" });
+    return;
+  }
+
+  const user = await db
+    .select({ id: usersTable.id, email: usersTable.email, name: usersTable.name, role: usersTable.role, tenantId: usersTable.tenantId })
+    .from(usersTable)
+    .where(eq(usersTable.id, req.user.userId))
+    .limit(1)
+    .then((rows) => rows[0] ?? null);
+
+  if (!user) {
+    res.status(404).json({ error: "User not found" });
+    return;
+  }
+
+  const tenant = await db
+    .select({ id: tenantsTable.id, name: tenantsTable.name, slug: tenantsTable.slug })
+    .from(tenantsTable)
+    .where(eq(tenantsTable.id, user.tenantId))
+    .limit(1)
+    .then((rows) => rows[0] ?? null);
+
+  res.json({ ...user, tenant });
 });
 
 export default router;

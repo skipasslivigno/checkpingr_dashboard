@@ -1,4 +1,5 @@
-import { integer, pgTable, serial, text, timestamp, uniqueIndex } from "drizzle-orm/pg-core";
+import { integer, pgTable, serial, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { tenantsTable } from "./tenants";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -20,10 +21,11 @@ export const liftSnapshotsTable = pgTable(
     nomeSocieta: text("nome_societa"),
     descrGrp: text("descr_grp"),
     idSocieta: text("id_societa"),
-    codgrp: text("codgrp"),
+    codgrp:    text("codgrp"),
+    tenantId:  uuid("tenant_id").references(() => tenantsTable.id, { onDelete: "cascade" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (t) => [uniqueIndex("lift_snapshots_dupd_ggnr_idx").on(t.dupd, t.ggnr)]
+  (t) => [uniqueIndex("lift_snapshots_tenant_dupd_ggnr_idx").on(t.tenantId, t.dupd, t.ggnr)]
 );
 
 export const insertLiftSnapshotSchema = createInsertSchema(liftSnapshotsTable).omit({

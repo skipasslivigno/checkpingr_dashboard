@@ -10,7 +10,7 @@ A mobile app (Expo) that shows a real-time dashboard of ski lift passages and gu
 - `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
 - `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
 - Required env: `DATABASE_URL` — Postgres connection string (auto-provisioned)
-- Optional env: `SYNC_API_KEY` — if set, the POST /api/lifts/sync endpoint requires X-API-Key header
+- First-run setup: `POST /api/setup/init` with `{tenantName, tenantSlug, adminEmail, adminName, adminPassword}` — creates the first tenant + admin user and returns the `apiKey` for the sync endpoint (one-time only)
 
 ## Stack
 
@@ -36,10 +36,12 @@ A mobile app (Expo) that shows a real-time dashboard of ski lift passages and gu
 ## Architecture decisions
 
 - Data flows from on-site MSSQL → extraction script → POST /api/lifts/sync → PostgreSQL → mobile app
-- Snapshots are upserted by `idin` (original row ID) so re-pushing extraction data is safe
+- **Multi-tenant**: `tenants` + `users` tables; all lift data is scoped by `tenant_id`; sync endpoint authenticates via per-tenant `api_key` (X-Api-Key header) looked up in the `tenants` table
+- Snapshots are upserted by `(tenant_id, dupd, ggnr)` — unique index `lift_snapshots_tenant_dupd_ggnr_idx`
 - `/api/lifts/latest` uses `SELECT DISTINCT ON (ggnr)` ordered by `dupd DESC` to get the most recent snapshot per lift
-- The sync endpoint is optionally protected by `SYNC_API_KEY` env var (X-API-Key header)
+- Auth: JWT signed with `SESSION_SECRET`; payload contains `{userId, tenantId, role, email, name}`; roles: `admin | operator | viewer`
 - `/lifts/history` uses query param `?ggnr=` (not path param) to avoid Orval TS2308 collision between path params Zod schema and query params TypeScript type
+- User management: `GET/POST /api/users`, `PATCH/DELETE /api/users/:id` — admin-only, scoped to own tenant
 
 ## Product
 

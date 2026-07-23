@@ -1,6 +1,6 @@
 import { Router, type IRouter } from "express";
 import { and, asc, desc, eq, sql } from "drizzle-orm";
-import { db, liftSnapshotsTable } from "@workspace/db";
+import { db, liftSnapshotsTable, tenantsTable } from "@workspace/db";
 import {
   GetLatestLiftsQueryParams,
   GetDashboardSummaryQueryParams,
@@ -9,8 +9,6 @@ import {
 } from "@workspace/api-zod";
 import { z } from "zod";
 
-// Coercing sync schema — uses z.coerce.number() so SQL Server string-typed
-// numeric columns (DECIMAL, CHAR-stored IDs, etc.) are accepted without error.
 const CoercedSyncBody = z.object({
   snapshots: z.array(z.object({
     idin:         z.string().nullish(),
@@ -37,6 +35,7 @@ function todayIso(): string {
 }
 
 router.get("/lifts/latest", async (req, res): Promise<void> => {
+  const tenantId = req.user!.tenantId;
   const parsed = GetLatestLiftsQueryParams.safeParse(req.query);
   const date = parsed.success && parsed.data.date ? parsed.data.date : todayIso();
   const season = parsed.success ? parsed.data.season : undefined;
@@ -69,6 +68,7 @@ router.get("/lifts/latest", async (req, res): Promise<void> => {
       .from(liftSnapshotsTable)
       .where(
         and(
+          eq(liftSnapshotsTable.tenantId, tenantId),
           sql`${liftSnapshotsTable.dtgg} LIKE ${datePattern}`,
           eq(liftSnapshotsTable.dupd, extraction),
           season ? eq(liftSnapshotsTable.eser, season) : undefined
@@ -85,6 +85,7 @@ router.get("/lifts/latest", async (req, res): Promise<void> => {
     .from(liftSnapshotsTable)
     .where(
       and(
+        eq(liftSnapshotsTable.tenantId, tenantId),
         sql`${liftSnapshotsTable.dtgg} LIKE ${datePattern}`,
         season ? eq(liftSnapshotsTable.eser, season) : undefined
       )
@@ -95,6 +96,7 @@ router.get("/lifts/latest", async (req, res): Promise<void> => {
 });
 
 router.get("/lifts/summary", async (req, res): Promise<void> => {
+  const tenantId = req.user!.tenantId;
   const parsed = GetDashboardSummaryQueryParams.safeParse(req.query);
   const date = parsed.success && parsed.data.date ? parsed.data.date : todayIso();
   const season = parsed.success ? parsed.data.season : undefined;
@@ -103,6 +105,7 @@ router.get("/lifts/summary", async (req, res): Promise<void> => {
   const datePattern = `${date}%`;
 
   const baseWhere = and(
+    eq(liftSnapshotsTable.tenantId, tenantId),
     sql`${liftSnapshotsTable.dtgg} LIKE ${datePattern}`,
     extraction ? eq(liftSnapshotsTable.dupd, extraction) : undefined,
     season ? eq(liftSnapshotsTable.eser, season) : undefined
@@ -132,6 +135,7 @@ router.get("/lifts/summary", async (req, res): Promise<void> => {
   const lastSyncRow = await db
     .select({ dupd: liftSnapshotsTable.dupd })
     .from(liftSnapshotsTable)
+    .where(eq(liftSnapshotsTable.tenantId, tenantId))
     .orderBy(desc(liftSnapshotsTable.createdAt))
     .limit(1);
 
@@ -157,6 +161,7 @@ router.get("/lifts/summary", async (req, res): Promise<void> => {
 });
 
 router.get("/lifts/dates", async (req, res): Promise<void> => {
+  const tenantId = req.user!.tenantId;
   const season = req.query["season"] as string | undefined;
 
   const rows = await db
@@ -164,13 +169,17 @@ router.get("/lifts/dates", async (req, res): Promise<void> => {
       date: sql<string>`LEFT(${liftSnapshotsTable.dtgg}, 10)`,
     })
     .from(liftSnapshotsTable)
-    .where(season ? eq(liftSnapshotsTable.eser, season) : undefined)
+    .where(and(
+      eq(liftSnapshotsTable.tenantId, tenantId),
+      season ? eq(liftSnapshotsTable.eser, season) : undefined
+    ))
     .orderBy(desc(sql`LEFT(${liftSnapshotsTable.dtgg}, 10)`));
 
   res.json(rows.map((r) => r.date));
 });
 
 router.get("/lifts/extractions", async (req, res): Promise<void> => {
+  const tenantId = req.user!.tenantId;
   const parsed = GetLiftExtractionsQueryParams.safeParse(req.query);
   const date = parsed.success && parsed.data.date ? parsed.data.date : todayIso();
   const season = parsed.success ? parsed.data.season : undefined;
@@ -182,6 +191,7 @@ router.get("/lifts/extractions", async (req, res): Promise<void> => {
     .from(liftSnapshotsTable)
     .where(
       and(
+        eq(liftSnapshotsTable.tenantId, tenantId),
         sql`${liftSnapshotsTable.dtgg} LIKE ${datePattern}`,
         season ? eq(liftSnapshotsTable.eser, season) : undefined
       )
@@ -192,6 +202,7 @@ router.get("/lifts/extractions", async (req, res): Promise<void> => {
 });
 
 router.get("/lifts/history", async (req, res): Promise<void> => {
+  const tenantId = req.user!.tenantId;
   const parsed = GetLiftHistoryQueryParams.safeParse(req.query);
   if (!parsed.success) {
     res.status(400).json({ error: parsed.error.message });
@@ -206,6 +217,7 @@ router.get("/lifts/history", async (req, res): Promise<void> => {
     .from(liftSnapshotsTable)
     .where(
       and(
+        eq(liftSnapshotsTable.tenantId, tenantId),
         eq(liftSnapshotsTable.ggnr, ggnr),
         sql`${liftSnapshotsTable.dtgg} LIKE ${datePattern}`,
         season ? eq(liftSnapshotsTable.eser, season) : undefined
@@ -217,14 +229,25 @@ router.get("/lifts/history", async (req, res): Promise<void> => {
 });
 
 router.post("/lifts/sync", async (req, res): Promise<void> => {
-  const apiKey = process.env["SYNC_API_KEY"];
-  if (apiKey) {
-    const provided = req.headers["x-api-key"];
-    if (provided !== apiKey) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
+  const providedKey = req.headers["x-api-key"] as string | undefined;
+  if (!providedKey) {
+    res.status(401).json({ error: "X-Api-Key header required" });
+    return;
   }
+
+  const tenant = await db
+    .select({ id: tenantsTable.id })
+    .from(tenantsTable)
+    .where(eq(tenantsTable.apiKey, providedKey))
+    .limit(1)
+    .then((r) => r[0] ?? null);
+
+  if (!tenant) {
+    res.status(401).json({ error: "Invalid API key" });
+    return;
+  }
+
+  const tenantId = tenant.id;
 
   req.log.info({ firstSnapshot: (req.body?.snapshots ?? [])[0] }, "sync first snapshot");
 
@@ -241,11 +264,6 @@ router.post("/lifts/sync", async (req, res): Promise<void> => {
     return;
   }
 
-  // Trim trailing spaces from CHAR-padded SQL Server columns and deduplicate
-  // by (dupd, ggnr) across the whole payload before chunking.
-  // SQL Server's LEFT JOIN on SKP_SOCIETA can produce duplicate (dupd, ggnr)
-  // pairs; PostgreSQL's ON CONFLICT DO UPDATE rejects duplicates within a
-  // single INSERT statement, so we must collapse them first.
   type Snap = z.infer<typeof CoercedSyncBody>["snapshots"][number];
   const deduped = Array.from(
     snapshots.reduce((map, snap) => {
@@ -255,8 +273,6 @@ router.post("/lifts/sync", async (req, res): Promise<void> => {
     }, new Map<string, Snap>()).values()
   );
 
-  // Batch upsert: unique key is (dupd, ggnr) — one lift per extraction time.
-  // Inserting the same (dupd, ggnr) again updates all other fields in place.
   const CHUNK = 500;
   for (let i = 0; i < deduped.length; i += CHUNK) {
     const chunk = deduped.slice(i, i + CHUNK);
@@ -264,6 +280,7 @@ router.post("/lifts/sync", async (req, res): Promise<void> => {
       .insert(liftSnapshotsTable)
       .values(
         chunk.map((snap: Snap) => ({
+          tenantId,
           idin: snap.idin != null ? snap.idin.trim() : null,
           dupd: (snap.dupd ?? "").trim(),
           dtgg: snap.dtgg,
@@ -282,7 +299,7 @@ router.post("/lifts/sync", async (req, res): Promise<void> => {
         }))
       )
       .onConflictDoUpdate({
-        target: [liftSnapshotsTable.dupd, liftSnapshotsTable.ggnr],
+        target: [liftSnapshotsTable.tenantId, liftSnapshotsTable.dupd, liftSnapshotsTable.ggnr],
         set: {
           idin: sql`excluded.idin`,
           dtgg: sql`excluded.dtgg`,
@@ -305,6 +322,7 @@ router.post("/lifts/sync", async (req, res): Promise<void> => {
 });
 
 router.get("/lifts/period", async (req, res): Promise<void> => {
+  const tenantId = req.user!.tenantId;
   const from = req.query["from"] as string | undefined;
   const to = req.query["to"] as string | undefined;
   const season = req.query["season"] as string | undefined;
@@ -314,8 +332,6 @@ router.get("/lifts/period", async (req, res): Promise<void> => {
     return;
   }
 
-  // For each (date, lift) pair take the latest extraction snapshot (MAX dupd),
-  // then aggregate those daily-latest values across the period.
   const liftRows = await db.execute<{
     ggnr: number;
     ggbz: string;
@@ -334,6 +350,7 @@ router.get("/lifts/period", async (req, res): Promise<void> => {
         ${liftSnapshotsTable.npin}
       FROM ${liftSnapshotsTable}
       WHERE LEFT(${liftSnapshotsTable.dtgg}, 10) BETWEEN ${from} AND ${to}
+        AND ${liftSnapshotsTable.tenantId} = ${tenantId}
         ${season ? sql`AND ${liftSnapshotsTable.eser} = ${season}` : sql``}
       ORDER BY LEFT(${liftSnapshotsTable.dtgg}, 10), ${liftSnapshotsTable.ggnr}, ${liftSnapshotsTable.dupd} DESC
     )
@@ -351,20 +368,18 @@ router.get("/lifts/period", async (req, res): Promise<void> => {
 
   const rows = liftRows.rows;
 
-  // Overall summary
   const totalPassages = rows.reduce((s, r) => s + Number(r.total_passages), 0);
   const totalGuests = rows.reduce((s, r) => s + Number(r.total_guests), 0);
 
-  // Count distinct days that have any data
   const activeDaysRow = await db.execute<{ active_days: string }>(sql`
     SELECT COUNT(DISTINCT LEFT(${liftSnapshotsTable.dtgg}, 10))::int AS active_days
     FROM ${liftSnapshotsTable}
     WHERE LEFT(${liftSnapshotsTable.dtgg}, 10) BETWEEN ${from} AND ${to}
+      AND ${liftSnapshotsTable.tenantId} = ${tenantId}
       ${season ? sql`AND ${liftSnapshotsTable.eser} = ${season}` : sql``}
   `);
   const activeDays = Number(activeDaysRow.rows[0]?.active_days ?? 0);
 
-  // Busiest day — day with highest total passages (using daily-latest per lift)
   const busiestDayRow = await db.execute<{ dtgg_date: string; day_total: string }>(sql`
     WITH latest_per_lift_per_day AS (
       SELECT DISTINCT ON (LEFT(${liftSnapshotsTable.dtgg}, 10), ${liftSnapshotsTable.ggnr})
@@ -372,6 +387,7 @@ router.get("/lifts/period", async (req, res): Promise<void> => {
         ${liftSnapshotsTable.npas}
       FROM ${liftSnapshotsTable}
       WHERE LEFT(${liftSnapshotsTable.dtgg}, 10) BETWEEN ${from} AND ${to}
+        AND ${liftSnapshotsTable.tenantId} = ${tenantId}
         ${season ? sql`AND ${liftSnapshotsTable.eser} = ${season}` : sql``}
       ORDER BY LEFT(${liftSnapshotsTable.dtgg}, 10), ${liftSnapshotsTable.ggnr}, ${liftSnapshotsTable.dupd} DESC
     )
@@ -405,6 +421,7 @@ router.get("/lifts/period", async (req, res): Promise<void> => {
 });
 
 router.get("/lifts/week-trend", async (req, res): Promise<void> => {
+  const tenantId = req.user!.tenantId;
   let requestedSeasons: string[] | null = null;
   if (req.query["seasons"] && typeof req.query["seasons"] === "string") {
     requestedSeasons = req.query["seasons"]
@@ -418,6 +435,7 @@ router.get("/lifts/week-trend", async (req, res): Promise<void> => {
     const allSeasons = await db
       .selectDistinct({ eser: liftSnapshotsTable.eser })
       .from(liftSnapshotsTable)
+      .where(eq(liftSnapshotsTable.tenantId, tenantId))
       .orderBy(desc(liftSnapshotsTable.eser))
       .limit(2);
     requestedSeasons = allSeasons.map((r) => r.eser);
@@ -450,6 +468,7 @@ router.get("/lifts/week-trend", async (req, res): Promise<void> => {
           COALESCE(${liftSnapshotsTable.npin}, 0) AS npin
         FROM ${liftSnapshotsTable}
         WHERE ${liftSnapshotsTable.eser} = ${season}
+          AND ${liftSnapshotsTable.tenantId} = ${tenantId}
         ORDER BY LEFT(${liftSnapshotsTable.dtgg}, 10), ${liftSnapshotsTable.ggnr}, ${liftSnapshotsTable.dupd} DESC
       ),
       daily_totals AS (
@@ -489,31 +508,33 @@ router.get("/lifts/week-trend", async (req, res): Promise<void> => {
   res.json(result);
 });
 
-router.get("/seasons", async (_req, res): Promise<void> => {
+router.get("/seasons", async (req, res): Promise<void> => {
+  const tenantId = req.user!.tenantId;
   const rows = await db
     .selectDistinct({ eser: liftSnapshotsTable.eser })
     .from(liftSnapshotsTable)
+    .where(eq(liftSnapshotsTable.tenantId, tenantId))
     .orderBy(desc(liftSnapshotsTable.eser));
 
   res.json(rows.map((r) => r.eser));
 });
 
 router.get("/lifts/season-trend", async (req, res): Promise<void> => {
-  // Resolve the seasons to query
+  const tenantId = req.user!.tenantId;
   let requestedSeasons: string[] | null = null;
   if (req.query["seasons"] && typeof req.query["seasons"] === "string") {
     requestedSeasons = req.query["seasons"]
       .split(",")
       .map((s) => s.trim())
       .filter(Boolean)
-      .slice(0, 3); // max 3 seasons as per spec
+      .slice(0, 3);
   }
 
-  // If not specified, default to the two most recent seasons
   if (!requestedSeasons || requestedSeasons.length === 0) {
     const allSeasons = await db
       .selectDistinct({ eser: liftSnapshotsTable.eser })
       .from(liftSnapshotsTable)
+      .where(eq(liftSnapshotsTable.tenantId, tenantId))
       .orderBy(desc(liftSnapshotsTable.eser))
       .limit(2);
     requestedSeasons = allSeasons.map((r) => r.eser);
@@ -524,7 +545,6 @@ router.get("/lifts/season-trend", async (req, res): Promise<void> => {
     return;
   }
 
-  // For each season, aggregate daily totals using the latest snapshot per lift per day
   const result: Array<{
     season: string;
     data: Array<{ date: string; dayIndex: number; totalPassages: number; totalGuests: number }>;
@@ -545,6 +565,7 @@ router.get("/lifts/season-trend", async (req, res): Promise<void> => {
           ${liftSnapshotsTable.npin}
         FROM ${liftSnapshotsTable}
         WHERE ${liftSnapshotsTable.eser} = ${season}
+          AND ${liftSnapshotsTable.tenantId} = ${tenantId}
         ORDER BY LEFT(${liftSnapshotsTable.dtgg}, 10), ${liftSnapshotsTable.ggnr}, ${liftSnapshotsTable.dupd} DESC
       )
       SELECT
@@ -557,8 +578,6 @@ router.get("/lifts/season-trend", async (req, res): Promise<void> => {
       ORDER BY dtgg_date ASC
     `);
 
-    // Compute dayIndex as calendar days from the first date in this season's data.
-    // This ensures cross-season alignment is by actual calendar position, not row order.
     const firstDate = rows.rows[0]?.dtgg_date;
     const data = rows.rows.map((r) => {
       const dayIndex = firstDate

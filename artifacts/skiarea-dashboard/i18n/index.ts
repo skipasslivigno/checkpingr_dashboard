@@ -132,11 +132,16 @@ export interface Translations {
 
   loginTitle: string;
   loginSubtitle: string;
-  loginUsername: string;
+  loginEmail: string;
   loginPassword: string;
   loginButton: string;
   loginError: string;
   logout: string;
+  userProfile: string;
+  userRole: string;
+  roleAdmin: string;
+  roleOperator: string;
+  roleViewer: string;
 }
 
 const it: Translations = {
@@ -271,11 +276,16 @@ const it: Translations = {
 
   loginTitle: "Ski Area Dashboard",
   loginSubtitle: "Accedi per visualizzare i dati",
-  loginUsername: "Nome utente",
+  loginEmail: "Email",
   loginPassword: "Password",
   loginButton: "Accedi",
   loginError: "Credenziali non valide",
   logout: "Esci",
+  userProfile: "Profilo",
+  userRole: "Ruolo",
+  roleAdmin: "Amministratore",
+  roleOperator: "Operatore",
+  roleViewer: "Visualizzatore",
 };
 
 const en: Translations = {
@@ -410,11 +420,16 @@ const en: Translations = {
 
   loginTitle: "Ski Area Dashboard",
   loginSubtitle: "Sign in to view data",
-  loginUsername: "Username",
+  loginEmail: "Email",
   loginPassword: "Password",
   loginButton: "Sign In",
   loginError: "Invalid credentials",
   logout: "Sign Out",
+  userProfile: "Profile",
+  userRole: "Role",
+  roleAdmin: "Administrator",
+  roleOperator: "Operator",
+  roleViewer: "Viewer",
 };
 
 export const translations: Record<Language, Translations> = { it, en };

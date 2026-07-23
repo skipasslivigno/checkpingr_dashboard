@@ -20,18 +20,18 @@ export default function LoginScreen() {
   const { login } = useAuth();
   const { t } = useTranslation();
 
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   async function handleLogin() {
-    if (!username.trim() || !password) return;
+    if (!email.trim() || !password) return;
     setLoading(true);
     setError(null);
     try {
-      await login(username.trim(), password);
+      await login(email.trim(), password);
     } catch (e) {
       setError(e instanceof Error ? e.message : t.loginError);
     } finally {
@@ -61,19 +61,20 @@ export default function LoginScreen() {
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
             <View style={styles.field}>
               <Text style={[styles.label, { color: colors.mutedForeground }]}>
-                {t.loginUsername}
+                {t.loginEmail}
               </Text>
               <View style={[styles.inputWrap, { borderColor: colors.input, backgroundColor: colors.background }]}>
-                <Feather name="user" size={16} color={colors.mutedForeground} style={styles.inputIcon} />
+                <Feather name="mail" size={16} color={colors.mutedForeground} style={styles.inputIcon} />
                 <TextInput
                   style={[styles.input, { color: colors.foreground }]}
-                  value={username}
-                  onChangeText={setUsername}
+                  value={email}
+                  onChangeText={setEmail}
                   autoCapitalize="none"
                   autoCorrect={false}
+                  keyboardType="email-address"
                   returnKeyType="next"
                   placeholderTextColor={colors.mutedForeground}
-                  placeholder={t.loginUsername}
+                  placeholder={t.loginEmail}
                 />
               </View>
             </View>
@@ -115,10 +116,10 @@ export default function LoginScreen() {
               style={[
                 styles.button,
                 { backgroundColor: colors.primary },
-                (loading || !username || !password) && styles.buttonDisabled,
+                (loading || !email || !password) && styles.buttonDisabled,
               ]}
               onPress={handleLogin}
-              disabled={loading || !username || !password}
+              disabled={loading || !email || !password}
             >
               {loading ? (
                 <ActivityIndicator color={colors.primaryForeground} />
