@@ -802,11 +802,21 @@ export default function ChartsScreen() {
       {/* Season summary stats */}
       {hasAnyData && !isLoading && (
         <View style={styles.summarySection}>
-          {seasonLines.map((line) => {
+          {seasonLines.map((line, idx) => {
             const last = line.points[line.points.length - 1];
             const totalDays = line.points.length;
             const total = last?.cumulative ?? 0;
             const peak = Math.max(...line.points.map((p) => p.totalPassages));
+
+            // Delta % vs next-listed season (chronologically previous)
+            const prevLine = seasonLines[idx + 1];
+            const prevTotal = prevLine?.points[prevLine.points.length - 1]?.cumulative ?? 0;
+            const delta = prevTotal > 0 ? ((total - prevTotal) / prevTotal) * 100 : null;
+            const deltaPositive = delta !== null && delta >= 0;
+            const deltaText = delta !== null
+              ? `${deltaPositive ? "+" : ""}${delta.toFixed(1)}%`
+              : null;
+
             return (
               <View key={line.season} style={[styles.summaryCard, { backgroundColor: colors.card, borderColor: line.color + "66" }]}>
                 <View style={[styles.summaryDot, { backgroundColor: line.color }]} />
@@ -814,7 +824,19 @@ export default function ChartsScreen() {
                   <Text style={[styles.summaryLabel, { color: colors.mutedForeground }]}>{line.season}</Text>
                   <View style={styles.summaryStats}>
                     <View style={styles.summaryStat}>
-                      <Text style={[styles.summaryValue, { color: colors.foreground }]}>{total.toLocaleString()}</Text>
+                      <View style={styles.summaryValueRow}>
+                        <Text style={[styles.summaryValue, { color: colors.foreground }]}>{total.toLocaleString()}</Text>
+                        {deltaText && (
+                          <View style={[styles.deltaBadge, { backgroundColor: deltaPositive ? colors.success + "22" : colors.destructive + "22" }]}>
+                            <Text style={[styles.deltaBadgeText, { color: deltaPositive ? colors.success : colors.destructive }]}>
+                              {deltaText}
+                            </Text>
+                            <Text style={[styles.deltaBadgeSub, { color: colors.mutedForeground }]}>
+                              {t.chartsVsPrev}
+                            </Text>
+                          </View>
+                        )}
+                      </View>
                       <Text style={[styles.summaryStatLabel, { color: colors.mutedForeground }]}>{t.chartsFirstEntries.toLowerCase()}</Text>
                     </View>
                     <View style={styles.summaryStat}>
@@ -876,6 +898,10 @@ const styles = StyleSheet.create({
   summaryLabel: { fontSize: 12, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
   summaryStats: { flexDirection: "row", gap: 20 },
   summaryStat: { gap: 2 },
+  summaryValueRow: { flexDirection: "row", alignItems: "center", gap: 8, flexWrap: "wrap" },
   summaryValue: { fontSize: 16, fontFamily: "Inter_700Bold" },
   summaryStatLabel: { fontSize: 10, fontFamily: "Inter_400Regular" },
+  deltaBadge: { flexDirection: "row", alignItems: "center", gap: 4, borderRadius: 6, paddingHorizontal: 7, paddingVertical: 2 },
+  deltaBadgeText: { fontSize: 13, fontFamily: "Inter_700Bold" },
+  deltaBadgeSub: { fontSize: 10, fontFamily: "Inter_400Regular" },
 });
