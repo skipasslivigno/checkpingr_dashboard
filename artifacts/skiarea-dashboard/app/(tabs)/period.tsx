@@ -438,7 +438,6 @@ export default function PeriodScreen() {
   const metrics = useMetricColors();
   const seasons = allSeasons.slice(0, maxSeasons);
   const [compareEnabled, setCompareEnabled] = useState(false);
-  const [viewMode, setViewMode] = useState<"list" | "groups">("list");
   const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => {
@@ -905,55 +904,24 @@ export default function PeriodScreen() {
         </View>
       )}
 
-      {/* View mode toggle + section title */}
-      <View style={styles.sectionHeaderRow}>
-        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-          {viewMode === "list" ? t.periodRankedLifts : t.periodViewGroups}
-        </Text>
-        {hasData && !anyLoading && (
-          <View style={[styles.viewToggle, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
-            <TouchableOpacity
-              style={[styles.viewToggleBtn, viewMode === "list" && { backgroundColor: colors.primary }]}
-              onPress={() => setViewMode("list")}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.viewToggleText, { color: viewMode === "list" ? colors.primaryForeground : colors.mutedForeground }]}>
-                {t.periodViewList}
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.viewToggleBtn, viewMode === "groups" && { backgroundColor: colors.primary }]}
-              onPress={() => setViewMode("groups")}
-              activeOpacity={0.7}
-            >
-              <Text style={[styles.viewToggleText, { color: viewMode === "groups" ? colors.primaryForeground : colors.mutedForeground }]}>
-                {t.periodViewGroups}
-              </Text>
-            </TouchableOpacity>
-          </View>
-        )}
-      </View>
+      <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+        {t.periodViewGroups}
+      </Text>
 
       {anyLoading ? (
-        Array.from({ length: 6 }).map((_, i) => (
+        Array.from({ length: 5 }).map((_, i) => (
           <View
             key={i}
             style={[styles.liftRowSkeleton, { backgroundColor: colors.card, borderColor: colors.border }]}
           />
         ))
       ) : !hasData ? (
-        <View
-          style={[styles.emptyState, { backgroundColor: colors.card, borderColor: colors.border }]}
-        >
+        <View style={[styles.emptyState, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Feather name="calendar" size={32} color={colors.mutedForeground} />
-          <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-            {t.periodNoData}
-          </Text>
-          <Text style={[styles.emptySubText, { color: colors.mutedForeground }]}>
-            {t.periodNoDataSub}
-          </Text>
+          <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>{t.periodNoData}</Text>
+          <Text style={[styles.emptySubText, { color: colors.mutedForeground }]}>{t.periodNoDataSub}</Text>
         </View>
-      ) : viewMode === "groups" ? (
+      ) : (
         periodGroups.map((group) => (
           <PeriodGroupSection
             key={group.name}
@@ -962,97 +930,6 @@ export default function PeriodScreen() {
             onToggle={() => toggleGroup(group.name)}
           />
         ))
-      ) : (
-        <>
-        {/* Column headers when comparing */}
-        {comparing && priorData && (
-          <View style={[styles.compareHeader, { borderColor: colors.border }]}>
-            <View style={{ flex: 1 }} />
-            <View style={styles.compareHeaderCols}>
-              <Text style={[styles.compareHeaderLabel, { color: colors.primary }]}>
-                {currentSeasonStr}
-              </Text>
-              <Text style={[styles.compareHeaderLabel, { color: colors.mutedForeground }]}>
-                {priorSeason}
-              </Text>
-            </View>
-          </View>
-        )}
-        {data.lifts.map((lift, index) => {
-          const prior = comparing
-            ? priorData?.lifts.find((l) => l.ggnr === lift.ggnr)
-            : undefined;
-          const delta = prior ? formatDelta(lift.totalPassages, prior.totalPassages) : null;
-
-          return (
-            <View
-              key={lift.ggnr}
-              style={[styles.liftRow, { backgroundColor: colors.card, borderColor: colors.border }]}
-            >
-              <View style={[styles.rankBadge, { backgroundColor: index < 3 ? colors.primary : colors.secondary }]}>
-                <Text style={[styles.rankText, { color: index < 3 ? colors.primaryForeground : colors.mutedForeground }]}>
-                  {index + 1}
-                </Text>
-              </View>
-
-              <View style={styles.liftInfo}>
-                <Text style={[styles.liftName, { color: colors.foreground }]} numberOfLines={1}>
-                  {lift.ggbz}
-                </Text>
-                <Text style={[styles.liftMeta, { color: colors.mutedForeground }]}>
-                  {lift.activeDays} {t.periodDays}
-                </Text>
-              </View>
-
-              {comparing ? (
-                <View style={styles.compareStats}>
-                  {/* Current season */}
-                  <View style={styles.compareCol}>
-                    <Text style={[styles.liftPassages, { color: colors.primary }]}>
-                      {lift.totalPassages.toLocaleString()}
-                    </Text>
-                    {delta && (
-                      <Text
-                        style={[
-                          styles.deltaText,
-                          { color: delta.positive ? colors.success : colors.destructive },
-                        ]}
-                      >
-                        {delta.text}
-                      </Text>
-                    )}
-                  </View>
-                  {/* Prior season */}
-                  <View style={styles.compareCol}>
-                    <Text style={[styles.liftPassagesPrior, { color: colors.mutedForeground }]}>
-                      {prior ? prior.totalPassages.toLocaleString() : "—"}
-                    </Text>
-                  </View>
-                </View>
-              ) : (
-                <View style={styles.liftStats}>
-                  <View style={styles.liftStatRow}>
-                    <Text style={[styles.liftPassages, { color: colors.primary }]}>
-                      {lift.totalPassages.toLocaleString()}
-                    </Text>
-                    <Text style={[styles.liftPassagesLabel, { color: colors.mutedForeground }]}>
-                      {t.passagesRowLabel}
-                    </Text>
-                  </View>
-                  <View style={styles.liftStatRow}>
-                    <Text style={[styles.liftGuests, { color: colors.mutedForeground }]}>
-                      {lift.totalGuests.toLocaleString()}
-                    </Text>
-                    <Text style={[styles.liftGuestsLabel, { color: colors.mutedForeground }]}>
-                      {t.guestsOnLifts}
-                    </Text>
-                  </View>
-                </View>
-              )}
-            </View>
-          );
-        })}
-        </>
       )}
 
       <View style={{ height: Platform.OS === "web" ? 34 : 100 }} />
@@ -1216,53 +1093,12 @@ const styles = StyleSheet.create({
   },
   busiestLabel: { fontSize: 12, fontFamily: "Inter_500Medium" },
   busiestValue: { fontSize: 13, fontFamily: "Inter_600SemiBold", flex: 1 },
-  sectionHeaderRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginTop: 8,
-    marginBottom: 12,
-    paddingHorizontal: 16,
-  },
   sectionTitle: {
     fontSize: 18,
     fontFamily: "Inter_600SemiBold",
-  },
-  viewToggle: {
-    flexDirection: "row",
-    borderRadius: 10,
-    borderWidth: 1,
-    padding: 3,
-    gap: 2,
-  },
-  viewToggleBtn: {
-    borderRadius: 7,
-    paddingHorizontal: 12,
-    paddingVertical: 5,
-  },
-  viewToggleText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
-  compareHeader: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginHorizontal: 16,
-    marginBottom: 4,
-    paddingHorizontal: 12,
-    paddingBottom: 6,
-    borderBottomWidth: 1,
-  },
-  compareHeaderCols: {
-    flexDirection: "row",
-    gap: 16,
-    minWidth: 130,
-    justifyContent: "flex-end",
-  },
-  compareHeaderLabel: {
-    fontSize: 11,
-    fontFamily: "Inter_600SemiBold",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    minWidth: 55,
-    textAlign: "right",
+    marginTop: 8,
+    marginBottom: 12,
+    paddingHorizontal: 16,
   },
   liftRowSkeleton: {
     marginHorizontal: 16,
@@ -1270,52 +1106,6 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 1,
     height: 60,
-  },
-  liftRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginHorizontal: 16,
-    marginBottom: 6,
-    borderRadius: 12,
-    borderWidth: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    gap: 10,
-  },
-  rankBadge: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  rankText: { fontSize: 12, fontFamily: "Inter_700Bold" },
-  liftInfo: { flex: 1, gap: 2 },
-  liftName: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
-  liftMeta: { fontSize: 11, fontFamily: "Inter_400Regular" },
-  liftStats: { alignItems: "flex-end", gap: 3 },
-  liftStatRow: { flexDirection: "row", alignItems: "baseline", gap: 3 },
-  liftPassages: { fontSize: 15, fontFamily: "Inter_700Bold" },
-  liftPassagesLabel: { fontSize: 10, fontFamily: "Inter_400Regular" },
-  liftGuests: { fontSize: 12, fontFamily: "Inter_500Medium" },
-  liftGuestsLabel: { fontSize: 10, fontFamily: "Inter_400Regular" },
-  compareStats: {
-    flexDirection: "row",
-    gap: 16,
-    alignItems: "center",
-  },
-  compareCol: {
-    alignItems: "flex-end",
-    gap: 2,
-    minWidth: 55,
-  },
-  liftPassagesPrior: {
-    fontSize: 13,
-    fontFamily: "Inter_500Medium",
-  },
-  deltaText: {
-    fontSize: 10,
-    fontFamily: "Inter_600SemiBold",
   },
   emptyState: {
     alignItems: "center",
