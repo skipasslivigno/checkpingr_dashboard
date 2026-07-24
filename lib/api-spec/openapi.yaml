@@ -594,7 +594,15 @@ components:
           description: Sum of daily-latest npin across the period
         activeDays:
           type: integer
-          description: Number of days the lift had at least one passage
+        nsoc:
+          type: ["integer", "null"]
+          description: Company/group sort number
+        descrGrp:
+          type: ["string", "null"]
+          description: Group name
+        nomeSocieta:
+          type: ["string", "null"]
+          description: Company name
 
     SeasonTrendPoint:
       type: object

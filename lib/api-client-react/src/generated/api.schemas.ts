@@ -151,8 +151,22 @@ export interface PeriodLiftRow {
   totalGuests: number;
   /** Sum of daily-latest npin across the period */
   totalFirstPassages: number;
-  /** Number of days the lift had at least one passage */
   activeDays: number;
+  /**
+     * Company/group sort number
+     * @nullable
+     */
+  nsoc?: number | null;
+  /**
+     * Group name
+     * @nullable
+     */
+  descrGrp?: string | null;
+  /**
+     * Company name
+     * @nullable
+     */
+  nomeSocieta?: string | null;
 }
 
 export interface SeasonTrendPoint {

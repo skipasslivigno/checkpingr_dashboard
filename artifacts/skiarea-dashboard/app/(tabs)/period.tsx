@@ -4,7 +4,7 @@ import { useQuery, useQueryClient, skipToken } from "@tanstack/react-query";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Platform,
   RefreshControl,
@@ -284,6 +284,142 @@ function seasonStartYear(season: string): number {
   return parseInt(season.split("-")[0], 10);
 }
 
+// ── Period group view ─────────────────────────────────────────────────────────
+
+interface PeriodGroupData {
+  name: string;
+  minNsoc: number;
+  totalPassages: number;
+  totalGuests: number;
+  totalFirstPassages: number;
+  activeLifts: number;
+  totalLifts: number;
+  lifts: PeriodResult["lifts"];
+}
+
+function PeriodGroupSection({
+  group,
+  expanded,
+  onToggle,
+}: {
+  group: PeriodGroupData;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  const colors = useColors();
+  const metrics = useMetricColors();
+  const { t } = useTranslation();
+
+  return (
+    <View style={[pgStyles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
+      <TouchableOpacity style={pgStyles.header} onPress={onToggle} activeOpacity={0.7}>
+        <View style={pgStyles.titleRow}>
+          <Text style={[pgStyles.name, { color: colors.foreground }]} numberOfLines={1}>
+            {group.name}
+          </Text>
+          <Feather name={expanded ? "chevron-up" : "chevron-down"} size={16} color={colors.mutedForeground} />
+        </View>
+        <View style={pgStyles.totalsRow}>
+          <View style={pgStyles.totalItem}>
+            <Text style={[pgStyles.totalValue, { color: metrics.primiIngressi.color }]}>
+              {group.totalFirstPassages.toLocaleString()}
+            </Text>
+            <Text style={[pgStyles.totalLabel, { color: colors.mutedForeground }]}>
+              {t.firstPassages.toUpperCase()}
+            </Text>
+          </View>
+          <View style={[pgStyles.divider, { backgroundColor: colors.border }]} />
+          <View style={pgStyles.totalItem}>
+            <Text style={[pgStyles.totalValue, { color: metrics.presenze.color }]}>
+              {group.totalGuests.toLocaleString()}
+            </Text>
+            <Text style={[pgStyles.totalLabel, { color: colors.mutedForeground }]}>
+              {t.onLiftLabel.toUpperCase()}
+            </Text>
+          </View>
+          <View style={[pgStyles.divider, { backgroundColor: colors.border }]} />
+          <View style={pgStyles.totalItem}>
+            <Text style={[pgStyles.totalValue, { color: metrics.passages.color }]}>
+              {group.totalPassages.toLocaleString()}
+            </Text>
+            <Text style={[pgStyles.totalLabel, { color: colors.mutedForeground }]}>
+              {t.passages.toUpperCase()}
+            </Text>
+          </View>
+          <View style={[pgStyles.divider, { backgroundColor: colors.border }]} />
+          <View style={pgStyles.totalItem}>
+            <Text style={[pgStyles.totalValue, { color: group.activeLifts > 0 ? colors.success : colors.mutedForeground }]}>
+              {group.activeLifts}
+              <Text style={[pgStyles.totalSmall, { color: colors.mutedForeground }]}>{" / "}{group.totalLifts}</Text>
+            </Text>
+            <Text style={[pgStyles.totalLabel, { color: colors.mutedForeground }]}>
+              {t.activeLifts.toUpperCase()}
+            </Text>
+          </View>
+        </View>
+      </TouchableOpacity>
+
+      {expanded && (
+        <View style={[pgStyles.liftList, { borderTopColor: colors.border }]}>
+          {/* Column header */}
+          <View style={[pgStyles.colHeader, { borderBottomColor: colors.border }]}>
+            <View style={pgStyles.colName} />
+            <Feather name="log-in" size={11} color={metrics.primiIngressi.color} style={pgStyles.colIcon} />
+            <Feather name="users" size={11} color={metrics.presenze.color} style={pgStyles.colIcon} />
+            <Feather name="repeat" size={11} color={metrics.passages.color} style={pgStyles.colIconWide} />
+          </View>
+          {group.lifts.map((lift) => {
+            const active = lift.totalPassages > 0;
+            return (
+              <View
+                key={lift.ggnr}
+                style={[pgStyles.liftRow, { borderBottomColor: colors.border, opacity: active ? 1 : 0.4 }]}
+              >
+                <Text style={[pgStyles.liftName, { color: colors.foreground }]} numberOfLines={1}>
+                  {lift.ggbz}
+                </Text>
+                <Text style={[pgStyles.col, { color: active ? metrics.primiIngressi.color : colors.mutedForeground }]}>
+                  {lift.totalFirstPassages.toLocaleString()}
+                </Text>
+                <Text style={[pgStyles.col, { color: active ? metrics.presenze.color : colors.border }]}>
+                  {lift.totalGuests.toLocaleString()}
+                </Text>
+                <Text style={[pgStyles.colWide, { color: active ? metrics.passages.color : colors.border }]}>
+                  {lift.totalPassages.toLocaleString()}
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      )}
+    </View>
+  );
+}
+
+const pgStyles = StyleSheet.create({
+  card: { borderRadius: 14, borderWidth: 1, overflow: "hidden", marginHorizontal: 16, marginBottom: 8 },
+  header: { padding: 14, gap: 10 },
+  titleRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", gap: 8 },
+  name: { fontSize: 15, fontFamily: "Inter_700Bold", flex: 1 },
+  totalsRow: { flexDirection: "row", alignItems: "center" },
+  totalItem: { flex: 1, alignItems: "center", gap: 2 },
+  totalValue: { fontSize: 14, fontFamily: "Inter_700Bold" },
+  totalSmall: { fontSize: 11, fontFamily: "Inter_400Regular" },
+  totalLabel: { fontSize: 9, fontFamily: "Inter_400Regular", letterSpacing: 0.3, textAlign: "center" },
+  divider: { width: 1, height: 26, marginHorizontal: 2 },
+  liftList: { borderTopWidth: 1, paddingHorizontal: 12, paddingVertical: 4 },
+  colHeader: { flexDirection: "row", alignItems: "center", paddingVertical: 5, paddingHorizontal: 4, gap: 4, borderBottomWidth: StyleSheet.hairlineWidth, marginBottom: 2 },
+  colName: { flex: 1 },
+  colIcon: { width: 44, textAlign: "right" },
+  colIconWide: { width: 52, textAlign: "right" },
+  liftRow: { flexDirection: "row", alignItems: "center", paddingVertical: 7, paddingHorizontal: 4, gap: 4, borderBottomWidth: StyleSheet.hairlineWidth },
+  liftName: { flex: 1, fontSize: 12, fontFamily: "Inter_500Medium", minWidth: 0 },
+  col: { fontSize: 12, fontFamily: "Inter_600SemiBold", width: 44, textAlign: "right" },
+  colWide: { fontSize: 13, fontFamily: "Inter_700Bold", width: 52, textAlign: "right" },
+});
+
+// ── Screen ────────────────────────────────────────────────────────────────────
+
 export default function PeriodScreen() {
   const colors = useColors();
   const { t, language } = useTranslation();
@@ -302,6 +438,8 @@ export default function PeriodScreen() {
   const metrics = useMetricColors();
   const seasons = allSeasons.slice(0, maxSeasons);
   const [compareEnabled, setCompareEnabled] = useState(false);
+  const [viewMode, setViewMode] = useState<"list" | "groups">("list");
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const isoPattern = /^\d{4}-\d{2}-\d{2}$/;
@@ -412,6 +550,36 @@ export default function PeriodScreen() {
   }
 
   const hasData = data && data.lifts.length > 0;
+
+  const periodGroups = useMemo<PeriodGroupData[]>(() => {
+    if (!data?.lifts) return [];
+    const map = new Map<string, PeriodGroupData>();
+    for (const lift of data.lifts) {
+      const key = lift.descrGrp ?? "—";
+      if (!map.has(key)) {
+        map.set(key, { name: key, minNsoc: lift.nsoc ?? 9999, totalPassages: 0, totalGuests: 0, totalFirstPassages: 0, activeLifts: 0, totalLifts: 0, lifts: [] });
+      }
+      const g = map.get(key)!;
+      g.minNsoc = Math.min(g.minNsoc, lift.nsoc ?? 9999);
+      g.totalPassages += lift.totalPassages;
+      g.totalGuests += lift.totalGuests;
+      g.totalFirstPassages += lift.totalFirstPassages;
+      if (lift.totalPassages > 0) g.activeLifts += 1;
+      g.totalLifts += 1;
+      g.lifts.push(lift);
+    }
+    for (const g of map.values()) g.lifts.sort((a, b) => (a.nsoc ?? 9999) - (b.nsoc ?? 9999));
+    return Array.from(map.values()).sort((a, b) => a.minNsoc - b.minNsoc);
+  }, [data?.lifts]);
+
+  function toggleGroup(name: string) {
+    setCollapsedGroups((prev) => {
+      const next = new Set(prev);
+      if (next.has(name)) next.delete(name);
+      else next.add(name);
+      return next;
+    });
+  }
 
   return (
     <>
@@ -737,25 +905,34 @@ export default function PeriodScreen() {
         </View>
       )}
 
-      {/* Ranked lift list */}
-      <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-        {t.periodRankedLifts}
-      </Text>
-
-      {/* Column headers when comparing */}
-      {comparing && hasData && !anyLoading && (
-        <View style={[styles.compareHeader, { borderColor: colors.border }]}>
-          <View style={{ flex: 1 }} />
-          <View style={styles.compareHeaderCols}>
-            <Text style={[styles.compareHeaderLabel, { color: colors.primary }]}>
-              {currentSeasonStr}
-            </Text>
-            <Text style={[styles.compareHeaderLabel, { color: colors.mutedForeground }]}>
-              {priorSeason}
-            </Text>
+      {/* View mode toggle + section title */}
+      <View style={styles.sectionHeaderRow}>
+        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+          {viewMode === "list" ? t.periodRankedLifts : t.periodViewGroups}
+        </Text>
+        {hasData && !anyLoading && (
+          <View style={[styles.viewToggle, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+            <TouchableOpacity
+              style={[styles.viewToggleBtn, viewMode === "list" && { backgroundColor: colors.primary }]}
+              onPress={() => setViewMode("list")}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.viewToggleText, { color: viewMode === "list" ? colors.primaryForeground : colors.mutedForeground }]}>
+                {t.periodViewList}
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.viewToggleBtn, viewMode === "groups" && { backgroundColor: colors.primary }]}
+              onPress={() => setViewMode("groups")}
+              activeOpacity={0.7}
+            >
+              <Text style={[styles.viewToggleText, { color: viewMode === "groups" ? colors.primaryForeground : colors.mutedForeground }]}>
+                {t.periodViewGroups}
+              </Text>
+            </TouchableOpacity>
           </View>
-        </View>
-      )}
+        )}
+      </View>
 
       {anyLoading ? (
         Array.from({ length: 6 }).map((_, i) => (
@@ -776,8 +953,32 @@ export default function PeriodScreen() {
             {t.periodNoDataSub}
           </Text>
         </View>
+      ) : viewMode === "groups" ? (
+        periodGroups.map((group) => (
+          <PeriodGroupSection
+            key={group.name}
+            group={group}
+            expanded={!collapsedGroups.has(group.name)}
+            onToggle={() => toggleGroup(group.name)}
+          />
+        ))
       ) : (
-        data.lifts.map((lift, index) => {
+        <>
+        {/* Column headers when comparing */}
+        {comparing && priorData && (
+          <View style={[styles.compareHeader, { borderColor: colors.border }]}>
+            <View style={{ flex: 1 }} />
+            <View style={styles.compareHeaderCols}>
+              <Text style={[styles.compareHeaderLabel, { color: colors.primary }]}>
+                {currentSeasonStr}
+              </Text>
+              <Text style={[styles.compareHeaderLabel, { color: colors.mutedForeground }]}>
+                {priorSeason}
+              </Text>
+            </View>
+          </View>
+        )}
+        {data.lifts.map((lift, index) => {
           const prior = comparing
             ? priorData?.lifts.find((l) => l.ggnr === lift.ggnr)
             : undefined;
@@ -850,7 +1051,8 @@ export default function PeriodScreen() {
               )}
             </View>
           );
-        })
+        })}
+        </>
       )}
 
       <View style={{ height: Platform.OS === "web" ? 34 : 100 }} />
@@ -1014,13 +1216,31 @@ const styles = StyleSheet.create({
   },
   busiestLabel: { fontSize: 12, fontFamily: "Inter_500Medium" },
   busiestValue: { fontSize: 13, fontFamily: "Inter_600SemiBold", flex: 1 },
-  sectionTitle: {
-    fontSize: 18,
-    fontFamily: "Inter_600SemiBold",
+  sectionHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     marginTop: 8,
     marginBottom: 12,
     paddingHorizontal: 16,
   },
+  sectionTitle: {
+    fontSize: 18,
+    fontFamily: "Inter_600SemiBold",
+  },
+  viewToggle: {
+    flexDirection: "row",
+    borderRadius: 10,
+    borderWidth: 1,
+    padding: 3,
+    gap: 2,
+  },
+  viewToggleBtn: {
+    borderRadius: 7,
+    paddingHorizontal: 12,
+    paddingVertical: 5,
+  },
+  viewToggleText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
   compareHeader: {
     flexDirection: "row",
     alignItems: "center",

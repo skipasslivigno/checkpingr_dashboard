@@ -185,6 +185,9 @@ export interface Translations {
   adminErrorUpdate: string;
   adminErrorDelete: string;
   adminPasswordMin: string;
+
+  periodViewList: string;
+  periodViewGroups: string;
 }
 
 const it: Translations = {
@@ -372,6 +375,9 @@ const it: Translations = {
   adminErrorUpdate: "Errore nell'aggiornamento dell'utente.",
   adminErrorDelete: "Errore nell'eliminazione dell'utente.",
   adminPasswordMin: "La password deve essere di almeno 8 caratteri.",
+
+  periodViewList: "Lista",
+  periodViewGroups: "Gruppi",
 };
 
 const en: Translations = {
@@ -559,6 +565,9 @@ const en: Translations = {
   adminErrorUpdate: "Failed to update user.",
   adminErrorDelete: "Failed to delete user.",
   adminPasswordMin: "Password must be at least 8 characters.",
+
+  periodViewList: "List",
+  periodViewGroups: "Groups",
 };
 
 export const translations: Record<Language, Translations> = { it, en };

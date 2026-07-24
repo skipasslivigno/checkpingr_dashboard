@@ -339,6 +339,9 @@ router.get("/lifts/period", async (req, res): Promise<void> => {
     total_guests: string;
     total_first_passages: string;
     active_days: string;
+    nsoc: string | null;
+    descr_grp: string | null;
+    nome_societa: string | null;
   }>(sql`
     WITH latest_per_lift_per_day AS (
       SELECT DISTINCT ON (LEFT(${liftSnapshotsTable.dtgg}, 10), ${liftSnapshotsTable.ggnr})
@@ -347,7 +350,10 @@ router.get("/lifts/period", async (req, res): Promise<void> => {
         ${liftSnapshotsTable.ggbz},
         ${liftSnapshotsTable.npas},
         ${liftSnapshotsTable.nuin},
-        ${liftSnapshotsTable.npin}
+        ${liftSnapshotsTable.npin},
+        ${liftSnapshotsTable.nsoc},
+        ${liftSnapshotsTable.descrGrp},
+        ${liftSnapshotsTable.nomeSocieta}
       FROM ${liftSnapshotsTable}
       WHERE LEFT(${liftSnapshotsTable.dtgg}, 10) BETWEEN ${from} AND ${to}
         AND ${liftSnapshotsTable.tenantId} = ${tenantId}
@@ -360,7 +366,10 @@ router.get("/lifts/period", async (req, res): Promise<void> => {
       COALESCE(SUM(npas), 0)::int AS total_passages,
       COALESCE(SUM(nuin), 0)::int AS total_guests,
       COALESCE(SUM(npin), 0)::int AS total_first_passages,
-      COUNT(DISTINCT CASE WHEN npas > 0 THEN dtgg_date END)::int AS active_days
+      COUNT(DISTINCT CASE WHEN npas > 0 THEN dtgg_date END)::int AS active_days,
+      MAX(nsoc) AS nsoc,
+      MAX(descr_grp) AS descr_grp,
+      MAX(nome_societa) AS nome_societa
     FROM latest_per_lift_per_day
     GROUP BY ggnr
     ORDER BY total_passages DESC
@@ -416,6 +425,9 @@ router.get("/lifts/period", async (req, res): Promise<void> => {
       totalGuests: Number(r.total_guests),
       totalFirstPassages: Number(r.total_first_passages),
       activeDays: Number(r.active_days),
+      nsoc: r.nsoc != null ? Number(r.nsoc) : null,
+      descrGrp: r.descr_grp ?? null,
+      nomeSocieta: r.nome_societa ?? null,
     })),
   });
 });

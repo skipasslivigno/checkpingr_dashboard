@@ -309,7 +309,10 @@ export const GetLiftsPeriodResponse = zod.object({
   "totalPassages": zod.number().describe('Sum of daily-latest npas across the period'),
   "totalGuests": zod.number().describe('Sum of daily-latest nuin across the period'),
   "totalFirstPassages": zod.number().describe('Sum of daily-latest npin across the period'),
-  "activeDays": zod.number().describe('Number of days the lift had at least one passage')
+  "activeDays": zod.number(),
+  "nsoc": zod.number().nullish().describe('Company\/group sort number'),
+  "descrGrp": zod.string().nullish().describe('Group name'),
+  "nomeSocieta": zod.string().nullish().describe('Company name')
 })).describe('Per-lift aggregated totals, sorted by total passages descending')
 })
 
