@@ -216,7 +216,7 @@ const it: Translations = {
   lift: "impianto",
   lifts: "impianti",
 
-  integration: "Integrazione",
+  integration: "Info",
   integrationSubtitle: "Invia i dati di estrazione dal tuo script MSSQL a questo dashboard",
   syncEndpoint: "Endpoint di sincronizzazione",
   syncEndpointDesc: "Aggiungi un passaggio HTTP POST al tuo script di estrazione MSSQL esistente. Invia i tuoi dati a:",
@@ -249,7 +249,7 @@ const it: Translations = {
   tabGroups: "Impianti",
   tabPeriod: "Periodo",
   tabCharts: "Grafici",
-  tabIntegration: "Integrazione",
+  tabIntegration: "Info",
 
   period: "Periodo",
   periodFrom: "Da",
@@ -407,7 +407,7 @@ const en: Translations = {
   lift: "lift",
   lifts: "lifts",
 
-  integration: "Integration",
+  integration: "Info",
   integrationSubtitle: "Push extraction data from your on-site MSSQL script to this dashboard",
   syncEndpoint: "Sync Endpoint",
   syncEndpointDesc: "Add an HTTP POST step to your existing MSSQL extraction script. Send your data to:",
@@ -440,7 +440,7 @@ const en: Translations = {
   tabGroups: "Lifts",
   tabPeriod: "Period",
   tabCharts: "Charts",
-  tabIntegration: "Integration",
+  tabIntegration: "Info",
 
   period: "Period",
   periodFrom: "From",

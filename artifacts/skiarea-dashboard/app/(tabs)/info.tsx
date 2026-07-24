@@ -217,51 +217,55 @@ export default function InfoScreen() {
         </View>
       )}
 
-      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={styles.stepRow}>
-          <View style={[styles.stepNum, { backgroundColor: colors.primary }]}>
-            <Text style={[styles.stepNumText, { color: colors.primaryForeground }]}>1</Text>
+      {user?.role === "admin" ? (
+        <>
+          <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.stepRow}>
+              <View style={[styles.stepNum, { backgroundColor: colors.primary }]}>
+                <Text style={[styles.stepNumText, { color: colors.primaryForeground }]}>1</Text>
+              </View>
+              <Text style={[styles.stepTitle, { color: colors.foreground }]}>{t.syncEndpoint}</Text>
+            </View>
+            <Text style={[styles.stepDesc, { color: colors.mutedForeground }]}>
+              {t.syncEndpointDesc}
+            </Text>
+            <CopyBlock label={t.postUrl} content={syncUrl} />
           </View>
-          <Text style={[styles.stepTitle, { color: colors.foreground }]}>{t.syncEndpoint}</Text>
-        </View>
-        <Text style={[styles.stepDesc, { color: colors.mutedForeground }]}>
-          {t.syncEndpointDesc}
-        </Text>
-        <CopyBlock label={t.postUrl} content={syncUrl} />
-      </View>
 
-      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={styles.stepRow}>
-          <View style={[styles.stepNum, { backgroundColor: colors.primary }]}>
-            <Text style={[styles.stepNumText, { color: colors.primaryForeground }]}>2</Text>
+          <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.stepRow}>
+              <View style={[styles.stepNum, { backgroundColor: colors.primary }]}>
+                <Text style={[styles.stepNumText, { color: colors.primaryForeground }]}>2</Text>
+              </View>
+              <Text style={[styles.stepTitle, { color: colors.foreground }]}>{t.jsonPayload}</Text>
+            </View>
+            <Text style={[styles.stepDesc, { color: colors.mutedForeground }]}>
+              {t.jsonPayloadDesc}
+            </Text>
+            <CopyBlock label={t.requestBody} content={examplePayload} />
           </View>
-          <Text style={[styles.stepTitle, { color: colors.foreground }]}>{t.jsonPayload}</Text>
-        </View>
-        <Text style={[styles.stepDesc, { color: colors.mutedForeground }]}>
-          {t.jsonPayloadDesc}
-        </Text>
-        <CopyBlock label={t.requestBody} content={examplePayload} />
-      </View>
 
-      <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <View style={styles.stepRow}>
-          <View style={[styles.stepNum, { backgroundColor: colors.primary }]}>
-            <Text style={[styles.stepNumText, { color: colors.primaryForeground }]}>3</Text>
+          <View style={[styles.section, { backgroundColor: colors.card, borderColor: colors.border }]}>
+            <View style={styles.stepRow}>
+              <View style={[styles.stepNum, { backgroundColor: colors.primary }]}>
+                <Text style={[styles.stepNumText, { color: colors.primaryForeground }]}>3</Text>
+              </View>
+              <Text style={[styles.stepTitle, { color: colors.foreground }]}>{t.sqlAgentScript}</Text>
+            </View>
+            <Text style={[styles.stepDesc, { color: colors.mutedForeground }]}>
+              {t.sqlAgentScriptDesc}
+            </Text>
+            <CopyBlock label={t.tsqlLabel} content={sqlExample} />
           </View>
-          <Text style={[styles.stepTitle, { color: colors.foreground }]}>{t.sqlAgentScript}</Text>
-        </View>
-        <Text style={[styles.stepDesc, { color: colors.mutedForeground }]}>
-          {t.sqlAgentScriptDesc}
-        </Text>
-        <CopyBlock label={t.tsqlLabel} content={sqlExample} />
-      </View>
 
-      <View style={[styles.noteBox, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
-        <Feather name="info" size={16} color={colors.primary} />
-        <Text style={[styles.noteText, { color: colors.foreground }]}>
-          {t.idempotentNote}
-        </Text>
-      </View>
+          <View style={[styles.noteBox, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
+            <Feather name="info" size={16} color={colors.primary} />
+            <Text style={[styles.noteText, { color: colors.foreground }]}>
+              {t.idempotentNote}
+            </Text>
+          </View>
+        </>
+      ) : null}
 
     </ScrollView>
   );
