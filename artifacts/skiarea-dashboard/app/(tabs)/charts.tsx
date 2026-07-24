@@ -347,8 +347,9 @@ interface ActiveBar {
 }
 
 function WeekBarChart({ bars, containerWidth, height, colors, weekLabel }: WeekBarChartProps) {
-  const showDelta = bars.length >= 2;
-  const PAD = { top: showDelta ? 26 : 16, right: 16, bottom: 44, left: 52 };
+  const hasDelta = bars.length >= 2;
+  const PAD = { top: 16, right: 16, bottom: 44, left: 52 };
+  const TIP_H = hasDelta ? 76 : 58;
   const [activeBar, setActiveBar] = useState<ActiveBar | null>(null);
 
   const numSeasons = bars.length;
@@ -378,9 +379,9 @@ function WeekBarChart({ bars, containerWidth, height, colors, weekLabel }: WeekB
     if (tx + TOOLTIP_W > chartW) tx = sx - TOOLTIP_W - 10;
     tx = Math.max(0, Math.min(tx, chartW - TOOLTIP_W));
 
-    let ty = sy - TOOLTIP_H - 10;
+    let ty = sy - TIP_H - 10;
     if (ty < 0) ty = sy + 10;
-    ty = Math.max(0, Math.min(ty, chartH - TOOLTIP_H));
+    ty = Math.max(0, Math.min(ty, chartH - TIP_H));
 
     return { tx, ty };
   }
@@ -462,34 +463,6 @@ function WeekBarChart({ bars, containerWidth, height, colors, weekLabel }: WeekB
                 );
               })}
 
-              {/* Delta % label above bars[0] vs bars[1] */}
-              {showDelta && (() => {
-                const b0 = bars[0]!;
-                const b1 = bars[1]!;
-                const v0 = b0.weeks.find((w) => w.weekNumber === weekNum)?.totalPassages ?? 0;
-                const v1 = b1.weeks.find((w) => w.weekNumber === weekNum)?.totalPassages ?? 0;
-                if (v0 === 0 || v1 === 0) return null;
-                const pct = ((v0 - v1) / v1) * 100;
-                const label = `${pct >= 0 ? "+" : ""}${pct.toFixed(0)}%`;
-                // bars[0] is at position (bars.length - 1) in the reversed array
-                const b0si = bars.length - 1;
-                const bx = barStartX + b0si * (BAR_W + BAR_GAP) + BAR_W / 2;
-                const barH = Math.max(2, (v0 / maxY) * chartH);
-                const positive = pct >= 0;
-                return (
-                  <SvgText
-                    key="delta"
-                    x={bx}
-                    y={chartH - barH - 4}
-                    textAnchor="middle"
-                    fontSize={7}
-                    fill={positive ? colors.success : colors.destructive}
-                    fontFamily="Inter_700Bold"
-                  >
-                    {label}
-                  </SvgText>
-                );
-              })()}
             </G>
           );
         })}
@@ -531,55 +504,49 @@ function WeekBarChart({ bars, containerWidth, height, colors, weekLabel }: WeekB
         })}
 
         {/* Tooltip card */}
-        {activeBar && tooltipPos && (
-          <G x={tooltipPos.tx} y={tooltipPos.ty}>
-            {/* Shadow approximation */}
-            <Rect x={2} y={2} width={TOOLTIP_W} height={TOOLTIP_H} rx={8} fill="rgba(0,0,0,0.18)" />
-            {/* Card background */}
-            <Rect
-              x={0}
-              y={0}
-              width={TOOLTIP_W}
-              height={TOOLTIP_H}
-              rx={8}
-              fill={colors.card}
-              stroke={activeBar.seasonColor}
-              strokeWidth={1.5}
-            />
-            {/* Season colour bar on the left */}
-            <Rect x={0} y={0} width={4} height={TOOLTIP_H} rx={4} fill={activeBar.seasonColor} />
-            {/* Season label */}
-            <SvgText
-              x={TOOLTIP_PADDING + 4}
-              y={TOOLTIP_PADDING + 10}
-              fontSize={9}
-              fill={colors.mutedForeground}
-              fontFamily="Inter_500Medium"
-            >
-              {activeBar.season}
-            </SvgText>
-            {/* Week number */}
-            <SvgText
-              x={TOOLTIP_PADDING + 4}
-              y={TOOLTIP_PADDING + 24}
-              fontSize={11}
-              fill={colors.foreground}
-              fontFamily="Inter_600SemiBold"
-            >
-              {`${weekLabel.slice(0, 1)}${activeBar.weekNumber}`}
-            </SvgText>
-            {/* Passage count */}
-            <SvgText
-              x={TOOLTIP_PADDING + 4}
-              y={TOOLTIP_PADDING + 42}
-              fontSize={13}
-              fill={activeBar.seasonColor}
-              fontFamily="Inter_700Bold"
-            >
-              {activeBar.value.toLocaleString()}
-            </SvgText>
-          </G>
-        )}
+        {activeBar && tooltipPos && (() => {
+          // Compute delta vs the other season for this week
+          const otherBar = bars.find((b) => b.season !== activeBar.season);
+          const otherVal = otherBar?.weeks.find((w) => w.weekNumber === activeBar.weekNumber)?.totalPassages ?? 0;
+          const delta = hasDelta && otherVal > 0 ? ((activeBar.value - otherVal) / otherVal) * 100 : null;
+          const deltaPositive = delta !== null && delta >= 0;
+          const deltaLabel = delta !== null ? `${deltaPositive ? "+" : ""}${delta.toFixed(1)}%` : null;
+
+          return (
+            <G x={tooltipPos.tx} y={tooltipPos.ty}>
+              {/* Shadow */}
+              <Rect x={2} y={2} width={TOOLTIP_W} height={TIP_H} rx={8} fill="rgba(0,0,0,0.18)" />
+              {/* Card background */}
+              <Rect x={0} y={0} width={TOOLTIP_W} height={TIP_H} rx={8} fill={colors.card} stroke={activeBar.seasonColor} strokeWidth={1.5} />
+              {/* Season colour bar */}
+              <Rect x={0} y={0} width={4} height={TIP_H} rx={4} fill={activeBar.seasonColor} />
+              {/* Season label */}
+              <SvgText x={TOOLTIP_PADDING + 4} y={TOOLTIP_PADDING + 10} fontSize={9} fill={colors.mutedForeground} fontFamily="Inter_500Medium">
+                {activeBar.season}
+              </SvgText>
+              {/* Week number */}
+              <SvgText x={TOOLTIP_PADDING + 4} y={TOOLTIP_PADDING + 24} fontSize={11} fill={colors.foreground} fontFamily="Inter_600SemiBold">
+                {`${weekLabel.slice(0, 1)}${activeBar.weekNumber}`}
+              </SvgText>
+              {/* Value */}
+              <SvgText x={TOOLTIP_PADDING + 4} y={TOOLTIP_PADDING + 42} fontSize={13} fill={activeBar.seasonColor} fontFamily="Inter_700Bold">
+                {activeBar.value.toLocaleString()}
+              </SvgText>
+              {/* Delta % vs other season */}
+              {deltaLabel && (
+                <SvgText
+                  x={TOOLTIP_PADDING + 4}
+                  y={TOOLTIP_PADDING + 58}
+                  fontSize={10}
+                  fill={deltaPositive ? colors.success : colors.destructive}
+                  fontFamily="Inter_700Bold"
+                >
+                  {`${deltaLabel} vs ${otherBar?.season ?? ""}`}
+                </SvgText>
+              )}
+            </G>
+          );
+        })()}
 
         {/* X axis label */}
         <SvgText x={chartW / 2} y={chartH + 36} textAnchor="middle" fontSize={9} fill={colors.mutedForeground} fontFamily="Inter_500Medium">
