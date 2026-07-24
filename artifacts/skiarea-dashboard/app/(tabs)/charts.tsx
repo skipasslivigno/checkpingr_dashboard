@@ -347,7 +347,8 @@ interface ActiveBar {
 }
 
 function WeekBarChart({ bars, containerWidth, height, colors, weekLabel }: WeekBarChartProps) {
-  const PAD = { top: 16, right: 16, bottom: 44, left: 52 };
+  const showDelta = bars.length >= 2;
+  const PAD = { top: showDelta ? 26 : 16, right: 16, bottom: 44, left: 52 };
   const [activeBar, setActiveBar] = useState<ActiveBar | null>(null);
 
   const numSeasons = bars.length;
@@ -460,6 +461,35 @@ function WeekBarChart({ bars, containerWidth, height, colors, weekLabel }: WeekB
                   />
                 );
               })}
+
+              {/* Delta % label above bars[0] vs bars[1] */}
+              {showDelta && (() => {
+                const b0 = bars[0]!;
+                const b1 = bars[1]!;
+                const v0 = b0.weeks.find((w) => w.weekNumber === weekNum)?.totalPassages ?? 0;
+                const v1 = b1.weeks.find((w) => w.weekNumber === weekNum)?.totalPassages ?? 0;
+                if (v0 === 0 || v1 === 0) return null;
+                const pct = ((v0 - v1) / v1) * 100;
+                const label = `${pct >= 0 ? "+" : ""}${pct.toFixed(0)}%`;
+                // bars[0] is at position (bars.length - 1) in the reversed array
+                const b0si = bars.length - 1;
+                const bx = barStartX + b0si * (BAR_W + BAR_GAP) + BAR_W / 2;
+                const barH = Math.max(2, (v0 / maxY) * chartH);
+                const positive = pct >= 0;
+                return (
+                  <SvgText
+                    key="delta"
+                    x={bx}
+                    y={chartH - barH - 4}
+                    textAnchor="middle"
+                    fontSize={7}
+                    fill={positive ? colors.success : colors.destructive}
+                    fontFamily="Inter_700Bold"
+                  >
+                    {label}
+                  </SvgText>
+                );
+              })()}
             </G>
           );
         })}
