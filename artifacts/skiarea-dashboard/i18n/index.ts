@@ -83,6 +83,7 @@ export interface Translations {
   periodShareComparison: string;
 
   calendarSelectFrom: string;
+  calendarSelectDate: string;
   calendarSelectTo: string;
   calendarHasData: string;
 
@@ -274,6 +275,7 @@ const it: Translations = {
   periodShareComparison: "Condividi confronto",
 
   calendarSelectFrom: "Seleziona data inizio",
+  calendarSelectDate: "Seleziona una data",
   calendarSelectTo: "Seleziona data fine",
   calendarHasData: "Giorni con dati disponibili",
 
@@ -465,6 +467,7 @@ const en: Translations = {
   periodShareComparison: "Share comparison",
 
   calendarSelectFrom: "Select start date",
+  calendarSelectDate: "Select a date",
   calendarSelectTo: "Select end date",
   calendarHasData: "Days with available data",
 

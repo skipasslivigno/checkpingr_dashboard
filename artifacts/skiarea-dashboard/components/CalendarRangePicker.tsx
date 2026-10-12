@@ -12,7 +12,7 @@ import {
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
 
-type PickerMode = "from" | "to";
+type PickerMode = "from" | "to" | "single";
 
 interface CalendarRangePickerProps {
   visible: boolean;
@@ -178,13 +178,14 @@ export function CalendarRangePicker({
 
   function canSelect(day: string): boolean {
     if (!availableSet.has(day)) return false;
+    if (mode === "single") return true;
     if (mode === "to" && day < fromDate) return false;
     if (mode === "from" && day > toDate) return false;
     return true;
   }
 
   const titleText =
-    mode === "from" ? t.calendarSelectFrom : t.calendarSelectTo;
+    mode === "single" ? t.calendarSelectDate : mode === "from" ? t.calendarSelectFrom : t.calendarSelectTo;
 
   return (
     <Modal

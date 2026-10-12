@@ -337,6 +337,7 @@ export default function DashboardScreen() {
 
       {/* Date + extraction picker */}
       <DateExtractionPicker
+        allowDateSelection
         selectedDate={selectedDate}
         selectedExtraction={selectedExtraction}
         season={selectedSeason}

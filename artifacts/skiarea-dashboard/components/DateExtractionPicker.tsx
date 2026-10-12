@@ -13,6 +13,7 @@ import {
 import { useGetLiftDates, useGetLiftExtractions } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { CalendarRangePicker } from "@/components/CalendarRangePicker";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -33,6 +34,7 @@ interface DateExtractionPickerProps {
   selectedDate: string;
   selectedExtraction: string | undefined;
   season?: string;
+  allowDateSelection?: boolean;
   onDateChange: (date: string) => void;
   onExtractionChange: (extraction: string | undefined) => void;
 }
@@ -41,6 +43,7 @@ export function DateExtractionPicker({
   selectedDate,
   selectedExtraction,
   season,
+  allowDateSelection = false,
   onDateChange,
   onExtractionChange,
 }: DateExtractionPickerProps) {
@@ -48,6 +51,7 @@ export function DateExtractionPicker({
   const { t, language } = useTranslation();
   const prevSeasonRef = useRef(season);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   const { data: dates } = useGetLiftDates(season ? { season } : {});
 
@@ -146,12 +150,19 @@ export function DateExtractionPicker({
         </TouchableOpacity>
 
         {/* Date label */}
-        <View style={styles.dateLabelBlock}>
+        <TouchableOpacity
+          style={styles.dateLabelBlock}
+          disabled={!allowDateSelection}
+          accessibilityRole={allowDateSelection ? "button" : undefined}
+          accessibilityLabel={`${t.calendarSelectDate}: ${selectedDate}`}
+          testID="dashboard-date-picker"
+          onPress={() => { setShowDropdown(false); setShowCalendar(true); }}
+        >
           <Feather name="calendar" size={13} color={colors.primary} />
           <Text style={[styles.dateText, { color: colors.foreground }]}>
             {dateLabel(selectedDate)}
           </Text>
-        </View>
+        </TouchableOpacity>
 
         {/* Right arrow */}
         <TouchableOpacity
@@ -186,6 +197,22 @@ export function DateExtractionPicker({
           </TouchableOpacity>
         )}
       </View>
+
+      {allowDateSelection && (
+        <CalendarRangePicker
+          visible={showCalendar}
+          mode="single"
+          fromDate={selectedDate}
+          toDate={selectedDate}
+          availableDates={dates}
+          onClose={() => setShowCalendar(false)}
+          onSelect={(date) => {
+            onDateChange(date);
+            onExtractionChange(undefined);
+            setShowCalendar(false);
+          }}
+        />
+      )}
 
       {/* Dropdown — inline on web, modal on native */}
       {showDropdown && hasExtractions && (
