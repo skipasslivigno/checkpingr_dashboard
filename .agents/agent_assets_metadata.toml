@@ -33,3 +33,17 @@ mtime_ms = 1794481000308
 storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:292e37f8-2dcf-45c1-a5fb-c2522672089d/26c6b9b2-e8d0-4fcc-b0ef-73b9eaaeece6/ee3351d0-69fc-41ec-a11e-8402c8539f10"
 storage_version_token = "1794481030245715"
 content_type = "image/png"
+
+[[outputs]]
+id = "ghnqEvx-vC8DndF1fZzM9"
+uri = "file://artifacts/skiarea-dashboard/assets/images/favicon-s.png"
+type = "image"
+title = "Favicon con la S di SkiPass"
+description = "S blu ispirata alla lettera del logo, ripulita dalla texture, con sottolineatura fucsia su fondo bianco."
+logical_id = "a5a0fbe3-9235-42b6-8a79-16a61def65db"
+content_hash = "sha256:2f99c087f77657485c0b850b0d96bdedbf5fcea3b93646c4f2a117600bb6c351"
+size = 21281
+mtime_ms = 1794481740024
+storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:292e37f8-2dcf-45c1-a5fb-c2522672089d/a5a0fbe3-9235-42b6-8a79-16a61def65db/4f1b9979-c8dc-4fc1-b1d2-d5b09d6c2a5e"
+storage_version_token = "1794481774834418"
+content_type = "image/png"
