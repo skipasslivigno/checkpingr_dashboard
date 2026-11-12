@@ -6,7 +6,7 @@ import express from "express";
 import { inArray } from "drizzle-orm";
 import { db, pool, tenantsTable, liftSnapshotsTable } from "@workspace/db";
 import { GetFirstEntriesForecastResponse, type FirstEntriesForecast } from "@workspace/api-zod";
-import forecastRouter from "./forecast";
+import forecastRouter, { createForecastRouter } from "./forecast";
 import { requireAuth } from "../middleware/requireAuth";
 
 const tenantId = randomUUID();
@@ -41,8 +41,14 @@ before(async () => {
   const app = express();
   app.use("/authenticated", requireAuth, forecastRouter);
   // Test-only identity on an isolated ephemeral server, never installed in the application.
-  app.use((req, _res, next) => { Object.assign(req, { user: { tenantId } }); next(); });
-  app.use(forecastRouter);
+  app.use((req, _res, next) => {
+    Object.assign(req, { user: { tenantId, role: req.headers["x-test-role"] ?? "admin" } });
+    next();
+  });
+  app.use("/live", createForecastRouter(() => new Date("2026-02-15T10:45:00Z")));
+  app.use("/closed", createForecastRouter(() => new Date("2026-02-15T18:00:00Z")));
+  app.use("/midnight", createForecastRouter(() => new Date("2026-02-15T23:30:00Z")));
+  app.use(createForecastRouter(() => new Date("2026-02-16T20:00:00Z")));
   server = createServer(app);
   await new Promise<void>((resolve) => server!.listen(0, "127.0.0.1", resolve));
   const address = server.address();
@@ -59,12 +65,14 @@ after(async () => {
   }
 });
 
-const query = `date=${date}&season=${season}`;
+const liveQuery = `date=${date}&season=${season}`;
+const query = `${liveQuery}&mode=verification`;
 
 test("forecast route uses real tenant-scoped history and the dashboard metric", async () => {
   const response = await fetch(`${base}/lifts/first-entries-forecast?${query}`);
   assert.equal(response.status, 200);
   const result = GetFirstEntriesForecastResponse.parse(await response.json());
+  assert.equal(result.availability, "verification");
   assert.equal(result.history.completeDays, 60);
   for (const point of result.forecasts) {
     assert.equal(point.status, "ready");
@@ -90,6 +98,7 @@ test("forecast route validates real dates, hours, mandatory inputs and duplicate
     "", `date=2026-02-31&season=${season}`, `date=${date}`, `${query}&extraction=20260214103000`,
     `${query}&extraction=20260215993000`, `${query}&season=another`,
     `${query}&date=${date}`, `${query}&extraction=20260215103000&extraction=20260215113000`,
+    `${query}&mode=live`, `${liveQuery}&mode=invalid`,
   ];
   for (const params of cases) {
     const response = await fetch(`${base}/lifts/first-entries-forecast?${params}`);
@@ -103,8 +112,74 @@ test("unauthenticated requests cannot reach the production-protected route", asy
 });
 
 test("empty data produces explicit unavailability rather than fabricated values", async () => {
-  const response = await fetch(`${base}/lifts/first-entries-forecast?date=2026-02-16&season=${season}`);
+  const response = await fetch(`${base}/lifts/first-entries-forecast?date=2026-02-16&season=${season}&mode=verification`);
   assert.equal(response.status, 200);
   const result = await response.json() as FirstEntriesForecast;
+  assert.equal(result.availability, "verification");
+  assert.equal(result.forecasts.length, 3);
   assert.ok(result.forecasts.every((p) => p.status === "no_data" && p.predictedTotal === null));
+});
+
+test("past days are withheld for viewers, operators and admins unless verification is enabled", async () => {
+  for (const role of ["viewer", "operator", "admin"]) {
+    const response = await fetch(`${base}/lifts/first-entries-forecast?${liveQuery}`, {
+      headers: { "x-test-role": role },
+    });
+    assert.equal(response.status, 200);
+    const result = GetFirstEntriesForecastResponse.parse(await response.json());
+    assert.equal(result.availability, "past_day");
+    assert.deepEqual(result.forecasts, []);
+    assert.equal(result.history.daysExamined, 0);
+  }
+});
+
+test("viewers and operators cannot bypass the restriction by requesting verification directly", async () => {
+  for (const role of ["viewer", "operator"]) {
+    const response = await fetch(`${base}/lifts/first-entries-forecast?${query}`, {
+      headers: { "x-test-role": role },
+    });
+    assert.equal(response.status, 403);
+  }
+});
+
+test("today's viewer forecast works before closure and ignores future-imported final batches", async () => {
+  const response = await fetch(`${base}/live/lifts/first-entries-forecast?${liveQuery}`, {
+    headers: { "x-test-role": "viewer" },
+  });
+  assert.equal(response.status, 200);
+  const result = GetFirstEntriesForecastResponse.parse(await response.json());
+  assert.equal(result.availability, "live");
+  assert.equal(result.forecasts[0].status, "ready");
+  assert.equal(result.forecasts[1].status, "ready");
+  assert.equal(result.forecasts[2].status, "before_extraction");
+});
+
+test("after closure, selecting the morning cannot restore a viewer forecast; admin override can", async () => {
+  const endpoint = `${base}/closed/lifts/first-entries-forecast?${liveQuery}&extraction=20260215103000`;
+  const viewer = await fetch(endpoint, { headers: { "x-test-role": "viewer" } });
+  assert.equal(viewer.status, 200);
+  const hidden = GetFirstEntriesForecastResponse.parse(await viewer.json());
+  assert.equal(hidden.availability, "day_closed");
+  assert.deepEqual(hidden.forecasts, []);
+  const admin = await fetch(`${endpoint}&mode=verification`);
+  assert.equal(admin.status, 200);
+  const verified = GetFirstEntriesForecastResponse.parse(await admin.json());
+  assert.equal(verified.availability, "verification");
+  assert.equal(verified.forecasts[0].status, "ready");
+  assert.equal(verified.forecasts[1].status, "before_extraction");
+});
+
+test("midnight in Rome closes yesterday even when the UTC date is still the previous day", async () => {
+  const response = await fetch(`${base}/midnight/lifts/first-entries-forecast?${liveQuery}`);
+  const result = GetFirstEntriesForecastResponse.parse(await response.json());
+  assert.equal(result.availability, "past_day");
+  assert.deepEqual(result.forecasts, []);
+});
+
+test("future dates are excluded even with admin verification", async () => {
+  const response = await fetch(`${base}/lifts/first-entries-forecast?date=2026-02-17&season=${season}&mode=verification`);
+  assert.equal(response.status, 200);
+  const result = GetFirstEntriesForecastResponse.parse(await response.json());
+  assert.equal(result.availability, "future_day");
+  assert.deepEqual(result.forecasts, []);
 });

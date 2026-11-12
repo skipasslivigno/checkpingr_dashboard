@@ -292,6 +292,7 @@ export interface Translations {
   fcStatus: Record<"ready"|"before_extraction"|"missing_extraction"|"incomplete_extraction"|"insufficient_history"|"insufficient_validation"|"no_data"|"zero_entries", string>;
   fcStatusHelp: Record<"ready"|"before_extraction"|"missing_extraction"|"incomplete_extraction"|"insufficient_history"|"insufficient_validation"|"no_data"|"zero_entries", string>;
   fcConfidence: Record<"unavailable"|"low"|"medium"|"high", string>;
+  fcVerificationMode: string; fcVerificationHint: string; fcVerificationActive: string; fcLiveOnly: string;
 }
 
 const it: Translations = {
@@ -580,6 +581,10 @@ const it: Translations = {
   emSendPreviewLoading: "Caricamento anteprima…",
   emRetry: "Riprova",
   fcTitle: "Previsione primi ingressi",
+  fcVerificationMode: "Modalità verifica",
+  fcVerificationHint: "Calcola anche su giornate passate o già a consuntivo. Solo amministratori.",
+  fcVerificationActive: "Modalità verifica attiva: simulazione sui dati disponibili all'estrazione selezionata.",
+  fcLiveOnly: "La previsione ordinaria è disponibile solo per oggi, prima del consuntivo. Attiva la modalità verifica per analizzare una giornata passata o chiusa; le date future restano escluse.",
   fcSubtitle: "Stima del totale giornaliero, separata dai dati reali",
   fcEstimate: "Stima",
   fcNoSeason: "Seleziona una stagione per vedere la previsione.",
@@ -892,6 +897,10 @@ const en: Translations = {
   emSendPreviewLoading: "Loading preview…",
   emRetry: "Retry",
   fcTitle: "First entries forecast",
+  fcVerificationMode: "Verification mode",
+  fcVerificationHint: "Also calculate for past or already closed days. Administrators only.",
+  fcVerificationActive: "Verification mode enabled: simulation using data available at the selected extraction.",
+  fcLiveOnly: "Live forecasts are available only for today before final counts arrive. Enable verification mode to inspect a past or closed day; future dates remain excluded.",
   fcSubtitle: "Estimated daily total, separate from actual counts",
   fcEstimate: "Estimate",
   fcNoSeason: "Select a season to see the forecast.",

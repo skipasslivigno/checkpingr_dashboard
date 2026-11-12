@@ -2,6 +2,19 @@ import type { FirstEntriesForecastPoint } from "@workspace/api-client-react";
 
 export const FORECAST_VIEW_SLOTS = ["10:30", "11:30", "14:00"] as const;
 
+export function romeDate(now = new Date()): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "Europe/Rome", year: "numeric", month: "2-digit", day: "2-digit",
+  }).formatToParts(now);
+  const part = (name: string) => parts.find((p) => p.type === name)!.value;
+  return `${part("year")}-${part("month")}-${part("day")}`;
+}
+
+export function forecastDateAllowed(date: string, verification: boolean, now = new Date()): boolean {
+  const today = romeDate(now);
+  return date === today || (verification && date < today);
+}
+
 export function extractionBelongsToDate(extraction: string | undefined, date: string): boolean {
   if (!extraction) return true;
   return /^\d{14}$/.test(extraction) && extraction.slice(0, 8) === date.replaceAll("-", "");

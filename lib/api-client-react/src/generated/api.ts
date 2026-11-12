@@ -1408,7 +1408,7 @@ export const getGetFirstEntriesForecastUrl = (params: GetFirstEntriesForecastPar
 }
 
 /**
- * Tenant-scoped historical estimates of the dashboard first-entry metric (nuin). Training and rolling validation use only preceding dates. No estimate is returned without sufficient history and validation.
+ * Tenant-scoped estimates of the dashboard first-entry metric (nuin). Live mode is limited to today's Europe/Rome date before a closing extraction is available. Only admins may request verification mode for past or closed days. Training and rolling validation use only preceding dates.
  * @summary Forecast end-of-day first entries at three extraction times
  */
 export const getFirstEntriesForecast = async (params: GetFirstEntriesForecastParams, options?: RequestInit): Promise<FirstEntriesForecast> => {

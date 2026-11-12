@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import React, { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, StyleSheet, Switch, Text, TouchableOpacity, View } from "react-native";
 import {
   useGetFirstEntriesForecast,
   getGetFirstEntriesForecastQueryKey,
@@ -9,7 +9,8 @@ import type { FirstEntriesForecastPoint } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useMetricColors } from "@/hooks/useMetricColors";
 import { useTranslation } from "@/contexts/LanguageContext";
-import { FORECAST_VIEW_SLOTS as SLOTS, extractionBelongsToDate, defaultForecastSlot } from "@/lib/forecast-view";
+import { useAuth } from "@/contexts/AuthContext";
+import { FORECAST_VIEW_SLOTS as SLOTS, extractionBelongsToDate, defaultForecastSlot, forecastDateAllowed } from "@/lib/forecast-view";
 
 interface Props {
   date: string;
@@ -34,12 +35,25 @@ export function FirstEntriesForecast({ date, season, extraction }: Props) {
   const colors = useColors();
   const metrics = useMetricColors();
   const { t } = useTranslation();
+  const { user } = useAuth();
   const accent = metrics.primiIngressi;
+  const isAdmin = user?.role === "admin";
+  const userKey = user ? `${user.tenantId}:${user.id}` : "";
+  const [verificationSetting, setVerificationSetting] = useState({ userKey: "", enabled: false });
+  const verification = isAdmin && verificationSetting.userKey === userKey && verificationSetting.enabled;
+  const [clock, setClock] = useState(() => new Date());
+  useEffect(() => {
+    // Re-evaluate midnight even if the screen stays open. Dates are Rome-local, not UTC/device-local.
+    const timer = setInterval(() => setClock(new Date()), 30000);
+    return () => clearInterval(timer);
+  }, []);
+  const dateAllowed = forecastDateAllowed(date, verification, clock);
 
-  const valid = !!season && extractionBelongsToDate(extraction, date);
+  const valid = !!season && !!user && dateAllowed && extractionBelongsToDate(extraction, date);
   const params = {
     date,
     season: season ?? "",
+    mode: verification ? "verification" as const : "live" as const,
     ...(extraction ? { extraction } : {}),
   };
   const query = useGetFirstEntriesForecast(params, {
@@ -63,12 +77,16 @@ export function FirstEntriesForecast({ date, season, extraction }: Props) {
 
   const [picked, setPicked] = useState<string | null>(null);
   const [expanded, setExpanded] = useState(false);
-  useEffect(() => { setPicked(null); }, [date, season, extraction]);
+  useEffect(() => { setPicked(null); }, [date, season, extraction, verification]);
   const slot = picked ?? defaultSlot;
   const focus = points.get(slot);
 
   const statusLabel = (s: FirstEntriesForecastPoint["status"]) => t.fcStatus[s] ?? s;
   const confLabel = (c: FirstEntriesForecastPoint["confidence"]) => t.fcConfidence[c] ?? c;
+  const suppressed = data && !["live", "verification"].includes(data.availability);
+
+  // All hooks above run consistently. A hidden viewer card also makes no historical requests.
+  if (!isAdmin && (!dateAllowed || suppressed)) return null;
 
   const wrap = (children: React.ReactNode) => (
     <View testID="forecast-card" style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -84,12 +102,39 @@ export function FirstEntriesForecast({ date, season, extraction }: Props) {
           <Text style={[styles.badgeText, { color: colors.mutedForeground }]}>{t.fcEstimate}</Text>
         </View>
       </View>
+      {isAdmin && (
+        <View style={[styles.verificationRow, { borderColor: colors.border }]}>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.retryText, { color: colors.foreground }]}>{t.fcVerificationMode}</Text>
+            <Text style={[styles.scope, { color: colors.mutedForeground }]}>{t.fcVerificationHint}</Text>
+          </View>
+          <Switch
+            testID="switch-forecast-verification"
+            accessibilityLabel={t.fcVerificationMode}
+            value={verification}
+            onValueChange={(enabled) => setVerificationSetting({ userKey, enabled })}
+            trackColor={{ false: colors.border, true: colors.primary }}
+          />
+        </View>
+      )}
+      {verification && (
+        <Text testID="forecast-verification-banner" style={[styles.note, { color: colors.primary }]}>
+          {t.fcVerificationActive}
+        </Text>
+      )}
       {children}
     </View>
   );
 
   if (!season) {
     return wrap(<Text testID="forecast-no-season" style={[styles.note, { color: colors.mutedForeground }]}>{t.fcNoSeason}</Text>);
+  }
+  if (!dateAllowed || suppressed) {
+    return wrap(
+      <Text testID="forecast-live-only" style={[styles.note, { color: colors.mutedForeground }]}>
+        {t.fcLiveOnly}
+      </Text>,
+    );
   }
   if (!valid || query.isLoading) {
     return wrap(
@@ -279,4 +324,5 @@ const styles = StyleSheet.create({
   rowLabel: { fontSize: 12, fontFamily: "Inter_400Regular", flex: 1 },
   rowValue: { fontSize: 12, fontFamily: "Inter_600SemiBold", textAlign: "right", flex: 1, flexShrink: 1 },
   method: { fontSize: 11, fontFamily: "Inter_400Regular", lineHeight: 16, marginTop: 6 },
+  verificationRow: { flexDirection: "row", alignItems: "center", gap: 12, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 10 },
 });

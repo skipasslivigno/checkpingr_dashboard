@@ -274,7 +274,7 @@ export function buildFirstEntriesForecast(
     return { ...result, status: "ready", predictedTotal: prediction.total, lowerBound, upperBound, confidence };
   });
   return {
-    ...input, metric: "nuin", modelVersion: "historical-ratio-v1", timeZone: "Europe/Rome",
+    ...input, metric: "nuin", modelVersion: "historical-ratio-v1", timeZone: "Europe/Rome", availability: "live",
     history: {
       daysExamined: new Set([...prior.values()].map((r) => r[0].date)).size,
       completeDays: history.length,

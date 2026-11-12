@@ -238,6 +238,20 @@ export const FirstEntriesForecastTimeZone = {
   'Europe/Rome': 'Europe/Rome',
 } as const;
 
+/**
+ * Blocked states return no forecasts and do not calculate or validate the model.
+ */
+export type FirstEntriesForecastAvailability = typeof FirstEntriesForecastAvailability[keyof typeof FirstEntriesForecastAvailability];
+
+
+export const FirstEntriesForecastAvailability = {
+  live: 'live',
+  verification: 'verification',
+  past_day: 'past_day',
+  day_closed: 'day_closed',
+  future_day: 'future_day',
+} as const;
+
 export type FirstEntriesForecastHistory = {
   daysExamined: number;
   completeDays: number;
@@ -253,6 +267,8 @@ export interface FirstEntriesForecast {
   metric: FirstEntriesForecastMetric;
   modelVersion: string;
   timeZone: FirstEntriesForecastTimeZone;
+  /** Blocked states return no forecasts and do not calculate or validate the model. */
+  availability: FirstEntriesForecastAvailability;
   history: FirstEntriesForecastHistory;
   forecasts: FirstEntriesForecastPoint[];
 }
@@ -578,7 +594,19 @@ season: string;
  * @pattern ^\d{14}$
  */
 extraction?: string;
+/**
+ * Defaults to live. Verification is admin-only and permits historical or closed days, never future data.
+ */
+mode?: GetFirstEntriesForecastMode;
 };
+
+export type GetFirstEntriesForecastMode = typeof GetFirstEntriesForecastMode[keyof typeof GetFirstEntriesForecastMode];
+
+
+export const GetFirstEntriesForecastMode = {
+  live: 'live',
+  verification: 'verification',
+} as const;
 
 export type GetLiftDatesParams = {
 season?: string;

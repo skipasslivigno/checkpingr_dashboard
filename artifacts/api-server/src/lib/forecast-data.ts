@@ -2,7 +2,11 @@ import { db, liftSnapshotsTable } from "@workspace/db";
 import { sql } from "drizzle-orm";
 import type { ForecastExtraction } from "./first-entries-forecast";
 
-export async function loadForecastExtractions(tenantId: string, date: string): Promise<ForecastExtraction[]> {
+export async function loadForecastExtractions(
+  tenantId: string,
+  date: string,
+  dayOnly?: { season: string },
+): Promise<ForecastExtraction[]> {
   // Bound the scan to five years. Never mix tenant data or "latest per lift" from different batches.
   const result = await db.execute<{
     date: string; season: string; extraction: string; entries: number; lift_ids: string; valid: boolean;
@@ -19,6 +23,7 @@ export async function loadForecastExtractions(tenantId: string, date: string): P
     WHERE tenant_id = ${tenantId}
       AND LEFT(dtgg, 10) <= ${date}
       AND LEFT(dtgg, 10) >= TO_CHAR(${date}::date - INTERVAL '5 years', 'YYYY-MM-DD')
+      ${dayOnly ? sql`AND LEFT(dtgg, 10) = ${date} AND eser = ${dayOnly.season}` : sql``}
     GROUP BY LEFT(dtgg, 10), eser, dupd
     ORDER BY LEFT(dtgg, 10), eser, dupd
   `);

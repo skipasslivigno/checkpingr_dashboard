@@ -349,7 +349,7 @@ paths:
       operationId: getFirstEntriesForecast
       tags: [dashboard]
       summary: Forecast end-of-day first entries at three extraction times
-      description: Tenant-scoped historical estimates of the dashboard first-entry metric (nuin). Training and rolling validation use only preceding dates. No estimate is returned without sufficient history and validation.
+      description: Tenant-scoped estimates of the dashboard first-entry metric (nuin). Live mode is limited to today's Europe/Rome date before a closing extraction is available. Only admins may request verification mode for past or closed days. Training and rolling validation use only preceding dates.
       parameters:
         - name: date
           in: query
@@ -364,6 +364,11 @@ paths:
           required: false
           schema: { type: string, pattern: '^\d{14}$' }
           description: Selected dupd; later extractions must not influence forecasts.
+        - name: mode
+          in: query
+          required: false
+          schema: { type: string, enum: [live, verification] }
+          description: Defaults to live. Verification is admin-only and permits historical or closed days, never future data.
       responses:
         "200":
           description: Forecasts, data coverage and chronological validation
@@ -372,6 +377,8 @@ paths:
               schema: { $ref: "#/components/schemas/FirstEntriesForecast" }
         "400":
           description: Invalid date, season or extraction
+        "403":
+          description: Verification mode requires an administrator
         "404":
           description: Selected extraction not found for this date and season
 
@@ -760,13 +767,17 @@ components:
 
     FirstEntriesForecast:
       type: object
-      required: [date, season, metric, modelVersion, timeZone, history, forecasts]
+      required: [date, season, metric, modelVersion, timeZone, availability, history, forecasts]
       properties:
         date: { type: string }
         season: { type: string }
         metric: { type: string, enum: [nuin] }
         modelVersion: { type: string }
         timeZone: { type: string, enum: [Europe/Rome] }
+        availability:
+          type: string
+          enum: [live, verification, past_day, day_closed, future_day]
+          description: Blocked states return no forecasts and do not calculate or validate the model.
         history:
           type: object
           required: [daysExamined, completeDays, fromDate, toDate]

@@ -5,6 +5,7 @@
  * Ski Area Dashboard API
  * OpenAPI spec version: 0.1.0
  */
+import type { FirstEntriesForecastAvailability } from './firstEntriesForecastAvailability';
 import type { FirstEntriesForecastHistory } from './firstEntriesForecastHistory';
 import type { FirstEntriesForecastMetric } from './firstEntriesForecastMetric';
 import type { FirstEntriesForecastPoint } from './firstEntriesForecastPoint';
@@ -16,6 +17,8 @@ export interface FirstEntriesForecast {
   metric: FirstEntriesForecastMetric;
   modelVersion: string;
   timeZone: FirstEntriesForecastTimeZone;
+  /** Blocked states return no forecasts and do not calculate or validate the model. */
+  availability: FirstEntriesForecastAvailability;
   history: FirstEntriesForecastHistory;
   forecasts: FirstEntriesForecastPoint[];
 }

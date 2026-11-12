@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
 import { buildFirstEntriesForecast, romeTimestamp, validDate, type ForecastExtraction } from "./first-entries-forecast";
+import { forecastAvailability } from "./forecast-access";
 
 const target = "2026-02-15";
 const season = "2025-2026";
@@ -136,4 +137,15 @@ test("rejects malformed timestamps and ambiguous duplicate historical dates", ()
   assert.ok(validDate("2024-02-29"));
   assert.ok(!validDate("2026-02-29"));
   assert.ok(!validDate("2026-02-31"));
+});
+
+test("live access uses the actual closing batch, not just the clock or another season", () => {
+  const clock = new Date("2026-02-15T18:00:00Z");
+  const rows = batches(target);
+  assert.equal(forecastAvailability(target, season, false, rows.slice(0, 3), clock), "live");
+  assert.equal(forecastAvailability(target, season, false, rows, clock), "day_closed");
+  assert.equal(forecastAvailability(target, season, false, rows.map((r) => ({ ...r, season: "other" })), clock), "live");
+  assert.equal(forecastAvailability(target, season, false, rows.map((r) => ({ ...r, valid: false })), clock), "live");
+  assert.equal(forecastAvailability(target, season, false, batches(target, [0, 0, 0, 0]), clock), "day_closed");
+  assert.equal(forecastAvailability(target, season, true, rows, clock), "verification");
 });

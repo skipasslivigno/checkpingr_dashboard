@@ -342,7 +342,7 @@ export const GetDashboardSummaryResponse = zod.object({
 
 
 /**
- * Tenant-scoped historical estimates of the dashboard first-entry metric (nuin). Training and rolling validation use only preceding dates. No estimate is returned without sufficient history and validation.
+ * Tenant-scoped estimates of the dashboard first-entry metric (nuin). Live mode is limited to today's Europe/Rome date before a closing extraction is available. Only admins may request verification mode for past or closed days. Training and rolling validation use only preceding dates.
  * @summary Forecast end-of-day first entries at three extraction times
  */
 export const getFirstEntriesForecastQueryDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
@@ -354,7 +354,8 @@ export const getFirstEntriesForecastQueryExtractionRegExp = new RegExp('^\\d{14}
 export const GetFirstEntriesForecastQueryParams = zod.object({
   "date": zod.coerce.string().regex(getFirstEntriesForecastQueryDateRegExp),
   "season": zod.coerce.string().min(1).max(getFirstEntriesForecastQuerySeasonMax),
-  "extraction": zod.coerce.string().regex(getFirstEntriesForecastQueryExtractionRegExp).optional().describe('Selected dupd; later extractions must not influence forecasts.')
+  "extraction": zod.coerce.string().regex(getFirstEntriesForecastQueryExtractionRegExp).optional().describe('Selected dupd; later extractions must not influence forecasts.'),
+  "mode": zod.enum(['live', 'verification']).optional().describe('Defaults to live. Verification is admin-only and permits historical or closed days, never future data.')
 })
 
 export const GetFirstEntriesForecastResponse = zod.object({
@@ -363,6 +364,7 @@ export const GetFirstEntriesForecastResponse = zod.object({
   "metric": zod.enum(['nuin']),
   "modelVersion": zod.string(),
   "timeZone": zod.enum(['Europe/Rome']),
+  "availability": zod.enum(['live', 'verification', 'past_day', 'day_closed', 'future_day']).describe('Blocked states return no forecasts and do not calculate or validate the model.'),
   "history": zod.object({
   "daysExamined": zod.number(),
   "completeDays": zod.number(),

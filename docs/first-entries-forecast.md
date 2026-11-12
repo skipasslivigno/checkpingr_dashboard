@@ -60,17 +60,40 @@ variabili del modello.
 
 ## API e interfaccia
 
-`GET /api/lifts/first-entries-forecast?date=YYYY-MM-DD&season=...&extraction=YYYYMMDDHHmmss`
+`GET /api/lifts/first-entries-forecast?date=YYYY-MM-DD&season=...&extraction=YYYYMMDDHHmmss&mode=live`
 
 Richiede l'autenticazione esistente. Il tenant deriva dall'utente, mai dai parametri.
 La data deve essere reale; un'estrazione specifica deve appartenere alla data e
 stagione richieste. Nessun dato successivo all'estrazione selezionata o all'ora
 reale può essere utilizzato.
 
+### Previsione ordinaria e modalità verifica
+
+La modalità ordinaria (`mode=live`, predefinita) è limitata alla **data odierna in
+Europe/Rome**, finché non è disponibile un'estrazione serale valida dalle 18:00
+in poi. La presenza del consuntivo è verificata su tutte le estrazioni odierne della
+stagione richiesta, non solo su quella selezionata: tornare alle 10:30 non riattiva
+la previsione dopo il consuntivo. Un import con orario futuro non chiude in anticipo
+la giornata.
+
+Visualizzatori e operatori non vedono la scheda sulle giornate passate o chiuse.
+Le API non eseguono il modello su giornate non ammesse e rispondono con
+`availability=past_day|day_closed|future_day` e `forecasts=[]`. Nella risposta
+sospesa lo storico non viene calcolato: i contatori di copertura sono zero.
+
+Gli amministratori hanno un interruttore **Modalità verifica**, disattivato per
+default, per richiedere `mode=verification` anche sulle giornate passate o già a
+consuntivo. Le API controllano il ruolo verificato dal server; un visualizzatore
+o operatore che prova a forzare il parametro riceve HTTP 403.
+La modalità resta locale alla scheda e all'account corrente, non è una preferenza
+globale né viene ereditata da un altro utente. Le date future rimangono escluse.
+
 La scheda si aggiorna al cambio data/stagione/estrazione, con il refresh della
-dashboard e con una richiesta ogni minuto mentre è montata. L'utente può ispezionare
-i tre orari e aprire i dettagli. All'estrazione serale resta l'ultima previsione
-disponibile, al massimo quella delle 14:00: non viene sostituita dal consuntivo.
+dashboard e con una richiesta ogni minuto mentre la data è ammessa. La data locale
+viene rivalutata anche lasciando la scheda aperta a mezzanotte. L'utente può
+ispezionare i tre orari e aprire i dettagli. Solo in modalità verifica, all'estrazione
+serale resta l'ultima previsione disponibile, al massimo quella delle 14:00:
+non viene sostituita dal consuntivo.
 Il calcolo è in sola lettura e su richiesta, senza job programmati, invio di email,
 modifiche alle estrazioni o salvataggio di previsioni immutabili. Import storici
 corretti successivamente possono modificare le ricostruzioni.

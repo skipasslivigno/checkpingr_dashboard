@@ -5,6 +5,7 @@
  * Ski Area Dashboard API
  * OpenAPI spec version: 0.1.0
  */
+import type { GetFirstEntriesForecastMode } from './getFirstEntriesForecastMode';
 
 export type GetFirstEntriesForecastParams = {
 /**
@@ -21,4 +22,8 @@ season: string;
  * @pattern ^\d{14}$
  */
 extraction?: string;
+/**
+ * Defaults to live. Verification is admin-only and permits historical or closed days, never future data.
+ */
+mode?: GetFirstEntriesForecastMode;
 };
