@@ -66,9 +66,15 @@ export function comparePeriods(input: {
   const start = starts[season] ?? null;
   const previousStart = previousSeason ? starts[previousSeason] ?? null : null;
   const end = input.ends?.[season];
-  const previousEnd = previousSeason ? input.ends?.[previousSeason] : undefined;
   const rows = input.rows.filter(r => validCalendarDate(r.date)
     && /^\d{14}$/.test(r.extraction) && r.extraction.slice(0, 8) === r.date.replaceAll("-", ""));
+  // For the previous season, an explicit closure takes precedence; otherwise
+  // its last observed date is the boundary. Include partial-only last days in
+  // this boundary so a missing closing batch is not silently discarded.
+  const previousEnd = previousSeason
+    ? input.ends?.[previousSeason] ?? rows.filter(r => r.season === previousSeason)
+      .map(r => r.date).sort().at(-1)
+    : undefined;
   const day = rows.filter(r => r.season === season && r.date === date)
     .sort((a, b) => a.extraction.localeCompare(b.extraction));
   const closing = day.filter(r => isFinalExtraction(r.extraction)).at(-1);

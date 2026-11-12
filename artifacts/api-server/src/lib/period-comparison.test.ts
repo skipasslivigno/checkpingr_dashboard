@@ -130,15 +130,47 @@ test("a shorter previous season uses its final annual total and its last operati
   assert.equal(r.weekly.changePercent, 420);
 });
 
-test("without a configured end, trailing absent imports are not guessed to be season closure", () => {
+test("without a configured end, the previous season stops at its last observed date", () => {
   const rows = data().filter(r => r.season !== previousSeason || r.date <= "2024-12-07");
-  const unknown = run("140000", rows);
-  assert.equal(unknown.progressive.previousTotal, null);
-  assert.equal(unknown.progressive.previousDefinitive, false);
+  const inferred = run("140000", rows);
+  assert.equal(inferred.progressive.previousTotal, 400);
+  assert.equal(inferred.progressive.previousDefinitive, true);
+  assert.equal(inferred.progressive.previousToDate, "2024-12-07");
+  assert.deepEqual(inferred.progressive.missingPreviousDays, []);
+  assert.equal(inferred.weekly.previousTotal, 50);
+  assert.equal(inferred.weekly.previousDefinitive, true);
   const closed = comparePeriods({ date, season, previousSeason, starts,
     ends: { [previousSeason]: "2024-12-07" }, rows, extraction: "20251208140000" });
   assert.equal(closed.progressive.previousTotal, 400);
   assert.equal(closed.progressive.previousDefinitive, true);
+});
+
+test("automatic closure preserves internal holes and requires the last day's 23:30 final", () => {
+  const truncated = data().filter(r => r.season !== previousSeason || r.date <= "2024-12-07");
+  const hole = run("140000", truncated.filter(r => r.season !== previousSeason || r.date !== "2024-12-04"));
+  assert.equal(hole.progressive.previousTotal, null);
+  assert.equal(hole.progressive.previousDefinitive, false);
+  assert.deepEqual(hole.progressive.missingPreviousDays, ["2024-12-04"]);
+  const unfinished = run("140000", [...truncated, batch("2024-12-08", previousSeason, 999, "180000")]);
+  assert.equal(unfinished.progressive.previousToDate, "2024-12-08");
+  assert.equal(unfinished.progressive.previousTotal, null);
+  assert.equal(unfinished.progressive.previousDefinitive, false);
+  assert.deepEqual(unfinished.progressive.missingPreviousDays, ["2024-12-08"]);
+});
+
+test("automatic closure neither shortens earlier comparisons nor mixes seasons or invents missing history", () => {
+  const early = run("103000");
+  assert.equal(early.progressive.previousToDate, "2024-12-08");
+  assert.equal(early.progressive.previousTotal, 450);
+  assert.equal(early.progressive.previousDefinitive, false);
+  const rows = data().filter(r => r.season !== previousSeason || r.date <= "2024-12-07");
+  rows.push(batch("2024-12-10", "unrelated-season", 999999));
+  const capped = run("140000", rows);
+  assert.equal(capped.progressive.previousToDate, "2024-12-07");
+  assert.equal(capped.progressive.previousTotal, 400);
+  const absent = run("140000", data().filter(r => r.season !== previousSeason));
+  assert.equal(absent.progressive.previousTotal, null);
+  assert.equal(absent.progressive.previousDefinitive, false);
 });
 
 test("closure never conceals missing imports within the operating season", () => {

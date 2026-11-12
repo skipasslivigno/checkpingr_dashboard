@@ -66,7 +66,7 @@ incluso**, senza modificare la data di inizio già salvata. La fine è facoltati
 deve essere una data reale e non può precedere l'inizio. Può essere rimossa
 separatamente lasciando il campo vuoto e salvando.
 
-Quando il giorno equivalente supera la chiusura configurata della stagione
+Quando il giorno equivalente supera la chiusura della stagione
 precedente, il progressivo usa il totale dell'intera stagione chiusa e mostra
 **Definitivo**. Il settimanale usa l'ultima settimana di apertura, fino al giorno
 di chiusura incluso, non un totale annuale al posto di una settimana.
@@ -85,11 +85,15 @@ consuntivo delle 23:30. Se sono presenti dati successivi alla chiusura
 configurata, il totale della stagione selezionata non viene indicato come
 definitivo finché la data configurata non corrisponde al termine effettivo.
 Il limite della stagione precedente resta invece quello impostato dall'admin.
+Se non è impostato, si usa automaticamente l'ultima data disponibile della
+stagione precedente, senza scrivere questa deduzione nelle impostazioni.
+Se il giorno equivalente è anteriore, il confronto resta limitato a quel giorno.
 
 I giorni successivi alla fine configurata non sono buchi; i consuntivi mancanti
 **entro** la stagione rimangono invece incompleti e non vengono nascosti dalla
-dicitura Definitivo. Senza una data finale configurata non si deduce la chiusura
-dal semplice ultimo record disponibile.
+dicitura Definitivo. L'ultima data automatica include anche eventuali record
+solo parziali: se manca il consuntivo delle 23:30 di quel giorno, il totale
+rimane incompleto invece di scartare silenziosamente l'ultima giornata.
 
 ## Verifica
 

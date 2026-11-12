@@ -201,3 +201,32 @@ test("API includes the current day's partial or final even after the configured 
     await saveBounds(season, { endDate: null });
   }
 });
+
+test("API automatically uses the last previous-season date unless an explicit end overrides it", async () => {
+  await saveBounds(previous, { endDate: null });
+  const removed = await db.delete(liftSnapshotsTable).where(and(
+    eq(liftSnapshotsTable.tenantId, tenantId), eq(liftSnapshotsTable.eser, previous),
+    inArray(liftSnapshotsTable.dtgg, ["2024-12-08", "2024-12-09"]),
+  )).returning();
+  try {
+    const r = GetPeriodComparisonResponse.parse(await (await fetch(`${base}${url}&extraction=20251208140000`)).json());
+    assert.equal(r.progressive.previousToDate, "2024-12-07");
+    assert.equal(r.progressive.previousTotal, 400);
+    assert.equal(r.progressive.previousDefinitive, true);
+    assert.deepEqual(r.progressive.missingPreviousDays, []);
+    assert.equal(r.weekly.previousTotal, 50);
+    assert.equal(r.weekly.previousDefinitive, true);
+    // Inference is not written over admin settings.
+    const settings = GetSeasonStartsResponse.parse(await (await fetch(`${base}/settings/season-starts`)).json());
+    assert.equal(settings.find(s => s.season === previous)?.endDate, null);
+    await saveBounds(previous, { endDate: "2024-12-09" });
+    const explicit = GetPeriodComparisonResponse.parse(await (await fetch(`${base}${url}&extraction=20251208140000`)).json());
+    assert.equal(explicit.progressive.previousToDate, "2024-12-09");
+    assert.equal(explicit.progressive.previousTotal, null);
+    assert.equal(explicit.progressive.previousDefinitive, false);
+    assert.deepEqual(explicit.progressive.missingPreviousDays, ["2024-12-08", "2024-12-09"]);
+  } finally {
+    if (removed.length) await db.insert(liftSnapshotsTable).values(removed);
+    await saveBounds(previous, { endDate: null });
+  }
+});

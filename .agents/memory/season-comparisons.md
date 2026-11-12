@@ -45,13 +45,17 @@ dopo. L'utente vuole il totale definitivo precedente, non «dati incompleti»,
 quando il confronto supera la fine della stagione precedente.
 
 **Why:** richiesta esplicita dell'utente; l'assenza di dati dopo la chiusura non
-è un buco negli import.
+è un buco negli import. Ha chiarito che non si aspetta «copertura incompleta»
+solo perché manca una fine stagione esplicita: va considerata l'ultima data
+della stagione precedente.
 
 **How to apply:** consentire agli admin di configurare anche l'ultimo giorno
 di apertura incluso. Il progressivo precedente si ferma al totale annuale;
 il settimanale usa l'ultima settimana di apertura. Mostrare «Definitivo» solo
-quando i consuntivi entro la chiusura sono completi. Non dedurre la chiusura
-da un ultimo record isolato e non nascondere buchi interni alla stagione.
+quando i consuntivi entro la chiusura sono completi. Se la fine non è impostata,
+usare automaticamente l'ultima data disponibile della stagione precedente.
+Non nascondere buchi interni alla stagione o un consuntivo mancante nell'ultimo
+giorno osservato. La data manuale, quando presente, ha precedenza.
 
 ## Precedenza dei dati nella stagione selezionata
 
@@ -67,4 +71,5 @@ consuntivo.
 **How to apply:** per la stagione selezionata usare la fine configurata
 solo per limitare giorni successivi senza dati. I dati osservati hanno
 precedenza; una data finale contraddetta dai dati non certifica un totale
-definitivo. Conservare il limite configurato per il confronto precedente.
+definitivo. Per il confronto precedente usare la fine manuale se impostata,
+altrimenti l'ultima data disponibile.
