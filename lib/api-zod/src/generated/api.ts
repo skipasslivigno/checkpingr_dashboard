@@ -9,6 +9,45 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Get the authenticated user's current account state
+ */
+export const GetCurrentUserResponse = zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "role": zod.enum(['admin', 'operator', 'viewer']),
+  "tenantId": zod.string(),
+  "mustChangePassword": zod.boolean()
+})
+
+
+/**
+ * @summary Change own password and clear the required-change flag
+ */
+export const changePasswordBodyNewPasswordMin = 8;
+export const changePasswordBodyNewPasswordMax = 72;
+
+
+
+export const ChangePasswordBody = zod.object({
+  "currentPassword": zod.string(),
+  "newPassword": zod.string().min(changePasswordBodyNewPasswordMin).max(changePasswordBodyNewPasswordMax)
+})
+
+export const ChangePasswordResponse = zod.object({
+  "token": zod.string(),
+  "user": zod.object({
+  "id": zod.string(),
+  "email": zod.string(),
+  "name": zod.string(),
+  "role": zod.enum(['admin', 'operator', 'viewer']),
+  "tenantId": zod.string(),
+  "mustChangePassword": zod.boolean()
+})
+})
+
+
+/**
  * Returns the current tenant's configuration settings
  * @summary Get tenant settings
  */
@@ -88,6 +127,7 @@ export const GetUsersResponseItem = zod.object({
   "name": zod.string(),
   "role": zod.enum(['admin', 'operator', 'viewer']),
   "isActive": zod.boolean(),
+  "mustChangePassword": zod.boolean(),
   "createdAt": zod.string().nullish()
 })
 export const GetUsersResponse = zod.array(GetUsersResponseItem)
@@ -96,11 +136,14 @@ export const GetUsersResponse = zod.array(GetUsersResponseItem)
 /**
  * @summary Create a new user (admin only)
  */
+export const createUserBodyMustChangePasswordDefault = false;
+
 export const CreateUserBody = zod.object({
   "email": zod.string().email(),
   "name": zod.string(),
   "password": zod.string(),
-  "role": zod.enum(['admin', 'operator', 'viewer']).optional()
+  "role": zod.enum(['admin', 'operator', 'viewer']).optional(),
+  "mustChangePassword": zod.boolean().default(createUserBodyMustChangePasswordDefault)
 })
 
 
@@ -115,7 +158,8 @@ export const UpdateUserBody = zod.object({
   "name": zod.string().optional(),
   "role": zod.enum(['admin', 'operator', 'viewer']).optional(),
   "password": zod.string().optional(),
-  "isActive": zod.boolean().optional()
+  "isActive": zod.boolean().optional(),
+  "mustChangePassword": zod.boolean().optional()
 })
 
 export const UpdateUserResponse = zod.object({
@@ -124,6 +168,7 @@ export const UpdateUserResponse = zod.object({
   "name": zod.string(),
   "role": zod.enum(['admin', 'operator', 'viewer']),
   "isActive": zod.boolean(),
+  "mustChangePassword": zod.boolean(),
   "createdAt": zod.string().nullish()
 })
 

@@ -38,9 +38,10 @@ interface FormState {
   password: string;
   role: Role;
   isActive: boolean;
+  mustChangePassword: boolean;
 }
 
-const EMPTY_FORM: FormState = { name: "", email: "", password: "", role: "viewer", isActive: true };
+const EMPTY_FORM: FormState = { name: "", email: "", password: "", role: "viewer", isActive: true, mustChangePassword: false };
 
 function initials(name: string): string {
   return name.split(" ").map((p) => p[0] ?? "").join("").toUpperCase().slice(0, 2) || "?";
@@ -84,8 +85,8 @@ const pickerStyles = StyleSheet.create({
   label: { fontSize: 13, fontFamily: "Inter_500Medium" },
 });
 
-type SortColumn = "name" | "email" | "role" | "status" | "id";
-const COLS = { name: 200, email: 230, role: 150, status: 125, id: 310, actions: 96 };
+type SortColumn = "name" | "email" | "role" | "status" | "password" | "id";
+const COLS = { name: 200, email: 230, role: 150, status: 125, password: 160, id: 310, actions: 96 };
 const TABLE_WIDTH = Object.values(COLS).reduce((sum, width) => sum + width, 24);
 
 function UserRow({ user, onEdit, onDelete, currentUserId, colors, t, last }: {
@@ -127,6 +128,12 @@ function UserRow({ user, onEdit, onDelete, currentUserId, colors, t, last }: {
         <View style={[styles.statusDot, { backgroundColor: user.isActive ? colors.success : colors.mutedForeground }]} />
         <Text style={[styles.statusLabel, { color: user.isActive ? colors.foreground : colors.mutedForeground }]}>
           {user.isActive ? t.adminActive : t.adminInactive}
+        </Text>
+      </View>
+      <View testID={`user-pwd-flag-${user.id}`} style={[styles.td, { width: COLS.password, flexDirection: "row", alignItems: "center", gap: 6 }]}>
+        <Feather name={user.mustChangePassword ? "key" : "check"} size={13} color={user.mustChangePassword ? colors.warning : colors.mutedForeground} />
+        <Text style={[styles.statusLabel, { color: user.mustChangePassword ? colors.warning : colors.mutedForeground }]} numberOfLines={1}>
+          {user.mustChangePassword ? t.adminPwdRequired : t.adminPwdOk}
         </Text>
       </View>
       <View style={[styles.td, { width: COLS.id }]}>
@@ -237,6 +244,7 @@ export default function AdminScreen() {
     const value = (user: User): string => {
       if (sort.column === "status") return user.isActive ? t.adminActive : t.adminInactive;
       if (sort.column === "role") return roleLabels[user.role];
+      if (sort.column === "password") return user.mustChangePassword ? "0" : "1";
       return user[sort.column];
     };
     const collator = new Intl.Collator(language === "it" ? "it-IT" : "en-GB", {
@@ -277,7 +285,7 @@ export default function AdminScreen() {
 
   function openEdit(u: User) {
     setEditingUser(u);
-    setForm({ name: u.name, email: u.email, password: "", role: u.role as Role, isActive: u.isActive });
+    setForm({ name: u.name, email: u.email, password: "", role: u.role as Role, isActive: u.isActive, mustChangePassword: u.mustChangePassword });
     setFormError(null);
     setModalVisible(true);
   }
@@ -302,7 +310,7 @@ export default function AdminScreen() {
   async function handleSave() {
     if (saving) return;
     setFormError(null);
-    const { name, email, password, role, isActive } = form;
+    const { name, email, password, role, isActive, mustChangePassword } = form;
     if (!name.trim()) { setFormError(t.adminName); return; }
     if (!editingUser && !email.trim()) { setFormError(t.adminEmail); return; }
     if (!editingUser && password.length < 8) { setFormError(t.adminPasswordMin); return; }
@@ -311,12 +319,12 @@ export default function AdminScreen() {
     setSaving(true);
     try {
       if (editingUser) {
-        const data: { name: string; role: Role; isActive: boolean; password?: string } = { name: name.trim(), role, isActive };
+        const data: { name: string; role: Role; isActive: boolean; mustChangePassword: boolean; password?: string } = { name: name.trim(), role, isActive, mustChangePassword };
         if (password) data.password = password;
         try { await updateMutation.mutateAsync({ id: editingUser.id, data }); }
         catch { throw new Error(t.adminErrorUpdate); }
       } else {
-        try { await createMutation.mutateAsync({ data: { email: email.trim(), name: name.trim(), password, role } }); }
+        try { await createMutation.mutateAsync({ data: { email: email.trim(), name: name.trim(), password, role, mustChangePassword } }); }
         catch { throw new Error(t.adminErrorCreate); }
       }
       await refreshUsers();
@@ -405,7 +413,7 @@ export default function AdminScreen() {
                 <View style={[styles.tr, styles.thead, { backgroundColor: colors.secondary, borderBottomColor: colors.border }]}>
                   {([
                     ["name", t.adminName], ["email", t.adminEmail], ["role", t.adminRole],
-                    ["status", t.adminStatus], ["id", "ID"],
+                    ["status", t.adminStatus], ["password", t.adminPwdColumn], ["id", "ID"],
                   ] as [SortColumn, string][]).map(([column, label]) => (
                     <TouchableOpacity
                       key={column}
@@ -537,6 +545,22 @@ export default function AdminScreen() {
             <View style={styles.field}>
               <Text style={[styles.fieldLabel, { color: colors.mutedForeground }]}>{t.adminRole.toUpperCase()}</Text>
               <RolePicker value={form.role} onChange={(r) => setField("role", r)} colors={colors} t={t} />
+            </View>
+
+            {/* Force password change */}
+            <View style={[styles.toggleRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
+              <View style={[styles.toggleInfo, { flex: 1, paddingRight: 12 }]}>
+                <Text style={[styles.toggleLabel, { color: colors.foreground }]}>{t.adminForceChange}</Text>
+                <Text style={[styles.toggleHint, { color: colors.mutedForeground }]}>{t.adminForceChangeHint}</Text>
+              </View>
+              <Switch
+                testID="user-form-force-password-change"
+                accessibilityLabel={t.adminForceChange}
+                value={form.mustChangePassword}
+                onValueChange={(v) => setField("mustChangePassword", v)}
+                trackColor={{ false: colors.border, true: colors.primary + "80" }}
+                thumbColor={form.mustChangePassword ? colors.primary : colors.mutedForeground}
+              />
             </View>
 
             {/* Active toggle (edit only, not for self) */}

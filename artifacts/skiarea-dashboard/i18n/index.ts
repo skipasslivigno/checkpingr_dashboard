@@ -198,6 +198,27 @@ export interface Translations {
   adminSaving: string;
 
   periodViewList: string;
+  sessionErrorTitle: string;
+  sessionErrorBody: string;
+  cpTitle: string;
+  cpSubtitle: string;
+  cpCurrent: string;
+  cpNew: string;
+  cpConfirm: string;
+  cpSubmit: string;
+  cpSaving: string;
+  cpErrCurrent: string;
+  cpErrMin: string;
+  cpErrMax: string;
+  cpErrSame: string;
+  cpErrMatch: string;
+  cpErrWrong: string;
+  cpErrGeneric: string;
+  adminForceChange: string;
+  adminForceChangeHint: string;
+  adminPwdColumn: string;
+  adminPwdRequired: string;
+  adminPwdOk: string;
   periodViewGroups: string;
 }
 
@@ -399,6 +420,27 @@ const it: Translations = {
   adminSaving: "Salvataggio...",
 
   periodViewList: "Lista",
+  sessionErrorTitle: "Impossibile verificare la sessione",
+  sessionErrorBody: "Il server non è raggiungibile. Controlla la connessione e riprova.",
+  cpTitle: "Imposta una nuova password",
+  cpSubtitle: "Per motivi di sicurezza devi cambiare la password prima di continuare.",
+  cpCurrent: "Password attuale",
+  cpNew: "Nuova password",
+  cpConfirm: "Conferma nuova password",
+  cpSubmit: "Aggiorna password",
+  cpSaving: "Aggiornamento...",
+  cpErrCurrent: "Inserisci la password attuale.",
+  cpErrMin: "La nuova password deve avere almeno 8 caratteri.",
+  cpErrMax: "La nuova password è troppo lunga (max 72 byte).",
+  cpErrSame: "La nuova password deve essere diversa da quella attuale.",
+  cpErrMatch: "Le password non coincidono.",
+  cpErrWrong: "Password attuale non corretta.",
+  cpErrGeneric: "Impossibile aggiornare la password. Riprova.",
+  adminForceChange: "Forza cambio password al prossimo accesso",
+  adminForceChangeHint: "L'utente dovrà impostare una nuova password",
+  adminPwdColumn: "Password",
+  adminPwdRequired: "Cambio richiesto",
+  adminPwdOk: "OK",
   periodViewGroups: "Gruppi",
 };
 
@@ -600,6 +642,27 @@ const en: Translations = {
   adminSaving: "Saving...",
 
   periodViewList: "List",
+  sessionErrorTitle: "Could not verify your session",
+  sessionErrorBody: "The server could not be reached. Check your connection and try again.",
+  cpTitle: "Set a new password",
+  cpSubtitle: "For security you must change your password before continuing.",
+  cpCurrent: "Current password",
+  cpNew: "New password",
+  cpConfirm: "Confirm new password",
+  cpSubmit: "Update password",
+  cpSaving: "Updating...",
+  cpErrCurrent: "Enter your current password.",
+  cpErrMin: "New password must be at least 8 characters.",
+  cpErrMax: "New password is too long (max 72 bytes).",
+  cpErrSame: "New password must differ from the current one.",
+  cpErrMatch: "Passwords do not match.",
+  cpErrWrong: "Current password is incorrect.",
+  cpErrGeneric: "Could not update password. Please try again.",
+  adminForceChange: "Force password change on next login",
+  adminForceChangeHint: "User must set a new password",
+  adminPwdColumn: "Password",
+  adminPwdRequired: "Change required",
+  adminPwdOk: "OK",
   periodViewGroups: "Groups",
 };
 

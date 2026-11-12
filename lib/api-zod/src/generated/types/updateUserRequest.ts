@@ -12,4 +12,5 @@ export interface UpdateUserRequest {
   role?: UpdateUserRequestRole;
   password?: string;
   isActive?: boolean;
+  mustChangePassword?: boolean;
 }

@@ -255,6 +255,33 @@ export interface WeekTrend {
   weeks: WeekTrendPoint[];
 }
 
+export interface ChangeOwnPasswordRequest {
+  currentPassword: string;
+  /**
+     * @minLength 8
+     * @maxLength 72
+     */
+  newPassword: string;
+}
+
+export type AuthUserRole = typeof AuthUserRole[keyof typeof AuthUserRole];
+
+
+export const AuthUserRole = {
+  admin: 'admin',
+  operator: 'operator',
+  viewer: 'viewer',
+} as const;
+
+export interface AuthUser {
+  id: string;
+  email: string;
+  name: string;
+  role: AuthUserRole;
+  tenantId: string;
+  mustChangePassword: boolean;
+}
+
 export type UserRole = typeof UserRole[keyof typeof UserRole];
 
 
@@ -270,6 +297,7 @@ export interface User {
   name: string;
   role: UserRole;
   isActive: boolean;
+  mustChangePassword: boolean;
   /** @nullable */
   createdAt?: string | null;
 }
@@ -288,6 +316,7 @@ export interface CreateUserRequest {
   name: string;
   password: string;
   role?: CreateUserRequestRole;
+  mustChangePassword?: boolean;
 }
 
 export type UpdateUserRequestRole = typeof UpdateUserRequestRole[keyof typeof UpdateUserRequestRole];
@@ -304,6 +333,7 @@ export interface UpdateUserRequest {
   role?: UpdateUserRequestRole;
   password?: string;
   isActive?: boolean;
+  mustChangePassword?: boolean;
 }
 
 export interface PeriodResult {
@@ -332,6 +362,11 @@ export interface PeriodResult {
   /** Per-lift aggregated totals, sorted by total passages descending */
   lifts: PeriodLiftRow[];
 }
+
+export type ChangePassword200 = {
+  token: string;
+  user: AuthUser;
+};
 
 export type GetLatestLiftsParams = {
 /**

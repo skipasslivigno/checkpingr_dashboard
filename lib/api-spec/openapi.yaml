@@ -19,6 +19,48 @@ tags:
   - name: users
     description: User management operations (admin only)
 paths:
+  /auth/me:
+    get:
+      operationId: getCurrentUser
+      tags: [users]
+      summary: Get the authenticated user's current account state
+      responses:
+        "200":
+          description: Current account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthUser"
+  /auth/change-password:
+    post:
+      operationId: changePassword
+      tags: [users]
+      summary: Change own password and clear the required-change flag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ChangeOwnPasswordRequest"
+      responses:
+        "200":
+          description: Replacement session after password change
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [token, user]
+                properties:
+                  token:
+                    type: string
+                  user:
+                    $ref: "#/components/schemas/AuthUser"
+        "400":
+          description: Invalid password or password reuse
+        "401":
+          description: Invalid session or current password
+        "409":
+          description: Account changed concurrently; sign in again
   /settings:
     get:
       operationId: getSettings
@@ -719,9 +761,36 @@ components:
             $ref: "#/components/schemas/WeekTrendPoint"
           description: Weekly data points ordered by week number
 
+    ChangeOwnPasswordRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+          minLength: 8
+          maxLength: 72
+    AuthUser:
+      type: object
+      required: [id, email, name, role, tenantId, mustChangePassword]
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [admin, operator, viewer]
+        tenantId:
+          type: string
+        mustChangePassword:
+          type: boolean
     User:
       type: object
-      required: [id, email, name, role, isActive]
+      required: [id, email, name, role, isActive, mustChangePassword]
       properties:
         id:
           type: string
@@ -733,6 +802,8 @@ components:
           type: string
           enum: [admin, operator, viewer]
         isActive:
+          type: boolean
+        mustChangePassword:
           type: boolean
         createdAt:
           type: ["string", "null"]
@@ -751,6 +822,9 @@ components:
         role:
           type: string
           enum: [admin, operator, viewer]
+        mustChangePassword:
+          type: boolean
+          default: false
 
     UpdateUserRequest:
       type: object
@@ -763,6 +837,8 @@ components:
         password:
           type: string
         isActive:
+          type: boolean
+        mustChangePassword:
           type: boolean
 
     PeriodResult:

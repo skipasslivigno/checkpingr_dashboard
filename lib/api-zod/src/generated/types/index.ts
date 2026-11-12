@@ -6,6 +6,10 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './authUser';
+export * from './authUserRole';
+export * from './changeOwnPasswordRequest';
+export * from './changePassword200';
 export * from './createUserRequest';
 export * from './createUserRequestRole';
 export * from './dashboardSummary';

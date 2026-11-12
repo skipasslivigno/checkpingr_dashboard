@@ -13,6 +13,7 @@ export interface User {
   name: string;
   role: UserRole;
   isActive: boolean;
+  mustChangePassword: boolean;
   /** @nullable */
   createdAt?: string | null;
 }
