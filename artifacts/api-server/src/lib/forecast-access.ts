@@ -1,5 +1,6 @@
 import type { FirstEntriesForecast } from "@workspace/api-zod";
 import { romeTimestamp, type ForecastExtraction } from "./first-entries-forecast";
+import { isFinalExtraction } from "./closing-extraction";
 
 export function forecastAvailability(
   date: string,
@@ -18,7 +19,7 @@ export function forecastAvailability(
   const closed = rows.some((r) => r.date === date && r.season === season
     && r.valid && /^\d{14}$/.test(r.extraction)
     && r.extraction.slice(0, 8) === clock.slice(0, 8)
-    && r.extraction.slice(8) >= "180000" && r.extraction.slice(8) <= "235959"
+    && isFinalExtraction(r.extraction)
     && r.extraction <= clock);
   return closed ? "day_closed" : "live";
 }
@@ -30,7 +31,7 @@ export function unavailableForecast(
 ): FirstEntriesForecast {
   return {
     date, season, availability, metric: "nuin",
-    modelVersion: "historical-ratio-v1", timeZone: "Europe/Rome",
+    modelVersion: "historical-ratio-2330-v2", timeZone: "Europe/Rome",
     history: { daysExamined: 0, completeDays: 0, fromDate: null, toDate: null },
     forecasts: [],
   };

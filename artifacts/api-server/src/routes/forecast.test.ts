@@ -23,7 +23,7 @@ before(async () => {
   })));
   const rows = Array.from({ length: 61 }, (_, day) => {
     const current = new Date(Date.parse(`${date}T12:00:00Z`) - (60 - day) * 86_400_000).toISOString().slice(0, 10);
-    return ["103000", "113000", "140000", "180000"].flatMap((hour, i) =>
+    return ["103000", "113000", "140000", "233000"].flatMap((hour, i) =>
       [tenantId, otherTenantId].map((tenant) => ({
         tenantId: tenant, dtgg: current, dupd: current.replaceAll("-", "") + hour,
         eser: season, ggnr: 1, ggbz: "Test",
@@ -46,7 +46,7 @@ before(async () => {
     next();
   });
   app.use("/live", createForecastRouter(() => new Date("2026-02-15T10:45:00Z")));
-  app.use("/closed", createForecastRouter(() => new Date("2026-02-15T18:00:00Z")));
+  app.use("/closed", createForecastRouter(() => new Date("2026-02-15T22:45:00Z")));
   app.use("/midnight", createForecastRouter(() => new Date("2026-02-15T23:30:00Z")));
   app.use(createForecastRouter(() => new Date("2026-02-16T20:00:00Z")));
   server = createServer(app);

@@ -15,8 +15,10 @@ nome «primi» non basta per decidere quale sia il dato atteso dal prodotto.
 **How to apply:** mantenere previsione e dato effettivo semanticamente coerenti;
 un'eventuale revisione del significato dei contatori va concordata separatamente.
 Le assunzioni e il metodo riproducibile sono descritti in
-`docs/first-entries-forecast.md`, incluso il limite operativo delle estrazioni
-serali dalle 18:00, che non è una conferma esterna degli orari di chiusura.
+`docs/first-entries-forecast.md`. L'utente ha chiarito che il consuntivo è
+l'estrazione delle **23:30**: le 18:00 sono ancora un parziale. Applicare
+questa regola sia allo storico di addestramento sia alla chiusura dei dati
+odierni per i visualizzatori.
 
 ## Disponibilità per ruolo
 

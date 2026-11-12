@@ -1,4 +1,5 @@
 import type { FirstEntriesForecast, FirstEntriesForecastPoint, ForecastValidation } from "@workspace/api-zod";
+import { isFinalExtraction } from "./closing-extraction";
 
 export const FORECAST_SLOTS = ["10:30", "11:30", "14:00"] as const;
 type Slot = typeof FORECAST_SLOTS[number];
@@ -197,9 +198,9 @@ function historicalDays(groups: Map<string, ForecastExtraction[]>, date: string)
   const candidates: HistoricalDay[] = [];
   for (const rows of groups.values()) {
     if (rows[0].date >= date) continue;
-    const final = rows[rows.length - 1];
-    // A morning-only day is not a final. 18:00 is the conservative closing cutoff.
-    if (time(final) < "18:00" || !final.valid || final.entries <= 0) continue;
+    const final = rows.filter(r => isFinalExtraction(r.extraction)).at(-1);
+    // Do not train against 18:00 partials or an arbitrary latest import.
+    if (!final || !final.valid || final.entries <= 0) continue;
     const roster = [...new Set(rows.flatMap((r) => r.liftIds.split(",")))].sort((a, b) => Number(a) - Number(b)).join(",");
     if (roster !== final.liftIds) continue;
     const comparable = rows.filter((r) => r.valid && r.liftIds === roster);
@@ -274,7 +275,7 @@ export function buildFirstEntriesForecast(
     return { ...result, status: "ready", predictedTotal: prediction.total, lowerBound, upperBound, confidence };
   });
   return {
-    ...input, metric: "nuin", modelVersion: "historical-ratio-v1", timeZone: "Europe/Rome", availability: "live",
+    ...input, metric: "nuin", modelVersion: "historical-ratio-2330-v2", timeZone: "Europe/Rome", availability: "live",
     history: {
       daysExamined: new Set([...prior.values()].map((r) => r[0].date)).size,
       completeDays: history.length,

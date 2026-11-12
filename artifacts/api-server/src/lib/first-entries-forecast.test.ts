@@ -9,7 +9,7 @@ const input = { date: target, season };
 const now = new Date("2026-02-16T12:00:00Z");
 
 function batches(date: string, amounts = [100, 150, 180, 200]): ForecastExtraction[] {
-  return ["103000", "113000", "140000", "180000"].map((hour, i) => ({
+  return ["103000", "113000", "140000", "233000"].map((hour, i) => ({
     date, season, extraction: date.replaceAll("-", "") + hour,
     entries: amounts[i], liftIds: "1,2", valid: true,
   }));
@@ -63,7 +63,7 @@ test("a simulated day's final never enters its own rolling validation forecast",
   const rows = [...history(), ...batches(target)];
   const before = buildFirstEntriesForecast(rows, input, now);
   const lastDay = "2026-02-14";
-  const changed = rows.map((r) => r.date === lastDay && r.extraction.endsWith("180000")
+  const changed = rows.map((r) => r.date === lastDay && r.extraction.endsWith("233000")
     ? { ...r, entries: 10000 } : r);
   const after = buildFirstEntriesForecast(changed, input, now);
   assert.equal(after.forecasts[0].predictedTotal, before.forecasts[0].predictedTotal);
@@ -80,14 +80,14 @@ test("requires both enough training and genuine out-of-sample validation", () =>
 });
 
 test("rejects incomplete finals, missing rosters, falling counters and morning-only days", () => {
-  const badDates = history(4).filter((r) => r.extraction.endsWith("180000")).map((r) => r.date);
+  const badDates = history(4).filter((r) => r.extraction.endsWith("233000")).map((r) => r.date);
   let bad = history(4).map((r) => {
-    if (r.date === badDates[0] && r.extraction.endsWith("180000")) return { ...r, valid: false };
-    if (r.date === badDates[1] && r.extraction.endsWith("180000")) return { ...r, liftIds: "1" };
+    if (r.date === badDates[0] && r.extraction.endsWith("233000")) return { ...r, valid: false };
+    if (r.date === badDates[1] && r.extraction.endsWith("233000")) return { ...r, liftIds: "1" };
     if (r.date === badDates[2] && r.extraction.endsWith("140000")) return { ...r, entries: 50 };
     return r;
   });
-  bad = bad.filter((r) => !(r.date === badDates[3] && r.extraction.endsWith("180000")));
+  bad = bad.filter((r) => !(r.date === badDates[3] && r.extraction.endsWith("233000")));
   const result = buildFirstEntriesForecast([...bad, ...batches(target)], input, now);
   assert.equal(result.history.daysExamined, 4);
   assert.equal(result.history.completeDays, 0);
@@ -140,7 +140,7 @@ test("rejects malformed timestamps and ambiguous duplicate historical dates", ()
 });
 
 test("live access uses the actual closing batch, not just the clock or another season", () => {
-  const clock = new Date("2026-02-15T18:00:00Z");
+  const clock = new Date("2026-02-15T22:45:00Z");
   const rows = batches(target);
   assert.equal(forecastAvailability(target, season, false, rows.slice(0, 3), clock), "live");
   assert.equal(forecastAvailability(target, season, false, rows, clock), "day_closed");
@@ -148,4 +148,11 @@ test("live access uses the actual closing batch, not just the clock or another s
   assert.equal(forecastAvailability(target, season, false, rows.map((r) => ({ ...r, valid: false })), clock), "live");
   assert.equal(forecastAvailability(target, season, false, batches(target, [0, 0, 0, 0]), clock), "day_closed");
   assert.equal(forecastAvailability(target, season, true, rows, clock), "verification");
+});
+
+test("18:00 is not a final and cannot close the viewer forecast or train the model", () => {
+  const rows = history().map(r => ({ ...r, extraction: r.extraction.replace(/233000$/, "180000") }));
+  const partial = batches(target).map(r => ({ ...r, extraction: r.extraction.replace(/233000$/, "180000") }));
+  assert.equal(forecastAvailability(target, season, false, partial, new Date("2026-02-15T20:00:00Z")), "live");
+  assert.equal(buildFirstEntriesForecast([...rows, ...partial], input, now).history.completeDays, 0);
 });

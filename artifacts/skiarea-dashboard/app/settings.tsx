@@ -20,6 +20,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useUpdateSettings, useUploadLogo } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { SeasonStartsSettings } from "@/components/SeasonStartsSettings";
 import { useTenantSettings } from "@/contexts/TenantSettingsContext";
 
 const MAX_COLORS = 10;
@@ -112,6 +114,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const qc = useQueryClient();
+  const { user } = useAuth();
   const { logoBase64, primaryColor: savedPrimaryColor, colors: savedColors, maxSeasons, queryKey } = useTenantSettings();
 
   const [localLogo, setLocalLogo] = useState<string | null>(null);
@@ -290,6 +293,8 @@ export default function SettingsScreen() {
             </Pressable>
           </View>
         </View>
+
+        {user?.role === "admin" && <SeasonStartsSettings />}
       </ScrollView>
     </View>
   );

@@ -175,6 +175,48 @@ paths:
               schema:
                 $ref: "#/components/schemas/TenantSettings"
 
+  /settings/season-starts:
+    get:
+      operationId: getSeasonStarts
+      tags: [settings]
+      summary: List seasons and their configured opening dates for the current tenant
+      responses:
+        "200":
+          description: Configured and available seasons, newest first
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: "#/components/schemas/SeasonStart" }
+
+  /settings/season-starts/{season}:
+    put:
+      operationId: updateSeasonStart
+      tags: [settings]
+      summary: Set or clear a season opening date (admin only)
+      parameters:
+        - name: season
+          in: path
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 40 }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SeasonStartInput" }
+      responses:
+        "200":
+          description: Saved season opening date
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SeasonStart" }
+        "400":
+          description: Invalid season or calendar date
+        "403":
+          description: Administrator required
+        "404":
+          description: Season not found for this tenant
+
   /settings/logo:
     post:
       operationId: uploadLogo
@@ -343,6 +385,36 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/DashboardSummary"
+
+  /lifts/period-comparison:
+    get:
+      operationId: getPeriodComparison
+      tags: [dashboard]
+      summary: Weekly and season-to-date first entries compared at equivalent season weekdays
+      description: Uses nuin. Weeks begin Saturday and are aligned by the Saturday containing each configured season opening date. Historical days use only the 23:30 extraction. If the selected day has a final 23:30 extraction it is included regardless of the selected hour. Otherwise the day is included from 14:00 onwards; earlier extractions stop both periods at the previous equivalent day. Missing finals are reported, never replaced with partial history or fabricated zeros.
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema: { type: string, pattern: '^\d{4}-\d{2}-\d{2}$' }
+        - name: season
+          in: query
+          required: true
+          schema: { type: string, minLength: 1, maxLength: 40 }
+        - name: extraction
+          in: query
+          required: false
+          schema: { type: string, pattern: '^\d{14}$' }
+      responses:
+        "200":
+          description: Calendar-aligned comparisons and data coverage
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/PeriodComparison" }
+        "400":
+          description: Invalid date or extraction
+        "404":
+          description: Season or selected extraction not found
 
   /lifts/first-entries-forecast:
     get:
@@ -937,6 +1009,64 @@ components:
         totalFirstPassages:
           type: integer
           description: Sum of npin (first daily entries) across all lifts during this week
+
+    SeasonStartInput:
+      type: object
+      required: [startDate]
+      properties:
+        startDate:
+          type: ["string", "null"]
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+          description: Real calendar date; null clears the configuration
+
+    SeasonStart:
+      type: object
+      required: [season, startDate, firstDataDate, suggestedStartDate]
+      properties:
+        season: { type: string }
+        startDate: { type: ["string", "null"] }
+        firstDataDate: { type: ["string", "null"] }
+        suggestedStartDate:
+          type: ["string", "null"]
+          description: Saturday on or before first recorded day; suggestion only, never silently saved
+
+    PeriodComparisonValue:
+      type: object
+      required: [currentTotal, previousTotal, changePercent, currentFromDate, currentToDate, previousFromDate, previousToDate, missingCurrentDays, missingPreviousDays]
+      properties:
+        currentTotal: { type: ["integer", "null"] }
+        previousTotal: { type: ["integer", "null"] }
+        changePercent: { type: ["number", "null"] }
+        currentFromDate: { type: ["string", "null"] }
+        currentToDate: { type: ["string", "null"] }
+        previousFromDate: { type: ["string", "null"] }
+        previousToDate: { type: ["string", "null"] }
+        missingCurrentDays:
+          type: array
+          items: { type: string }
+        missingPreviousDays:
+          type: array
+          items: { type: string }
+
+    PeriodComparison:
+      type: object
+      required: [date, season, previousSeason, status, includedSelectedDay, sourceExtraction, currentSeasonStartDate, previousSeasonStartDate, missingConfiguration, weekly, progressive]
+      properties:
+        date: { type: string }
+        season: { type: string }
+        previousSeason: { type: ["string", "null"] }
+        status:
+          type: string
+          enum: [ready, configuration_required, before_season, no_data]
+        includedSelectedDay: { type: boolean }
+        sourceExtraction: { type: ["string", "null"] }
+        currentSeasonStartDate: { type: ["string", "null"] }
+        previousSeasonStartDate: { type: ["string", "null"] }
+        missingConfiguration:
+          type: array
+          items: { type: string }
+        weekly: { $ref: "#/components/schemas/PeriodComparisonValue" }
+        progressive: { $ref: "#/components/schemas/PeriodComparisonValue" }
 
     TenantSettings:
       type: object

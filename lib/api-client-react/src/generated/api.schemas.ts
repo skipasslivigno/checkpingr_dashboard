@@ -389,6 +389,75 @@ export interface WeekTrendPoint {
   totalFirstPassages: number;
 }
 
+export interface SeasonStartInput {
+  /**
+     * Real calendar date; null clears the configuration
+     * @nullable
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  startDate: string | null;
+}
+
+export interface SeasonStart {
+  season: string;
+  /** @nullable */
+  startDate: string | null;
+  /** @nullable */
+  firstDataDate: string | null;
+  /**
+     * Saturday on or before first recorded day; suggestion only, never silently saved
+     * @nullable
+     */
+  suggestedStartDate: string | null;
+}
+
+export interface PeriodComparisonValue {
+  /** @nullable */
+  currentTotal: number | null;
+  /** @nullable */
+  previousTotal: number | null;
+  /** @nullable */
+  changePercent: number | null;
+  /** @nullable */
+  currentFromDate: string | null;
+  /** @nullable */
+  currentToDate: string | null;
+  /** @nullable */
+  previousFromDate: string | null;
+  /** @nullable */
+  previousToDate: string | null;
+  missingCurrentDays: string[];
+  missingPreviousDays: string[];
+}
+
+export type PeriodComparisonStatus = typeof PeriodComparisonStatus[keyof typeof PeriodComparisonStatus];
+
+
+export const PeriodComparisonStatus = {
+  ready: 'ready',
+  configuration_required: 'configuration_required',
+  before_season: 'before_season',
+  no_data: 'no_data',
+} as const;
+
+export interface PeriodComparison {
+  date: string;
+  season: string;
+  /** @nullable */
+  previousSeason: string | null;
+  status: PeriodComparisonStatus;
+  includedSelectedDay: boolean;
+  /** @nullable */
+  sourceExtraction: string | null;
+  /** @nullable */
+  currentSeasonStartDate: string | null;
+  /** @nullable */
+  previousSeasonStartDate: string | null;
+  missingConfiguration: string[];
+  weekly: PeriodComparisonValue;
+  progressive: PeriodComparisonValue;
+}
+
 export interface TenantSettings {
   tenantId: string;
   /** @nullable */
@@ -575,6 +644,22 @@ season?: string;
 date?: string;
 /**
  * Pin to a specific extraction time (dupd value)
+ */
+extraction?: string;
+};
+
+export type GetPeriodComparisonParams = {
+/**
+ * @pattern ^\d{4}-\d{2}-\d{2}$
+ */
+date: string;
+/**
+ * @minLength 1
+ * @maxLength 40
+ */
+season: string;
+/**
+ * @pattern ^\d{14}$
  */
 extraction?: string;
 };

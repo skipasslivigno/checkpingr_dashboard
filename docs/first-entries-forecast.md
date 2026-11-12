@@ -14,7 +14,7 @@ La dashboard mostra una stima separata dal dato effettivo. Il conteggio previsto
 - Per lo storico si considerano i cinque anni precedenti alla data richiesta,
   esclusivamente nello stesso tenant. Il limite delle stagioni visibili nei grafici
   non limita le stagioni usate dal modello.
-- Consuntivo storico: ultima estrazione del giorno, solo se dalle **18:00** in poi.
+- Consuntivo storico: estrazione delle **23:30**, non il parziale delle 18:00 né un generico ultimo record.
   Questa è un'ipotesi operativa di chiusura per l'attuale comprensorio, non una
   scoperta automatica degli orari degli impianti.
 - Sono esclusi consuntivi a zero, contatori negativi/in calo, impianti attivi senza
@@ -70,7 +70,7 @@ reale può essere utilizzato.
 ### Previsione ordinaria e modalità verifica
 
 La modalità ordinaria (`mode=live`, predefinita) è limitata alla **data odierna in
-Europe/Rome**, finché non è disponibile un'estrazione serale valida dalle 18:00
+Europe/Rome**, finché non è disponibile l'estrazione valida delle 23:30
 in poi. La presenza del consuntivo è verificata su tutte le estrazioni odierne della
 stagione richiesta, non solo su quella selezionata: tornare alle 10:30 non riattiva
 la previsione dopo il consuntivo. Un import con orario futuro non chiude in anticipo

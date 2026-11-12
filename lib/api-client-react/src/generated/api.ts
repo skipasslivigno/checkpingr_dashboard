@@ -39,12 +39,16 @@ import type {
   GetLiftExtractionsParams,
   GetLiftHistoryParams,
   GetLiftsPeriodParams,
+  GetPeriodComparisonParams,
   GetSeasonTrendParams,
   GetWeekTrendParams,
   HealthStatus,
   LiftSnapshot,
   LogoUpload,
+  PeriodComparison,
   PeriodResult,
+  SeasonStart,
+  SeasonStartInput,
   SeasonTrend,
   SettingsPatch,
   SyncInput,
@@ -783,6 +787,155 @@ export const useUpdateSettings = <TError = ErrorType<unknown>,
       return useMutation(getUpdateSettingsMutationOptions(options));
     }
 
+export const getGetSeasonStartsUrl = () => {
+
+
+
+
+  return `/api/settings/season-starts`
+}
+
+/**
+ * @summary List seasons and their configured opening dates for the current tenant
+ */
+export const getSeasonStarts = async ( options?: RequestInit): Promise<SeasonStart[]> => {
+
+  return customFetch<SeasonStart[]>(getGetSeasonStartsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetSeasonStartsQueryKey = () => {
+    return [
+    `/api/settings/season-starts`
+    ] as const;
+    }
+
+
+export const getGetSeasonStartsQueryOptions = <TData = Awaited<ReturnType<typeof getSeasonStarts>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSeasonStarts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetSeasonStartsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getSeasonStarts>>> = ({ signal }) => getSeasonStarts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getSeasonStarts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetSeasonStartsQueryResult = NonNullable<Awaited<ReturnType<typeof getSeasonStarts>>>
+export type GetSeasonStartsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List seasons and their configured opening dates for the current tenant
+ */
+
+export function useGetSeasonStarts<TData = Awaited<ReturnType<typeof getSeasonStarts>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSeasonStarts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetSeasonStartsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getUpdateSeasonStartUrl = (season: string,) => {
+
+
+
+
+  return `/api/settings/season-starts/${season}`
+}
+
+/**
+ * @summary Set or clear a season opening date (admin only)
+ */
+export const updateSeasonStart = async (season: string,
+    seasonStartInput: SeasonStartInput, options?: RequestInit): Promise<SeasonStart> => {
+
+  return customFetch<SeasonStart>(getUpdateSeasonStartUrl(season),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      seasonStartInput,)
+  }
+);}
+
+
+
+
+export const getUpdateSeasonStartMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSeasonStart>>, TError,{season: string;data: BodyType<SeasonStartInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateSeasonStart>>, TError,{season: string;data: BodyType<SeasonStartInput>}, TContext> => {
+
+const mutationKey = ['updateSeasonStart'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateSeasonStart>>, {season: string;data: BodyType<SeasonStartInput>}> = (props) => {
+          const {season,data} = props ?? {};
+
+          return  updateSeasonStart(season,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateSeasonStartMutationResult = NonNullable<Awaited<ReturnType<typeof updateSeasonStart>>>
+    export type UpdateSeasonStartMutationBody = BodyType<SeasonStartInput>
+    export type UpdateSeasonStartMutationError = ErrorType<void>
+
+    /**
+ * @summary Set or clear a season opening date (admin only)
+ */
+export const useUpdateSeasonStart = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSeasonStart>>, TError,{season: string;data: BodyType<SeasonStartInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateSeasonStart>>,
+        TError,
+        {season: string;data: BodyType<SeasonStartInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateSeasonStartMutationOptions(options));
+    }
+
 export const getUploadLogoUrl = () => {
 
 
@@ -1380,6 +1533,91 @@ export function useGetDashboardSummary<TData = Awaited<ReturnType<typeof getDash
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetDashboardSummaryQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetPeriodComparisonUrl = (params: GetPeriodComparisonParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/lifts/period-comparison?${stringifiedParams}` : `/api/lifts/period-comparison`
+}
+
+/**
+ * Uses nuin. Weeks begin Saturday and are aligned by the Saturday containing each configured season opening date. Historical days use only the 23:30 extraction. If the selected day has a final 23:30 extraction it is included regardless of the selected hour. Otherwise the day is included from 14:00 onwards; earlier extractions stop both periods at the previous equivalent day. Missing finals are reported, never replaced with partial history or fabricated zeros.
+ * @summary Weekly and season-to-date first entries compared at equivalent season weekdays
+ */
+export const getPeriodComparison = async (params: GetPeriodComparisonParams, options?: RequestInit): Promise<PeriodComparison> => {
+
+  return customFetch<PeriodComparison>(getGetPeriodComparisonUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPeriodComparisonQueryKey = (params?: GetPeriodComparisonParams,) => {
+    return [
+    `/api/lifts/period-comparison`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetPeriodComparisonQueryOptions = <TData = Awaited<ReturnType<typeof getPeriodComparison>>, TError = ErrorType<void>>(params: GetPeriodComparisonParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPeriodComparison>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPeriodComparisonQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPeriodComparison>>> = ({ signal }) => getPeriodComparison(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPeriodComparison>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPeriodComparisonQueryResult = NonNullable<Awaited<ReturnType<typeof getPeriodComparison>>>
+export type GetPeriodComparisonQueryError = ErrorType<void>
+
+
+/**
+ * @summary Weekly and season-to-date first entries compared at equivalent season weekdays
+ */
+
+export function useGetPeriodComparison<TData = Awaited<ReturnType<typeof getPeriodComparison>>, TError = ErrorType<void>>(
+ params: GetPeriodComparisonParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPeriodComparison>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPeriodComparisonQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

@@ -194,6 +194,44 @@ export const UpdateSettingsResponse = zod.object({
 
 
 /**
+ * @summary List seasons and their configured opening dates for the current tenant
+ */
+export const GetSeasonStartsResponseItem = zod.object({
+  "season": zod.string(),
+  "startDate": zod.string().nullable(),
+  "firstDataDate": zod.string().nullable(),
+  "suggestedStartDate": zod.string().nullable().describe('Saturday on or before first recorded day; suggestion only, never silently saved')
+})
+export const GetSeasonStartsResponse = zod.array(GetSeasonStartsResponseItem)
+
+
+/**
+ * @summary Set or clear a season opening date (admin only)
+ */
+export const updateSeasonStartPathSeasonMax = 40;
+
+
+
+export const UpdateSeasonStartParams = zod.object({
+  "season": zod.coerce.string().min(1).max(updateSeasonStartPathSeasonMax)
+})
+
+export const updateSeasonStartBodyStartDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+
+
+export const UpdateSeasonStartBody = zod.object({
+  "startDate": zod.string().regex(updateSeasonStartBodyStartDateRegExp).nullable().describe('Real calendar date; null clears the configuration')
+})
+
+export const UpdateSeasonStartResponse = zod.object({
+  "season": zod.string(),
+  "startDate": zod.string().nullable(),
+  "firstDataDate": zod.string().nullable(),
+  "suggestedStartDate": zod.string().nullable().describe('Saturday on or before first recorded day; suggestion only, never silently saved')
+})
+
+
+/**
  * @summary Upload tenant logo as base64 (admin only)
  */
 export const UploadLogoBody = zod.object({
@@ -338,6 +376,57 @@ export const GetDashboardSummaryResponse = zod.object({
   "totalLifts": zod.number().describe('Total number of lifts'),
   "activeLifts": zod.number().describe('Lifts with at least one passage'),
   "lastSyncAt": zod.string().nullable().describe('ISO timestamp of last data sync')
+})
+
+
+/**
+ * Uses nuin. Weeks begin Saturday and are aligned by the Saturday containing each configured season opening date. Historical days use only the 23:30 extraction. If the selected day has a final 23:30 extraction it is included regardless of the selected hour. Otherwise the day is included from 14:00 onwards; earlier extractions stop both periods at the previous equivalent day. Missing finals are reported, never replaced with partial history or fabricated zeros.
+ * @summary Weekly and season-to-date first entries compared at equivalent season weekdays
+ */
+export const getPeriodComparisonQueryDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const getPeriodComparisonQuerySeasonMax = 40;
+
+export const getPeriodComparisonQueryExtractionRegExp = new RegExp('^\\d{14}$');
+
+
+export const GetPeriodComparisonQueryParams = zod.object({
+  "date": zod.coerce.string().regex(getPeriodComparisonQueryDateRegExp),
+  "season": zod.coerce.string().min(1).max(getPeriodComparisonQuerySeasonMax),
+  "extraction": zod.coerce.string().regex(getPeriodComparisonQueryExtractionRegExp).optional()
+})
+
+export const GetPeriodComparisonResponse = zod.object({
+  "date": zod.string(),
+  "season": zod.string(),
+  "previousSeason": zod.string().nullable(),
+  "status": zod.enum(['ready', 'configuration_required', 'before_season', 'no_data']),
+  "includedSelectedDay": zod.boolean(),
+  "sourceExtraction": zod.string().nullable(),
+  "currentSeasonStartDate": zod.string().nullable(),
+  "previousSeasonStartDate": zod.string().nullable(),
+  "missingConfiguration": zod.array(zod.string()),
+  "weekly": zod.object({
+  "currentTotal": zod.number().nullable(),
+  "previousTotal": zod.number().nullable(),
+  "changePercent": zod.number().nullable(),
+  "currentFromDate": zod.string().nullable(),
+  "currentToDate": zod.string().nullable(),
+  "previousFromDate": zod.string().nullable(),
+  "previousToDate": zod.string().nullable(),
+  "missingCurrentDays": zod.array(zod.string()),
+  "missingPreviousDays": zod.array(zod.string())
+}),
+  "progressive": zod.object({
+  "currentTotal": zod.number().nullable(),
+  "previousTotal": zod.number().nullable(),
+  "changePercent": zod.number().nullable(),
+  "currentFromDate": zod.string().nullable(),
+  "currentToDate": zod.string().nullable(),
+  "previousFromDate": zod.string().nullable(),
+  "previousToDate": zod.string().nullable(),
+  "missingCurrentDays": zod.array(zod.string()),
+  "missingPreviousDays": zod.array(zod.string())
+})
 })
 
 
