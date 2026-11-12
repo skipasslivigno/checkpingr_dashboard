@@ -4,3 +4,4 @@
 - [Multi-tenant auth architecture](multi-tenant-auth.md) — tenants+users DB tables, JWT with tenantId+role, sync via per-tenant apiKey; first-run via POST /api/setup/init.
 - [Gmail personale](gmail-sending.md) — posta interna Gmail; invii dalla casella dell’amministratore collegato, con password per app.
 - [Runtime dei test Node](workspace-node-tests.md) — i test server richiedono bundling: Node ESM non risolve i barrel TypeScript dei pacchetti workspace.
+- [Navigazione nelle stagioni](season-navigation.md) — Dashboard e Impianti devono mantenere la navigazione giornaliera entro la stagione selezionata.

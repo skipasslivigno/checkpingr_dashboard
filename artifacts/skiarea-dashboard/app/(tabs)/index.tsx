@@ -176,7 +176,7 @@ export default function DashboardScreen() {
   const queryClient = useQueryClient();
   const { t, language, setLanguage } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
-  const { seasons: allSeasons, selectedSeason, setSelectedSeason } = useSeason();
+  const { seasons: allSeasons, selectedSeason, effectiveSeason, setSelectedSeason } = useSeason();
   const { maxSeasons } = useTenantSettings();
   const seasons = allSeasons.slice(0, maxSeasons);
   const [searchQuery, setSearchQuery] = useState("");
@@ -186,7 +186,7 @@ export default function DashboardScreen() {
 
   const queryParams = {
     date: selectedDate,
-    ...(selectedSeason ? { season: selectedSeason } : {}),
+    ...(effectiveSeason ? { season: effectiveSeason } : {}),
     ...(selectedExtraction ? { extraction: selectedExtraction } : {}),
   };
 
@@ -340,7 +340,7 @@ export default function DashboardScreen() {
         allowDateSelection
         selectedDate={selectedDate}
         selectedExtraction={selectedExtraction}
-        season={selectedSeason}
+        season={effectiveSeason}
         onDateChange={(d) => { setSelectedDate(d); setSelectedExtraction(undefined); }}
         onExtractionChange={setSelectedExtraction}
       />

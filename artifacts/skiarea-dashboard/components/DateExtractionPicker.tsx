@@ -10,10 +10,11 @@ import {
   TouchableWithoutFeedback,
   View,
 } from "react-native";
-import { useGetLiftDates, useGetLiftExtractions } from "@workspace/api-client-react";
+import { getGetLiftDatesQueryKey, useGetLiftDates, useGetLiftExtractions } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { CalendarRangePicker } from "@/components/CalendarRangePicker";
+import { getDateNavigation, resolveSeasonDate } from "@/lib/season-dates";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -33,7 +34,7 @@ export function dupdToTime(dupd: string): string {
 interface DateExtractionPickerProps {
   selectedDate: string;
   selectedExtraction: string | undefined;
-  season?: string;
+  season: string | undefined;
   allowDateSelection?: boolean;
   onDateChange: (date: string) => void;
   onExtractionChange: (extraction: string | undefined) => void;
@@ -53,20 +54,29 @@ export function DateExtractionPicker({
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
 
-  const { data: dates } = useGetLiftDates(season ? { season } : {});
+  // An omitted season means "all seasons" to the API, not "latest season".
+  const { data: dates } = useGetLiftDates(season ? { season } : {}, {
+    query: { queryKey: getGetLiftDatesQueryKey(season ? { season } : {}), enabled: !!season },
+  });
 
   const { data: extractions } = useGetLiftExtractions(
     selectedDate ? (season ? { date: selectedDate, season } : { date: selectedDate }) : undefined,
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    { query: { enabled: !!selectedDate } as any }
+    { query: { enabled: !!season && !!dates?.includes(selectedDate) } as any }
   );
 
   useEffect(() => {
-    if (!dates || dates.length === 0) return;
+    if (!season || !dates || dates.length === 0) return;
     const seasonChanged = prevSeasonRef.current !== season;
     prevSeasonRef.current = season;
-    if (seasonChanged || !dates.includes(selectedDate)) {
-      onDateChange(dates[0]);
+    const nextDate = resolveSeasonDate(dates, selectedDate, seasonChanged);
+    if (nextDate && nextDate !== selectedDate) {
+      onDateChange(nextDate);
+      onExtractionChange(undefined);
+    }
+    if (seasonChanged) {
+      setShowCalendar(false);
+      setShowDropdown(false);
       onExtractionChange(undefined);
     }
   }, [dates, season]);
@@ -91,17 +101,17 @@ export function DateExtractionPicker({
     return d.toLocaleDateString(locale, { weekday: "short", day: "numeric", month: "short" });
   }
 
-  if (!dates || dates.length === 0) return null;
+  if (!season || !dates || dates.length === 0) return null;
 
-  const currentIdx = dates.indexOf(selectedDate);
-  const canGoNewer = currentIdx > 0;
-  const canGoOlder = currentIdx < dates.length - 1;
+  const { newerDate, olderDate } = getDateNavigation(dates, selectedDate);
+  const canGoNewer = newerDate !== undefined;
+  const canGoOlder = olderDate !== undefined;
 
   function goNewer() {
-    if (canGoNewer) { onDateChange(dates![currentIdx - 1]); onExtractionChange(undefined); }
+    if (newerDate) { onDateChange(newerDate); onExtractionChange(undefined); }
   }
   function goOlder() {
-    if (canGoOlder) { onDateChange(dates![currentIdx + 1]); onExtractionChange(undefined); }
+    if (olderDate) { onDateChange(olderDate); onExtractionChange(undefined); }
   }
 
   const hasExtractions = extractions && extractions.length > 0;
@@ -143,6 +153,8 @@ export function DateExtractionPicker({
         <TouchableOpacity
           onPress={goOlder}
           disabled={!canGoOlder}
+          accessibilityState={{ disabled: !canGoOlder }}
+          testID="date-previous"
           style={[styles.arrowBtn, !canGoOlder && styles.arrowDisabled]}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 6 }}
         >
@@ -168,6 +180,8 @@ export function DateExtractionPicker({
         <TouchableOpacity
           onPress={goNewer}
           disabled={!canGoNewer}
+          accessibilityState={{ disabled: !canGoNewer }}
+          testID="date-next"
           style={[styles.arrowBtn, !canGoNewer && styles.arrowDisabled]}
           hitSlop={{ top: 10, bottom: 10, left: 6, right: 6 }}
         >
@@ -207,6 +221,7 @@ export function DateExtractionPicker({
           availableDates={dates}
           onClose={() => setShowCalendar(false)}
           onSelect={(date) => {
+            if (!dates.includes(date)) return;
             onDateChange(date);
             onExtractionChange(undefined);
             setShowCalendar(false);

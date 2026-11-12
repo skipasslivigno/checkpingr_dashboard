@@ -26,6 +26,7 @@ import { useColors } from "@/hooks/useColors";
 import { useResponsive, CONTENT_MAX_WIDTH } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
+import { useSeason } from "@/contexts/SeasonContext";
 
 interface CompanyEntry {
   name: string;
@@ -40,12 +41,14 @@ export default function LiftsScreen() {
   const [search, setSearch] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const { selectedDate, setSelectedDate, selectedExtraction, setSelectedExtraction } = useSelectedDate();
+  const { effectiveSeason } = useSeason();
   const [selectedCompany, setSelectedCompany] = useState<string | null>(null);
   const [showCompanyDropdown, setShowCompanyDropdown] = useState(false);
   const [companySortMode, setCompanySortMode] = useState<"id" | "name">("id");
 
   const queryParams = {
     date: selectedDate,
+    ...(effectiveSeason ? { season: effectiveSeason } : {}),
     ...(selectedExtraction ? { extraction: selectedExtraction } : {}),
   };
 
@@ -161,6 +164,7 @@ export default function LiftsScreen() {
           <Text style={[styles.title, { color: colors.foreground }]}>{t.allLifts}</Text>
 
           <DateExtractionPicker
+            season={effectiveSeason}
             selectedDate={selectedDate}
             selectedExtraction={selectedExtraction}
             onDateChange={(d) => { setSelectedDate(d); setSelectedExtraction(undefined); }}

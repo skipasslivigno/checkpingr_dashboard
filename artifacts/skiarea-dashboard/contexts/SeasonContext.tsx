@@ -9,6 +9,7 @@ export function formatSeason(s: string): string {
 interface SeasonContextValue {
   seasons: string[];
   selectedSeason: string | undefined;
+  effectiveSeason: string | undefined;
   setSelectedSeason: (s: string | undefined) => void;
 }
 
@@ -26,7 +27,7 @@ export function SeasonProvider({ children }: { children: React.ReactNode }) {
   );
 
   const value = useMemo(
-    () => ({ seasons, selectedSeason, setSelectedSeason }),
+    () => ({ seasons, selectedSeason, effectiveSeason: selectedSeason ?? seasons[0], setSelectedSeason }),
     [seasons, selectedSeason, setSelectedSeason]
   );
 

@@ -226,7 +226,7 @@ export default function GroupsScreen() {
   const { t } = useTranslation();
   const [refreshing, setRefreshing] = useState(false);
   const { selectedDate, setSelectedDate, selectedExtraction, setSelectedExtraction } = useSelectedDate();
-  const { seasons: allSeasons, selectedSeason, setSelectedSeason } = useSeason();
+  const { seasons: allSeasons, selectedSeason, effectiveSeason, setSelectedSeason } = useSeason();
   const { maxSeasons } = useTenantSettings();
   const seasons = allSeasons.slice(0, maxSeasons);
   // Default expanded: track collapsed groups (opt-out)
@@ -236,7 +236,7 @@ export default function GroupsScreen() {
   const queryParams = {
     date: selectedDate,
     ...(selectedExtraction ? { extraction: selectedExtraction } : {}),
-    ...(selectedSeason ? { season: selectedSeason } : {}),
+    ...(effectiveSeason ? { season: effectiveSeason } : {}),
   };
 
   const { data: lifts, isLoading } = useGetLatestLifts(queryParams);
@@ -388,6 +388,7 @@ export default function GroupsScreen() {
             if (item.type === "picker") {
               return (
                 <DateExtractionPicker
+                  season={effectiveSeason}
                   selectedDate={selectedDate}
                   selectedExtraction={selectedExtraction}
                   onDateChange={(d) => { setSelectedDate(d); setSelectedExtraction(undefined); }}
