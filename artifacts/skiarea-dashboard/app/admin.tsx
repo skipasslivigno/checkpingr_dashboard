@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import {
   ActivityIndicator,
   KeyboardAvoidingView,
@@ -84,8 +84,9 @@ const pickerStyles = StyleSheet.create({
   label: { fontSize: 13, fontFamily: "Inter_500Medium" },
 });
 
-const COLS = { name: 200, email: 230, role: 130, status: 100, actions: 96 };
-const TABLE_WIDTH = COLS.name + COLS.email + COLS.role + COLS.status + COLS.actions + 24;
+type SortColumn = "name" | "email" | "role" | "status" | "id";
+const COLS = { name: 200, email: 230, role: 150, status: 125, id: 310, actions: 96 };
+const TABLE_WIDTH = Object.values(COLS).reduce((sum, width) => sum + width, 24);
 
 function UserRow({ user, onEdit, onDelete, currentUserId, colors, t, last }: {
   user: User;
@@ -127,6 +128,9 @@ function UserRow({ user, onEdit, onDelete, currentUserId, colors, t, last }: {
         <Text style={[styles.statusLabel, { color: user.isActive ? colors.foreground : colors.mutedForeground }]}>
           {user.isActive ? t.adminActive : t.adminInactive}
         </Text>
+      </View>
+      <View style={[styles.td, { width: COLS.id }]}>
+        <Text selectable style={[styles.userEmail, { color: colors.mutedForeground }]}>{user.id}</Text>
       </View>
       <View style={[styles.td, { width: COLS.actions, flexDirection: "row", gap: 6, justifyContent: "flex-end" }]}>
         <TouchableOpacity
@@ -218,13 +222,38 @@ function DeleteDialog({ user, pending, error, onCancel, onConfirm, colors, t }: 
 
 export default function AdminScreen() {
   const colors = useColors();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { user: me } = useAuth();
   const router = useRouter();
   const queryClient = useQueryClient();
   const { isWide } = useResponsive();
 
   const { data: users = [], isLoading, isError, refetch } = useGetUsers();
+  const [sort, setSort] = useState<{ column: SortColumn; direction: "asc" | "desc" }>({
+    column: "name", direction: "asc",
+  });
+  const sortedUsers = useMemo(() => {
+    const roleLabels = { admin: t.roleAdmin, operator: t.roleOperator, viewer: t.roleViewer };
+    const value = (user: User): string => {
+      if (sort.column === "status") return user.isActive ? t.adminActive : t.adminInactive;
+      if (sort.column === "role") return roleLabels[user.role];
+      return user[sort.column];
+    };
+    const collator = new Intl.Collator(language === "it" ? "it-IT" : "en-GB", {
+      sensitivity: "base", numeric: true,
+    });
+    return [...users].sort((a, b) => {
+      const compared = collator.compare(value(a), value(b)) || collator.compare(a.id, b.id);
+      return sort.direction === "asc" ? compared : -compared;
+    });
+  }, [users, sort, language, t]);
+
+  function sortBy(column: SortColumn) {
+    setSort((current) => ({
+      column,
+      direction: current.column === column && current.direction === "asc" ? "desc" : "asc",
+    }));
+  }
   const createMutation = useCreateUser();
   const updateMutation = useUpdateUser();
   const deleteMutation = useDeleteUser();
@@ -375,18 +404,32 @@ export default function AdminScreen() {
               <View style={{ width: TABLE_WIDTH }}>
                 <View style={[styles.tr, styles.thead, { backgroundColor: colors.secondary, borderBottomColor: colors.border }]}>
                   {([
-                    [t.adminName, COLS.name], [t.adminEmail, COLS.email], [t.adminRole, COLS.role],
-                    [t.adminStatus, COLS.status], [t.adminActions, COLS.actions],
-                  ] as [string, number][]).map(([label, w], i) => (
-                    <Text
-                      key={label}
-                      style={[styles.th, { width: w, color: colors.mutedForeground, textAlign: i === 4 ? "right" : "left" }]}
+                    ["name", t.adminName], ["email", t.adminEmail], ["role", t.adminRole],
+                    ["status", t.adminStatus], ["id", "ID"],
+                  ] as [SortColumn, string][]).map(([column, label]) => (
+                    <TouchableOpacity
+                      key={column}
+                      testID={`sort-users-${column}`}
+                      accessibilityRole="button"
+                      accessibilityLabel={`${label}: ${sort.column === column && sort.direction === "asc" ? t.adminSortDescending : t.adminSortAscending}`}
+                      onPress={() => sortBy(column)}
+                      style={{ width: COLS[column], flexDirection: "row", alignItems: "center", gap: 4, paddingVertical: 12 }}
                     >
-                      {label.toUpperCase()}
-                    </Text>
+                      <Text style={[styles.th, { color: sort.column === column ? colors.primary : colors.mutedForeground, paddingRight: 0 }]}>
+                        {label.toUpperCase()}
+                      </Text>
+                      <Feather
+                        name={sort.column === column ? (sort.direction === "asc" ? "arrow-up" : "arrow-down") : "chevrons-up"}
+                        size={12}
+                        color={sort.column === column ? colors.primary : colors.mutedForeground}
+                      />
+                    </TouchableOpacity>
                   ))}
+                  <Text style={[styles.th, { width: COLS.actions, color: colors.mutedForeground, textAlign: "right" }]}>
+                    {t.adminActions.toUpperCase()}
+                  </Text>
                 </View>
-                {users.map((u, i) => (
+                {sortedUsers.map((u, i) => (
                   <UserRow
                     key={u.id}
                     user={u}
@@ -395,7 +438,7 @@ export default function AdminScreen() {
                     currentUserId={me?.id ?? ""}
                     colors={colors}
                     t={t}
-                    last={i === users.length - 1}
+                    last={i === sortedUsers.length - 1}
                   />
                 ))}
               </View>

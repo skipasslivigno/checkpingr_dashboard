@@ -189,6 +189,8 @@ export interface Translations {
   adminPasswordMin: string;
   adminActions: string;
   adminStatus: string;
+  adminSortAscending: string;
+  adminSortDescending: string;
   adminYou: string;
   adminDeleteTitle: string;
   adminDeleteSelf: string;
@@ -388,6 +390,8 @@ const it: Translations = {
   adminPasswordMin: "La password deve essere di almeno 8 caratteri.",
   adminActions: "Azioni",
   adminStatus: "Stato",
+  adminSortAscending: "Ordina in modo crescente",
+  adminSortDescending: "Ordina in modo decrescente",
   adminYou: "tu",
   adminDeleteTitle: "Eliminare utente?",
   adminDeleteSelf: "Non puoi eliminare il tuo account",
@@ -587,6 +591,8 @@ const en: Translations = {
   adminPasswordMin: "Password must be at least 8 characters.",
   adminActions: "Actions",
   adminStatus: "Status",
+  adminSortAscending: "Sort ascending",
+  adminSortDescending: "Sort descending",
   adminYou: "you",
   adminDeleteTitle: "Delete user?",
   adminDeleteSelf: "You cannot delete your own account",
