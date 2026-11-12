@@ -473,7 +473,7 @@ export const GetSeasonsResponse = zod.array(GetSeasonsResponseItem)
  * @summary Get daily passage totals per season for comparison charts
  */
 export const GetSeasonTrendQueryParams = zod.object({
-  "seasons": zod.coerce.string().optional().describe('Comma-separated list of season strings e.g. \"2023-2024,2024-2025\". Defaults to the two most recent seasons.')
+  "seasons": zod.coerce.string().optional().describe('Comma-separated list of up to 20 distinct season strings e.g. \"2023-2024,2024-2025\". All requested seasons are returned in request order. Defaults to the two most recent seasons.')
 })
 
 export const GetSeasonTrendResponseItem = zod.object({
@@ -494,7 +494,7 @@ export const GetSeasonTrendResponse = zod.array(GetSeasonTrendResponseItem)
  * @summary Get weekly passage totals per season
  */
 export const GetWeekTrendQueryParams = zod.object({
-  "seasons": zod.coerce.string().optional().describe('Comma-separated season identifiers (max 3). Defaults to the two most recent seasons.')
+  "seasons": zod.coerce.string().optional().describe('Comma-separated list of up to 20 distinct season identifiers. All requested seasons are returned in request order. Defaults to the two most recent seasons.')
 })
 
 export const GetWeekTrendResponseItem = zod.object({

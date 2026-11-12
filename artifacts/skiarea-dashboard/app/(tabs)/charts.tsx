@@ -23,8 +23,7 @@ import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSeason, formatSeason } from "@/contexts/SeasonContext";
 import { useTenantSettings } from "@/contexts/TenantSettingsContext";
-
-const DEFAULT_SEASON_COLORS = ["#0070BA", "#E6007E", "#4E82A0", "#4E82A0"];
+import { buildSeasonColorMap, resolveChartSeasons, toggleChartSeason } from "@/lib/chart-seasons";
 
 function formatBigNumber(n: number): string {
   if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
@@ -55,16 +54,15 @@ interface SeasonLine {
 
 function buildSeasonLines(
   rawData: Array<{ season: string; data: Array<{ date: string; dayIndex: number; totalPassages: number; totalGuests: number; totalFirstPassages: number }> }>,
-  seasonColors: string[],
-  colorOffset = 0
+  colorBySeason: Record<string, string>,
 ): SeasonLine[] {
-  return rawData.map((s, i) => {
+  return rawData.map((s) => {
     let cum = 0;
     const points = s.data.map((d) => {
       cum += d.totalFirstPassages;
       return { dayIndex: d.dayIndex, totalPassages: d.totalFirstPassages, cumulative: cum, date: d.date };
     });
-    return { season: s.season, color: seasonColors[(i + colorOffset) % seasonColors.length]!, points };
+    return { season: s.season, color: colorBySeason[s.season]!, points };
   });
 }
 
@@ -600,14 +598,12 @@ export default function ChartsScreen() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { colors: tenantColors, maxSeasons } = useTenantSettings();
-  const seasonColors = tenantColors.length > 0
-    ? [...tenantColors, ...DEFAULT_SEASON_COLORS].slice(0, Math.max(tenantColors.length, 4))
-    : DEFAULT_SEASON_COLORS;
   const [refreshing, setRefreshing] = useState(false);
 
   const { data: allSeasonsRaw } = useGetSeasons();
-  const { selectedSeason: contextSeason } = useSeason();
+  const { effectiveSeason: contextSeason } = useSeason();
   const visibleSeasons = useMemo(() => allSeasonsRaw?.slice(0, maxSeasons) ?? [], [allSeasonsRaw, maxSeasons]);
+  const colorBySeason = useMemo(() => buildSeasonColorMap(visibleSeasons, tenantColors), [visibleSeasons, tenantColors]);
 
   const [selectedSeasons, setSelectedSeasons] = useState<string[]>([]);
 
@@ -615,41 +611,42 @@ export default function ChartsScreen() {
   React.useEffect(() => {
     if (!contextSeason || !visibleSeasons.length) return;
     setSelectedSeasons((prev) => {
-      const base = prev.length > 0 ? prev : visibleSeasons.slice(0, Math.min(2, maxSeasons));
+      const base = resolveChartSeasons(visibleSeasons, prev);
+      if (!visibleSeasons.includes(contextSeason)) return base;
       if (base.includes(contextSeason)) return base;
       return [contextSeason, ...base.filter((s) => s !== contextSeason)].slice(0, maxSeasons);
     });
   }, [contextSeason, visibleSeasons, maxSeasons]);
 
   const resolvedSeasons = useMemo(() => {
-    if (selectedSeasons.length > 0) return selectedSeasons;
-    if (visibleSeasons.length > 0) return visibleSeasons.slice(0, Math.min(2, maxSeasons));
-    return [];
+    return resolveChartSeasons(visibleSeasons, selectedSeasons);
   }, [selectedSeasons, visibleSeasons, maxSeasons]);
 
   const seasonsParam = resolvedSeasons.join(",") || undefined;
 
   const { data: trendData, isLoading } = useGetSeasonTrend(
-    seasonsParam ? { seasons: seasonsParam } : {}
+    seasonsParam ? { seasons: seasonsParam } : {},
+    { query: { queryKey: getGetSeasonTrendQueryKey(seasonsParam ? { seasons: seasonsParam } : {}), enabled: !!seasonsParam } },
   );
 
   const { data: weekData, isLoading: weekLoading } = useGetWeekTrend(
-    seasonsParam ? { seasons: seasonsParam } : {}
+    seasonsParam ? { seasons: seasonsParam } : {},
+    { query: { queryKey: getGetWeekTrendQueryKey(seasonsParam ? { seasons: seasonsParam } : {}), enabled: !!seasonsParam } },
   );
 
   const seasonLines = useMemo(() => {
     if (!trendData) return [];
-    return buildSeasonLines(trendData, seasonColors);
-  }, [trendData, seasonColors]);
+    return buildSeasonLines(trendData, colorBySeason);
+  }, [trendData, colorBySeason]);
 
   const weekBars = useMemo((): WeekBar[] => {
     if (!weekData) return [];
-    return weekData.map((s, i) => ({
+    return weekData.map((s) => ({
       season: s.season,
-      color: seasonColors[i % seasonColors.length]!,
+      color: colorBySeason[s.season]!,
       weeks: s.weeks.map((w) => ({ weekNumber: w.weekNumber, totalPassages: w.totalFirstPassages })),
     }));
-  }, [weekData, seasonColors]);
+  }, [weekData, colorBySeason]);
 
   const hasAnyData = seasonLines.some((l) => l.points.length > 0);
   const hasWeekData = weekBars.some((b) => b.weeks.length > 0);
@@ -667,15 +664,7 @@ export default function ChartsScreen() {
   };
 
   function toggleSeason(s: string) {
-    setSelectedSeasons((prev) => {
-      const current = prev.length > 0 ? prev : visibleSeasons.slice(0, Math.min(2, maxSeasons));
-      if (current.includes(s)) {
-        const next = current.filter((x) => x !== s);
-        return next.length === 0 ? [] : next;
-      }
-      if (current.length >= maxSeasons) return current;
-      return [...current, s];
-    });
+    setSelectedSeasons((prev) => toggleChartSeason(visibleSeasons, prev, s));
   }
 
   const CHART_HEIGHT = 220;
@@ -701,31 +690,47 @@ export default function ChartsScreen() {
       {/* Season selector */}
       {visibleSeasons.length > 0 && (
         <View style={styles.selectorSection}>
-          <Text style={[styles.selectorLabel, { color: colors.mutedForeground }]}>{t.chartsSeasonSelector}</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.seasonRow}>
+          <View style={styles.selectorHeader}>
+            <Text style={[styles.selectorLabel, { color: colors.mutedForeground }]}>{t.chartsSeasonSelector} ({resolvedSeasons.length}/{visibleSeasons.length})</Text>
+            <TouchableOpacity
+              testID="charts-select-all-seasons"
+              accessibilityRole="button"
+              accessibilityState={{ selected: resolvedSeasons.length === visibleSeasons.length }}
+              onPress={() => setSelectedSeasons([...visibleSeasons])}
+              style={[styles.selectAllButton, { borderColor: colors.primary }]}
+            >
+              <Feather name="check-square" size={13} color={colors.primary} />
+              <Text style={[styles.seasonText, { color: colors.primary }]}>{t.chartsAllSeasons}</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.seasonRow}>
             {visibleSeasons.map((s) => {
               const current = resolvedSeasons;
               const active = current.includes(s);
-              const color = seasonColors[visibleSeasons.indexOf(s) % seasonColors.length]!;
+              const color = colorBySeason[s]!;
               return (
                 <TouchableOpacity
                   key={s}
+                  testID={`charts-season-${s}`}
+                  accessibilityRole="checkbox"
+                  accessibilityState={{ checked: active }}
                   style={[styles.seasonChip, { backgroundColor: active ? color + "22" : colors.secondary, borderColor: active ? color : colors.border }]}
                   onPress={() => toggleSeason(s)}
                 >
-                  {active && <View style={[styles.colorDot, { backgroundColor: color }]} />}
+                  <View style={[styles.colorDot, { backgroundColor: color }]} />
                   <Text style={[styles.seasonText, { color: active ? color : colors.mutedForeground }]}>{formatSeason(s)}</Text>
+                  {active && <Feather name="check" size={12} color={color} />}
                 </TouchableOpacity>
               );
             })}
-          </ScrollView>
+          </View>
 
           {seasonLines.length > 0 && (
             <View style={styles.legendRow}>
               {seasonLines.map((line) => (
                 <View key={line.season} style={styles.legendItem}>
                   <View style={[styles.legendLine, { backgroundColor: line.color }]} />
-                  <Text style={[styles.legendText, { color: colors.mutedForeground }]}>{line.season}</Text>
+                  <Text style={[styles.legendText, { color: colors.mutedForeground }]}>{formatSeason(line.season)}</Text>
                 </View>
               ))}
             </View>
@@ -871,12 +876,14 @@ const styles = StyleSheet.create({
   subtitle: { fontSize: 12, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
   title: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: -0.5, marginTop: 2 },
   selectorSection: { marginBottom: 16, paddingHorizontal: 16 },
-  selectorLabel: { fontSize: 11, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5, marginBottom: 8 },
-  seasonRow: { flexDirection: "row", gap: 6 },
+  selectorHeader: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 10 },
+  selectAllButton: { flexDirection: "row", alignItems: "center", gap: 5, borderWidth: 1, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 7 },
+  selectorLabel: { fontSize: 11, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5, flexShrink: 1 },
+  seasonRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
   seasonChip: { flexDirection: "row", alignItems: "center", borderRadius: 20, paddingHorizontal: 12, paddingVertical: 6, borderWidth: 1.5, gap: 5 },
   colorDot: { width: 7, height: 7, borderRadius: 4 },
   seasonText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
-  legendRow: { flexDirection: "row", gap: 16, marginTop: 10 },
+  legendRow: { flexDirection: "row", flexWrap: "wrap", columnGap: 16, rowGap: 8, marginTop: 10 },
   legendItem: { flexDirection: "row", alignItems: "center", gap: 6 },
   legendLine: { width: 18, height: 3, borderRadius: 2 },
   legendText: { fontSize: 11, fontFamily: "Inter_500Medium" },

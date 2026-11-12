@@ -108,6 +108,7 @@ export interface Translations {
   chartsNoData: string;
   chartsNoDataSub: string;
   chartsSeasonSelector: string;
+  chartsAllSeasons: string;
   chartsPassages: string;
   chartsFirstEntries: string;
   chartsDay: string;
@@ -394,6 +395,7 @@ const it: Translations = {
   chartsNoData: "Nessun dato disponibile",
   chartsNoDataSub: "Carica dati per visualizzare i grafici",
   chartsSeasonSelector: "Stagioni da confrontare",
+  chartsAllSeasons: "Tutte",
   chartsPassages: "Passaggi",
   chartsFirstEntries: "Primi ingressi",
   chartsDay: "Giorno",
@@ -680,6 +682,7 @@ const en: Translations = {
   chartsNoData: "No data available",
   chartsNoDataSub: "Push data to see charts",
   chartsSeasonSelector: "Seasons to compare",
+  chartsAllSeasons: "All",
   chartsPassages: "Passages",
   chartsFirstEntries: "First Entries",
   chartsDay: "Day",

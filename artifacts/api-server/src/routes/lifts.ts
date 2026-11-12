@@ -8,6 +8,7 @@ import {
   GetLiftExtractionsQueryParams,
 } from "@workspace/api-zod";
 import { z } from "zod";
+import { parseComparisonSeasons } from "../lib/comparison-seasons";
 
 const CoercedSyncBody = z.object({
   snapshots: z.array(z.object({
@@ -435,12 +436,11 @@ router.get("/lifts/period", async (req, res): Promise<void> => {
 router.get("/lifts/week-trend", async (req, res): Promise<void> => {
   const tenantId = req.user!.tenantId;
   let requestedSeasons: string[] | null = null;
-  if (req.query["seasons"] && typeof req.query["seasons"] === "string") {
-    requestedSeasons = req.query["seasons"]
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .slice(0, 3);
+  try {
+    requestedSeasons = parseComparisonSeasons(req.query["seasons"]);
+  } catch (error) {
+    res.status(400).json({ error: (error as Error).message });
+    return;
   }
 
   if (!requestedSeasons || requestedSeasons.length === 0) {
@@ -534,12 +534,11 @@ router.get("/seasons", async (req, res): Promise<void> => {
 router.get("/lifts/season-trend", async (req, res): Promise<void> => {
   const tenantId = req.user!.tenantId;
   let requestedSeasons: string[] | null = null;
-  if (req.query["seasons"] && typeof req.query["seasons"] === "string") {
-    requestedSeasons = req.query["seasons"]
-      .split(",")
-      .map((s) => s.trim())
-      .filter(Boolean)
-      .slice(0, 3);
+  try {
+    requestedSeasons = parseComparisonSeasons(req.query["seasons"]);
+  } catch (error) {
+    res.status(400).json({ error: (error as Error).message });
+    return;
   }
 
   if (!requestedSeasons || requestedSeasons.length === 0) {

@@ -513,7 +513,7 @@ paths:
           required: false
           schema:
             type: string
-          description: Comma-separated list of season strings e.g. "2023-2024,2024-2025". Defaults to the two most recent seasons.
+          description: Comma-separated list of up to 20 distinct season strings e.g. "2023-2024,2024-2025". All requested seasons are returned in request order. Defaults to the two most recent seasons.
       responses:
         "200":
           description: Season trend data
@@ -523,6 +523,8 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/SeasonTrend"
+        "400":
+          description: Invalid season list or more than 20 distinct seasons requested
 
   /lifts/week-trend:
     get:
@@ -536,7 +538,7 @@ paths:
           required: false
           schema:
             type: string
-          description: Comma-separated season identifiers (max 3). Defaults to the two most recent seasons.
+          description: Comma-separated list of up to 20 distinct season identifiers. All requested seasons are returned in request order. Defaults to the two most recent seasons.
       responses:
         "200":
           description: Weekly trend data per season
@@ -546,6 +548,8 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/WeekTrend"
+        "400":
+          description: Invalid season list or more than 20 distinct seasons requested
 
 components:
   securitySchemes:

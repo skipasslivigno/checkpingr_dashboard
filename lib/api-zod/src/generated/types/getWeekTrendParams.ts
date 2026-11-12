@@ -8,7 +8,7 @@
 
 export type GetWeekTrendParams = {
 /**
- * Comma-separated season identifiers (max 3). Defaults to the two most recent seasons.
+ * Comma-separated list of up to 20 distinct season identifiers. All requested seasons are returned in request order. Defaults to the two most recent seasons.
  */
 seasons?: string;
 };

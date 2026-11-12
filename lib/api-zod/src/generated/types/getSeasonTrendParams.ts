@@ -8,7 +8,7 @@
 
 export type GetSeasonTrendParams = {
 /**
- * Comma-separated list of season strings e.g. "2023-2024,2024-2025". Defaults to the two most recent seasons.
+ * Comma-separated list of up to 20 distinct season strings e.g. "2023-2024,2024-2025". All requested seasons are returned in request order. Defaults to the two most recent seasons.
  */
 seasons?: string;
 };

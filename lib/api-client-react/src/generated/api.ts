@@ -1919,7 +1919,7 @@ export const getGetSeasonTrendQueryKey = (params?: GetSeasonTrendParams,) => {
     }
 
 
-export const getGetSeasonTrendQueryOptions = <TData = Awaited<ReturnType<typeof getSeasonTrend>>, TError = ErrorType<unknown>>(params?: GetSeasonTrendParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSeasonTrend>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetSeasonTrendQueryOptions = <TData = Awaited<ReturnType<typeof getSeasonTrend>>, TError = ErrorType<void>>(params?: GetSeasonTrendParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSeasonTrend>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -1938,14 +1938,14 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetSeasonTrendQueryResult = NonNullable<Awaited<ReturnType<typeof getSeasonTrend>>>
-export type GetSeasonTrendQueryError = ErrorType<unknown>
+export type GetSeasonTrendQueryError = ErrorType<void>
 
 
 /**
  * @summary Get daily passage totals per season for comparison charts
  */
 
-export function useGetSeasonTrend<TData = Awaited<ReturnType<typeof getSeasonTrend>>, TError = ErrorType<unknown>>(
+export function useGetSeasonTrend<TData = Awaited<ReturnType<typeof getSeasonTrend>>, TError = ErrorType<void>>(
  params?: GetSeasonTrendParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getSeasonTrend>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
@@ -2004,7 +2004,7 @@ export const getGetWeekTrendQueryKey = (params?: GetWeekTrendParams,) => {
     }
 
 
-export const getGetWeekTrendQueryOptions = <TData = Awaited<ReturnType<typeof getWeekTrend>>, TError = ErrorType<unknown>>(params?: GetWeekTrendParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWeekTrend>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+export const getGetWeekTrendQueryOptions = <TData = Awaited<ReturnType<typeof getWeekTrend>>, TError = ErrorType<void>>(params?: GetWeekTrendParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWeekTrend>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 ) => {
 
 const {query: queryOptions, request: requestOptions} = options ?? {};
@@ -2023,14 +2023,14 @@ const {query: queryOptions, request: requestOptions} = options ?? {};
 }
 
 export type GetWeekTrendQueryResult = NonNullable<Awaited<ReturnType<typeof getWeekTrend>>>
-export type GetWeekTrendQueryError = ErrorType<unknown>
+export type GetWeekTrendQueryError = ErrorType<void>
 
 
 /**
  * @summary Get weekly passage totals per season
  */
 
-export function useGetWeekTrend<TData = Awaited<ReturnType<typeof getWeekTrend>>, TError = ErrorType<unknown>>(
+export function useGetWeekTrend<TData = Awaited<ReturnType<typeof getWeekTrend>>, TError = ErrorType<void>>(
  params?: GetWeekTrendParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getWeekTrend>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
