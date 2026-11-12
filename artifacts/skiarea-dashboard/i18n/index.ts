@@ -187,6 +187,13 @@ export interface Translations {
   adminErrorUpdate: string;
   adminErrorDelete: string;
   adminPasswordMin: string;
+  adminActions: string;
+  adminStatus: string;
+  adminYou: string;
+  adminDeleteTitle: string;
+  adminDeleteSelf: string;
+  adminDeleting: string;
+  adminSaving: string;
 
   periodViewList: string;
   periodViewGroups: string;
@@ -379,6 +386,13 @@ const it: Translations = {
   adminErrorUpdate: "Errore nell'aggiornamento dell'utente.",
   adminErrorDelete: "Errore nell'eliminazione dell'utente.",
   adminPasswordMin: "La password deve essere di almeno 8 caratteri.",
+  adminActions: "Azioni",
+  adminStatus: "Stato",
+  adminYou: "tu",
+  adminDeleteTitle: "Eliminare utente?",
+  adminDeleteSelf: "Non puoi eliminare il tuo account",
+  adminDeleting: "Eliminazione...",
+  adminSaving: "Salvataggio...",
 
   periodViewList: "Lista",
   periodViewGroups: "Gruppi",
@@ -571,6 +585,13 @@ const en: Translations = {
   adminErrorUpdate: "Failed to update user.",
   adminErrorDelete: "Failed to delete user.",
   adminPasswordMin: "Password must be at least 8 characters.",
+  adminActions: "Actions",
+  adminStatus: "Status",
+  adminYou: "you",
+  adminDeleteTitle: "Delete user?",
+  adminDeleteSelf: "You cannot delete your own account",
+  adminDeleting: "Deleting...",
+  adminSaving: "Saving...",
 
   periodViewList: "List",
   periodViewGroups: "Groups",

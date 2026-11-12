@@ -3,11 +3,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
-  FlatList,
+  ActivityIndicator,
   KeyboardAvoidingView,
   Modal,
   Platform,
+  RefreshControl,
   ScrollView,
   StyleSheet,
   Switch,
@@ -22,12 +22,13 @@ import {
   useCreateUser,
   useUpdateUser,
   useDeleteUser,
+  getGetUsersQueryKey,
 } from "@workspace/api-client-react";
 import type { User } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { useResponsive, CONTENT_MAX_WIDTH } from "@/hooks/useResponsive";
+import { useResponsive } from "@/hooks/useResponsive";
 
 type Role = "admin" | "operator" | "viewer";
 
@@ -83,44 +84,135 @@ const pickerStyles = StyleSheet.create({
   label: { fontSize: 13, fontFamily: "Inter_500Medium" },
 });
 
-function UserRow({ user, onEdit, currentUserId, colors, t }: {
+const COLS = { name: 200, email: 230, role: 130, status: 100, actions: 96 };
+const TABLE_WIDTH = COLS.name + COLS.email + COLS.role + COLS.status + COLS.actions + 24;
+
+function UserRow({ user, onEdit, onDelete, currentUserId, colors, t, last }: {
   user: User;
   onEdit: (u: User) => void;
+  onDelete: (u: User) => void;
   currentUserId: string;
   colors: ReturnType<typeof useColors>;
   t: ReturnType<typeof useTranslation>["t"];
+  last: boolean;
 }) {
   const isSelf = user.id === currentUserId;
-  const roleColor = user.role === "admin" ? colors.primary : user.role === "operator" ? "#E07B00" : colors.mutedForeground;
+  const roleColor = user.role === "admin" ? colors.primary : user.role === "operator" ? colors.warning : colors.mutedForeground;
   const roleLabel = user.role === "admin" ? t.roleAdmin : user.role === "operator" ? t.roleOperator : t.roleViewer;
 
   return (
-    <TouchableOpacity
-      style={[styles.userRow, { backgroundColor: colors.card, borderColor: colors.border, opacity: user.isActive ? 1 : 0.55 }]}
-      onPress={() => onEdit(user)}
-      activeOpacity={0.7}
+    <View
+      testID={`user-row-${user.id}`}
+      style={[styles.tr, { borderBottomColor: colors.border, borderBottomWidth: last ? 0 : 1 }]}
     >
-      <View style={[styles.avatar, { backgroundColor: roleColor + "20" }]}>
-        <Text style={[styles.initials, { color: roleColor }]}>{initials(user.name)}</Text>
-      </View>
-      <View style={styles.userInfo}>
-        <View style={styles.nameRow}>
-          <Text style={[styles.userName, { color: colors.foreground }]} numberOfLines={1}>{user.name}</Text>
-          {isSelf && <Text style={[styles.selfTag, { color: colors.mutedForeground }]}> (tu)</Text>}
+      <View style={[styles.td, { width: COLS.name, flexDirection: "row", alignItems: "center", gap: 10 }]}>
+        <View style={[styles.avatar, { backgroundColor: roleColor + "20" }]}>
+          <Text style={[styles.initials, { color: roleColor }]}>{initials(user.name)}</Text>
         </View>
+        <Text style={[styles.userName, { color: colors.foreground }]} numberOfLines={1}>
+          {user.name}
+          {isSelf ? <Text style={[styles.selfTag, { color: colors.mutedForeground }]}>{` (${t.adminYou})`}</Text> : null}
+        </Text>
+      </View>
+      <View style={[styles.td, { width: COLS.email }]}>
         <Text style={[styles.userEmail, { color: colors.mutedForeground }]} numberOfLines={1}>{user.email}</Text>
-        <View style={styles.badgesRow}>
-          <View style={[styles.roleBadge, { backgroundColor: roleColor + "18" }]}>
-            <Text style={[styles.roleBadgeText, { color: roleColor }]}>{roleLabel}</Text>
-          </View>
-          <View style={[styles.statusDot, { backgroundColor: user.isActive ? colors.success : colors.border }]} />
-          <Text style={[styles.statusLabel, { color: user.isActive ? colors.success : colors.mutedForeground }]}>
-            {user.isActive ? t.adminActive : t.adminInactive}
-          </Text>
+      </View>
+      <View style={[styles.td, { width: COLS.role }]}>
+        <View style={[styles.roleBadge, { backgroundColor: roleColor + "18" }]}>
+          <Text style={[styles.roleBadgeText, { color: roleColor }]} numberOfLines={1}>{roleLabel}</Text>
         </View>
       </View>
-      <Feather name="edit-2" size={16} color={colors.mutedForeground} />
-    </TouchableOpacity>
+      <View style={[styles.td, { width: COLS.status, flexDirection: "row", alignItems: "center", gap: 6 }]}>
+        <View style={[styles.statusDot, { backgroundColor: user.isActive ? colors.success : colors.mutedForeground }]} />
+        <Text style={[styles.statusLabel, { color: user.isActive ? colors.foreground : colors.mutedForeground }]}>
+          {user.isActive ? t.adminActive : t.adminInactive}
+        </Text>
+      </View>
+      <View style={[styles.td, { width: COLS.actions, flexDirection: "row", gap: 6, justifyContent: "flex-end" }]}>
+        <TouchableOpacity
+          testID={`edit-user-${user.id}`}
+          accessibilityRole="button"
+          accessibilityLabel={`${t.adminEditUser}: ${user.name}`}
+          onPress={() => onEdit(user)}
+          style={[styles.iconBtn, { borderColor: colors.border, backgroundColor: colors.card }]}
+          activeOpacity={0.7}
+        >
+          <Feather name="edit-2" size={15} color={colors.primary} />
+        </TouchableOpacity>
+        <TouchableOpacity
+          testID={`delete-user-${user.id}`}
+          accessibilityRole="button"
+          accessibilityLabel={isSelf ? t.adminDeleteSelf : `${t.adminDelete}: ${user.name}`}
+          accessibilityState={{ disabled: isSelf }}
+          disabled={isSelf}
+          onPress={() => onDelete(user)}
+          style={[styles.iconBtn, { borderColor: isSelf ? colors.border : colors.destructive + "50", backgroundColor: colors.card, opacity: isSelf ? 0.35 : 1 }]}
+          activeOpacity={0.7}
+        >
+          <Feather name="trash-2" size={15} color={isSelf ? colors.mutedForeground : colors.destructive} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+}
+
+function DeleteDialog({ user, pending, error, onCancel, onConfirm, colors, t }: {
+  user: User | null;
+  pending: boolean;
+  error: string | null;
+  onCancel: () => void;
+  onConfirm: () => void;
+  colors: ReturnType<typeof useColors>;
+  t: ReturnType<typeof useTranslation>["t"];
+}) {
+  if (!user) return null;
+  return (
+    <View style={styles.overlay} testID="delete-user-dialog" accessibilityViewIsModal accessibilityLabel={t.adminDeleteTitle}>
+      <TouchableOpacity style={StyleSheet.absoluteFill} activeOpacity={1} onPress={onCancel} accessibilityLabel={t.adminCancel} />
+      <View style={[styles.dialog, { backgroundColor: colors.card, borderColor: colors.border }]}>
+        <View style={[styles.dialogIcon, { backgroundColor: colors.destructive + "15" }]}>
+          <Feather name="trash-2" size={20} color={colors.destructive} />
+        </View>
+        <Text style={[styles.dialogTitle, { color: colors.foreground }]} accessibilityRole="header">{t.adminDeleteTitle}</Text>
+        <View style={[styles.dialogUser, { backgroundColor: colors.secondary }]}>
+          <Text style={[styles.userName, { color: colors.foreground }]} numberOfLines={1}>{user.name}</Text>
+          <Text style={[styles.userEmail, { color: colors.mutedForeground }]} numberOfLines={1}>{user.email}</Text>
+        </View>
+        <Text style={[styles.dialogBody, { color: colors.mutedForeground }]}>{t.adminDeleteConfirm}</Text>
+        {error ? (
+          <View testID="delete-user-error" style={[styles.errorBox, { backgroundColor: colors.destructive + "15", borderColor: colors.destructive + "40" }]}>
+            <Feather name="alert-circle" size={14} color={colors.destructive} />
+            <Text style={[styles.errorText, { color: colors.destructive }]}>{error}</Text>
+          </View>
+        ) : null}
+        <View style={styles.dialogActions}>
+          <TouchableOpacity
+            testID="delete-user-cancel"
+            accessibilityRole="button"
+            accessibilityLabel={t.adminCancel}
+            disabled={pending}
+            onPress={onCancel}
+            style={[styles.dialogBtn, { borderColor: colors.border, opacity: pending ? 0.5 : 1 }]}
+          >
+            <Text style={[styles.dialogBtnText, { color: colors.foreground }]}>{t.adminCancel}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            testID="delete-user-confirm"
+            accessibilityRole="button"
+            accessibilityLabel={`${t.adminDelete}: ${user.name}`}
+            accessibilityState={{ disabled: pending, busy: pending }}
+            disabled={pending}
+            onPress={onConfirm}
+            style={[styles.dialogBtn, { backgroundColor: colors.destructive, borderColor: colors.destructive }]}
+          >
+            {pending ? <ActivityIndicator size="small" color={colors.destructiveForeground} /> : null}
+            <Text style={[styles.dialogBtnText, { color: colors.destructiveForeground }]}>
+              {pending ? t.adminDeleting : t.adminDelete}
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </View>
   );
 }
 
@@ -132,7 +224,7 @@ export default function AdminScreen() {
   const queryClient = useQueryClient();
   const { isWide } = useResponsive();
 
-  const { data: users = [], isLoading, refetch } = useGetUsers();
+  const { data: users = [], isLoading, isError, refetch } = useGetUsers();
   const createMutation = useCreateUser();
   const updateMutation = useUpdateUser();
   const deleteMutation = useDeleteUser();
@@ -142,6 +234,10 @@ export default function AdminScreen() {
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+
+  const [deleteTarget, setDeleteTarget] = useState<User | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   function openCreate() {
     setEditingUser(null);
@@ -157,22 +253,28 @@ export default function AdminScreen() {
     setModalVisible(true);
   }
 
-  function closeModal() {
-    if (saving) return;
+  function resetModal() {
     setModalVisible(false);
     setEditingUser(null);
     setForm(EMPTY_FORM);
     setFormError(null);
   }
 
-  function invalidate() {
-    queryClient.invalidateQueries({ queryKey: ["getUsers"] });
+  function closeModal() {
+    if (saving || deleting) return;
+    if (deleteTarget) { cancelDelete(); return; }
+    resetModal();
+  }
+
+  async function refreshUsers() {
+    await queryClient.invalidateQueries({ queryKey: getGetUsersQueryKey() });
   }
 
   async function handleSave() {
+    if (saving) return;
     setFormError(null);
     const { name, email, password, role, isActive } = form;
-    if (!name.trim()) { setFormError(t.adminName + " " + t.adminPasswordMin.toLowerCase()); return; }
+    if (!name.trim()) { setFormError(t.adminName); return; }
     if (!editingUser && !email.trim()) { setFormError(t.adminEmail); return; }
     if (!editingUser && password.length < 8) { setFormError(t.adminPasswordMin); return; }
     if (editingUser && password && password.length < 8) { setFormError(t.adminPasswordMin); return; }
@@ -182,41 +284,49 @@ export default function AdminScreen() {
       if (editingUser) {
         const data: { name: string; role: Role; isActive: boolean; password?: string } = { name: name.trim(), role, isActive };
         if (password) data.password = password;
-        await new Promise<void>((resolve, reject) => {
-          updateMutation.mutate({ id: editingUser.id, data }, {
-            onSuccess: () => { invalidate(); resolve(); },
-            onError: () => reject(new Error(t.adminErrorUpdate)),
-          });
-        });
+        try { await updateMutation.mutateAsync({ id: editingUser.id, data }); }
+        catch { throw new Error(t.adminErrorUpdate); }
       } else {
-        await new Promise<void>((resolve, reject) => {
-          createMutation.mutate({ data: { email: email.trim(), name: name.trim(), password, role } }, {
-            onSuccess: () => { invalidate(); resolve(); },
-            onError: () => reject(new Error(t.adminErrorCreate)),
-          });
-        });
+        try { await createMutation.mutateAsync({ data: { email: email.trim(), name: name.trim(), password, role } }); }
+        catch { throw new Error(t.adminErrorCreate); }
       }
-      closeModal();
+      await refreshUsers();
+      setSaving(false);
+      resetModal();
     } catch (e: unknown) {
       setFormError(e instanceof Error ? e.message : t.adminErrorUpdate);
-    } finally {
       setSaving(false);
     }
   }
 
-  function handleDelete(u: User) {
-    Alert.alert(t.adminDelete, t.adminDeleteConfirm, [
-      { text: t.adminCancel, style: "cancel" },
-      {
-        text: t.adminDelete, style: "destructive",
-        onPress: () => {
-          deleteMutation.mutate({ id: u.id }, {
-            onSuccess: () => { invalidate(); closeModal(); },
-            onError: () => Alert.alert("Errore", t.adminErrorDelete),
-          });
-        },
-      },
-    ]);
+  function requestDelete(u: User) {
+    if (u.id === me?.id) return;
+    setDeleteError(null);
+    setDeleteTarget(u);
+  }
+
+  function cancelDelete() {
+    if (deleting) return;
+    setDeleteTarget(null);
+    setDeleteError(null);
+  }
+
+  async function confirmDelete() {
+    if (!deleteTarget || deleting) return;
+    const target = deleteTarget;
+    setDeleting(true);
+    setDeleteError(null);
+    try {
+      await deleteMutation.mutateAsync({ id: target.id });
+      queryClient.setQueryData<User[]>(getGetUsersQueryKey(), (old) => old?.filter((x) => x.id !== target.id));
+      await refreshUsers();
+      setDeleting(false);
+      setDeleteTarget(null);
+      if (editingUser?.id === target.id) resetModal();
+    } catch {
+      setDeleting(false);
+      setDeleteError(t.adminErrorDelete);
+    }
   }
 
   function setField<K extends keyof FormState>(k: K, v: FormState[K]) {
@@ -231,51 +341,85 @@ export default function AdminScreen() {
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]} edges={["top"]}>
       {/* Header */}
       <View style={[styles.header, { borderBottomColor: colors.border }]}>
-        <TouchableOpacity onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
+        <TouchableOpacity testID="admin-back" accessibilityRole="button" accessibilityLabel={t.back} onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.foreground }]}>{t.adminTitle}</Text>
-        <TouchableOpacity onPress={openCreate} style={[styles.addBtn, { backgroundColor: colors.primary }]} activeOpacity={0.7}>
+        <TouchableOpacity testID="add-user" accessibilityRole="button" accessibilityLabel={t.adminCreateUser} onPress={openCreate} style={[styles.addBtn, { backgroundColor: colors.primary }]} activeOpacity={0.7}>
           <Feather name="plus" size={20} color={colors.primaryForeground} />
         </TouchableOpacity>
       </View>
 
-      {/* User list */}
-      <FlatList
-        data={users}
-        keyExtractor={(u) => u.id}
-        contentContainerStyle={[styles.list, isWide && { maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center", width: "100%" }]}
-        refreshing={isLoading}
-        onRefresh={refetch}
-        ListEmptyComponent={
-          !isLoading ? (
-            <View style={styles.empty}>
-              <Feather name="users" size={32} color={colors.mutedForeground} />
-              <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>{t.adminNoUsers}</Text>
-            </View>
-          ) : null
-        }
-        renderItem={({ item }) => (
-          <UserRow user={item} onEdit={openEdit} currentUserId={me?.id ?? ""} colors={colors} t={t} />
+      {/* User table */}
+      <ScrollView
+        contentContainerStyle={[styles.list, isWide && { maxWidth: TABLE_WIDTH + 32, alignSelf: "center", width: "100%" }]}
+        refreshControl={<RefreshControl refreshing={isLoading} onRefresh={refetch} />}
+      >
+        {isLoading && users.length === 0 ? (
+          <View style={styles.empty}><ActivityIndicator color={colors.primary} /></View>
+        ) : isError ? (
+          <View style={styles.empty}>
+            <Feather name="alert-circle" size={28} color={colors.destructive} />
+            <TouchableOpacity testID="users-retry" accessibilityRole="button" onPress={() => refetch()}>
+              <Text style={[styles.emptyText, { color: colors.primary }]}>{t.errorTryAgain}</Text>
+            </TouchableOpacity>
+          </View>
+        ) : users.length === 0 ? (
+          <View style={styles.empty}>
+            <Feather name="users" size={32} color={colors.mutedForeground} />
+            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>{t.adminNoUsers}</Text>
+          </View>
+        ) : (
+          <View style={[styles.tableWrap, { borderColor: colors.border, backgroundColor: colors.card }]}>
+            <ScrollView horizontal showsHorizontalScrollIndicator testID="users-table-scroll">
+              <View style={{ width: TABLE_WIDTH }}>
+                <View style={[styles.tr, styles.thead, { backgroundColor: colors.secondary, borderBottomColor: colors.border }]}>
+                  {([
+                    [t.adminName, COLS.name], [t.adminEmail, COLS.email], [t.adminRole, COLS.role],
+                    [t.adminStatus, COLS.status], [t.adminActions, COLS.actions],
+                  ] as [string, number][]).map(([label, w], i) => (
+                    <Text
+                      key={label}
+                      style={[styles.th, { width: w, color: colors.mutedForeground, textAlign: i === 4 ? "right" : "left" }]}
+                    >
+                      {label.toUpperCase()}
+                    </Text>
+                  ))}
+                </View>
+                {users.map((u, i) => (
+                  <UserRow
+                    key={u.id}
+                    user={u}
+                    onEdit={openEdit}
+                    onDelete={requestDelete}
+                    currentUserId={me?.id ?? ""}
+                    colors={colors}
+                    t={t}
+                    last={i === users.length - 1}
+                  />
+                ))}
+              </View>
+            </ScrollView>
+          </View>
         )}
-      />
+      </ScrollView>
 
       {/* Create / Edit modal */}
-      <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={closeModal}>
+      <Modal visible={modalVisible} animationType="slide" presentationStyle="pageSheet" onRequestClose={closeModal} testID="user-form-modal">
         <KeyboardAvoidingView
           style={[styles.modalContainer, { backgroundColor: colors.background }]}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
         >
           {/* Modal header */}
           <View style={[styles.modalHeader, { borderBottomColor: colors.border }]}>
-            <TouchableOpacity onPress={closeModal} activeOpacity={0.7} disabled={saving}>
-              <Text style={[styles.modalCancel, { color: colors.mutedForeground }]}>{t.adminCancel}</Text>
+            <TouchableOpacity testID="user-form-cancel" accessibilityRole="button" onPress={closeModal} activeOpacity={0.7} disabled={saving}>
+              <Text style={[styles.modalCancel, { color: colors.mutedForeground, opacity: saving ? 0.4 : 1 }]}>{t.adminCancel}</Text>
             </TouchableOpacity>
             <Text style={[styles.modalTitle, { color: colors.foreground }]}>
               {isEditing ? t.adminEditUser : t.adminCreateUser}
             </Text>
-            <TouchableOpacity onPress={handleSave} activeOpacity={0.7} disabled={saving}>
-              <Text style={[styles.modalSave, { color: saving ? colors.mutedForeground : colors.primary }]}>{t.adminSave}</Text>
+            <TouchableOpacity testID="user-form-save" accessibilityRole="button" accessibilityState={{ disabled: saving, busy: saving }} onPress={handleSave} activeOpacity={0.7} disabled={saving}>
+              <Text style={[styles.modalSave, { color: saving ? colors.mutedForeground : colors.primary }]}>{saving ? t.adminSaving : t.adminSave}</Text>
             </TouchableOpacity>
           </View>
 
@@ -376,7 +520,11 @@ export default function AdminScreen() {
             {isEditing && !isSelf && (
               <TouchableOpacity
                 style={[styles.deleteBtn, { borderColor: colors.destructive + "50" }]}
-                onPress={() => handleDelete(editingUser!)}
+                onPress={() => editingUser && requestDelete(editingUser)}
+                disabled={saving}
+                testID="user-form-delete"
+                accessibilityRole="button"
+                accessibilityLabel={`${t.adminDelete}: ${editingUser?.name ?? ""}`}
                 activeOpacity={0.7}
               >
                 <Feather name="trash-2" size={16} color={colors.destructive} />
@@ -385,7 +533,25 @@ export default function AdminScreen() {
             )}
           </ScrollView>
         </KeyboardAvoidingView>
+        {modalVisible ? <DeleteDialog
+          user={deleteTarget}
+          pending={deleting}
+          error={deleteError}
+          onCancel={cancelDelete}
+          onConfirm={confirmDelete}
+          colors={colors}
+          t={t}
+        /> : null}
       </Modal>
+      {!modalVisible ? <DeleteDialog
+        user={deleteTarget}
+        pending={deleting}
+        error={deleteError}
+        onCancel={cancelDelete}
+        onConfirm={confirmDelete}
+        colors={colors}
+        t={t}
+      /> : null}
     </SafeAreaView>
   );
 }
@@ -400,26 +566,41 @@ const styles = StyleSheet.create({
   headerTitle: { fontSize: 17, fontFamily: "Inter_600SemiBold" },
   addBtn: { width: 36, height: 36, borderRadius: 18, alignItems: "center", justifyContent: "center" },
 
-  list: { padding: 16, gap: 10 },
+  list: { padding: 16, paddingBottom: Platform.OS === "web" ? 50 : 24 },
   empty: { alignItems: "center", justifyContent: "center", paddingTop: 80, gap: 12 },
   emptyText: { fontSize: 15, fontFamily: "Inter_400Regular" },
 
-  userRow: {
-    flexDirection: "row", alignItems: "center", gap: 12,
-    borderRadius: 14, borderWidth: 1, padding: 14,
-  },
-  avatar: { width: 44, height: 44, borderRadius: 22, alignItems: "center", justifyContent: "center" },
-  initials: { fontSize: 16, fontFamily: "Inter_700Bold" },
-  userInfo: { flex: 1, gap: 3 },
-  nameRow: { flexDirection: "row", alignItems: "center" },
-  userName: { fontSize: 15, fontFamily: "Inter_600SemiBold", flexShrink: 1 },
-  selfTag: { fontSize: 13, fontFamily: "Inter_400Regular" },
-  userEmail: { fontSize: 12, fontFamily: "Inter_400Regular" },
-  badgesRow: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 2 },
-  roleBadge: { borderRadius: 5, paddingHorizontal: 7, paddingVertical: 2 },
+  tableWrap: { borderRadius: 14, borderWidth: 1, overflow: "hidden" },
+  tr: { flexDirection: "row", alignItems: "center", paddingHorizontal: 12, minHeight: 56 },
+  thead: { minHeight: 38, borderBottomWidth: 1 },
+  th: { fontSize: 11, fontFamily: "Inter_600SemiBold", letterSpacing: 0.5, paddingRight: 12 },
+  td: { paddingRight: 12, paddingVertical: 8 },
+  avatar: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
+  initials: { fontSize: 12, fontFamily: "Inter_700Bold" },
+  userName: { fontSize: 14, fontFamily: "Inter_600SemiBold", flexShrink: 1 },
+  selfTag: { fontSize: 12, fontFamily: "Inter_400Regular" },
+  userEmail: { fontSize: 13, fontFamily: "Inter_400Regular" },
+  roleBadge: { alignSelf: "flex-start", borderRadius: 5, paddingHorizontal: 7, paddingVertical: 3 },
   roleBadgeText: { fontSize: 10, fontFamily: "Inter_600SemiBold", textTransform: "uppercase", letterSpacing: 0.3 },
-  statusDot: { width: 6, height: 6, borderRadius: 3 },
-  statusLabel: { fontSize: 11, fontFamily: "Inter_400Regular" },
+  statusDot: { width: 7, height: 7, borderRadius: 4 },
+  statusLabel: { fontSize: 13, fontFamily: "Inter_500Medium" },
+  iconBtn: { width: 34, height: 34, borderRadius: 8, borderWidth: 1, alignItems: "center", justifyContent: "center" },
+
+  overlay: {
+    ...StyleSheet.absoluteFillObject, zIndex: 50, elevation: 50,
+    backgroundColor: "rgba(7,30,42,0.55)", alignItems: "center", justifyContent: "center", padding: 20,
+  },
+  dialog: { width: "100%", maxWidth: 400, borderRadius: 16, borderWidth: 1, padding: 20, gap: 12 },
+  dialogIcon: { width: 40, height: 40, borderRadius: 20, alignItems: "center", justifyContent: "center" },
+  dialogTitle: { fontSize: 17, fontFamily: "Inter_600SemiBold" },
+  dialogUser: { borderRadius: 10, padding: 12, gap: 2 },
+  dialogBody: { fontSize: 14, fontFamily: "Inter_400Regular", lineHeight: 20 },
+  dialogActions: { flexDirection: "row", gap: 10, marginTop: 4 },
+  dialogBtn: {
+    flex: 1, height: 44, borderRadius: 10, borderWidth: 1,
+    flexDirection: "row", gap: 8, alignItems: "center", justifyContent: "center",
+  },
+  dialogBtnText: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
 
   modalContainer: { flex: 1 },
   modalHeader: {
