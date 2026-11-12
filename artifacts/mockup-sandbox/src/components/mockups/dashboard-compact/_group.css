@@ -1,0 +1,7 @@
+/* Native font-family aliases used verbatim by the extracted app components. */
+@font-face { font-family: Inter_400Regular; src: url("/__mockup/fonts/dashboard-compact/Inter_400Regular.ttf"); font-display: swap; }
+@font-face { font-family: Inter_500Medium; src: url("/__mockup/fonts/dashboard-compact/Inter_500Medium.ttf"); font-display: swap; }
+@font-face { font-family: Inter_600SemiBold; src: url("/__mockup/fonts/dashboard-compact/Inter_600SemiBold.ttf"); font-display: swap; }
+@font-face { font-family: Inter_700Bold; src: url("/__mockup/fonts/dashboard-compact/Inter_700Bold.ttf"); font-display: swap; }
+
+.ski-extraction { display: flex; flex-direction: column; font-family: Inter_400Regular, sans-serif; background: #F1F8FC; min-height: 100vh; }

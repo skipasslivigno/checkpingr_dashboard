@@ -293,6 +293,7 @@ export interface Translations {
   fcStatusHelp: Record<"ready"|"before_extraction"|"missing_extraction"|"incomplete_extraction"|"insufficient_history"|"insufficient_validation"|"no_data"|"zero_entries", string>;
   fcConfidence: Record<"unavailable"|"low"|"medium"|"high", string>;
   fcVerificationMode: string; fcVerificationHint: string; fcVerificationActive: string; fcLiveOnly: string;
+  fcTileLabel: string; fcTileAt: string; fcTileOpen: string; fcTileVerify: string; fcTileUnavailable: string; fcClose: string; fcSlots: string;
 }
 
 const it: Translations = {
@@ -581,6 +582,13 @@ const it: Translations = {
   emSendPreviewLoading: "Caricamento anteprima…",
   emRetry: "Riprova",
   fcTitle: "Previsione primi ingressi",
+  fcTileLabel: "Ingressi previsti",
+  fcTileAt: "Stima delle {time}",
+  fcTileOpen: "Apri dettagli previsione",
+  fcTileVerify: "Verifica",
+  fcTileUnavailable: "Previsione non disponibile",
+  fcClose: "Chiudi",
+  fcSlots: "Orari di previsione",
   fcVerificationMode: "Modalità verifica",
   fcVerificationHint: "Calcola anche su giornate passate o già a consuntivo. Solo amministratori.",
   fcVerificationActive: "Modalità verifica attiva: simulazione sui dati disponibili all'estrazione selezionata.",
@@ -897,6 +905,13 @@ const en: Translations = {
   emSendPreviewLoading: "Loading preview…",
   emRetry: "Retry",
   fcTitle: "First entries forecast",
+  fcTileLabel: "Expected entries",
+  fcTileAt: "Estimate at {time}",
+  fcTileOpen: "Open forecast details",
+  fcTileVerify: "Verify",
+  fcTileUnavailable: "Forecast unavailable",
+  fcClose: "Close",
+  fcSlots: "Forecast times",
   fcVerificationMode: "Verification mode",
   fcVerificationHint: "Also calculate for past or already closed days. Administrators only.",
   fcVerificationActive: "Verification mode enabled: simulation using data available at the selected extraction.",

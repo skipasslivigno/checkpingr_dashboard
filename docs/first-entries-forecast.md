@@ -81,12 +81,24 @@ Le API non eseguono il modello su giornate non ammesse e rispondono con
 `availability=past_day|day_closed|future_day` e `forecasts=[]`. Nella risposta
 sospesa lo storico non viene calcolato: i contatori di copertura sono zero.
 
-Gli amministratori hanno un interruttore **Modalità verifica**, disattivato per
-default, per richiedere `mode=verification` anche sulle giornate passate o già a
+Gli amministratori hanno un interruttore **Modalità verifica** nel pannello dei
+dettagli, disattivato per default, per richiedere `mode=verification` anche sulle giornate passate o già a
 consuntivo. Le API controllano il ruolo verificato dal server; un visualizzatore
 o operatore che prova a forzare il parametro riceve HTTP 403.
 La modalità resta locale alla scheda e all'account corrente, non è una preferenza
 globale né viene ereditata da un altro utente. Le date future rimangono escluse.
+
+La previsione occupa il posto della vecchia statistica «Stagione», eliminata perché
+la stagione rimane nel selettore in alto, ora più leggibile anche con una sola
+stagione. Nella vista iniziale si vedono solo il totale previsto, l'etichetta
+«Ingressi previsti» e l'orario della stima. Toccando la scheda si apre un pannello
+con orari, intervalli, attendibilità, validazione e spiegazioni; sul telefono è un
+pannello dal basso, su desktop una finestra centrata. I dettagli non aumentano
+l'altezza della dashboard e non vengono montati finché non sono richiesti.
+Per gli admin senza stima disponibile la scheda «Verifica» apre comunque il
+pannello e consente di attivare il calcolo storico. Per gli altri utenti senza una
+stima utilizzabile, la scheda non viene mostrata, salvo caricamento o errore
+con possibilità di riprovare.
 
 La scheda si aggiorna al cambio data/stagione/estrazione, con il refresh della
 dashboard e con una richiesta ogni minuto mentre la data è ammessa. La data locale

@@ -31,3 +31,17 @@ funzionamento, senza mostrare ai visualizzatori previsioni inutili sui consuntiv
 consuntivo; l'eccezione di verifica è esplicita e controllata dal ruolo anche sul
 server. Selezionare un'estrazione mattutina di una giornata già chiusa non deve
 aggirare il limite.
+
+## Presentazione compatta
+
+La dashboard non deve ripetere la stagione in una scheda statistica, perché è già
+indicata nella fascia di selezione in alto. Al suo posto va mostrato il valore
+previsto, quando disponibile. Gli altri dati della previsione devono apparire solo
+su richiesta.
+
+**Why:** l'utente ha segnalato che il blocco con i dettagli della previsione
+riempiva troppo lo schermo e che la scheda della stagione era ridondante.
+
+**How to apply:** mantenere il riepilogo compatto tra le statistiche e i dettagli
+in un pannello apribile; la verifica admin deve restare raggiungibile anche senza
+una previsione ordinaria disponibile, senza ripristinare il grande blocco inline.

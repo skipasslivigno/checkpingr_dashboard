@@ -281,6 +281,10 @@ export default function DashboardScreen() {
 
   const { logoBase64 } = useTenantSettings();
 
+  const forecastTile = (compact: boolean) => (
+    <FirstEntriesForecast compact={compact} date={selectedDate} season={effectiveSeason} extraction={selectedExtraction} />
+  );
+
   const renderHeader = () => (
     <View style={[styles.headerBlock, { paddingTop: topPadding + 16 }]}>
       {/* Logo / title / lang */}
@@ -315,15 +319,18 @@ export default function DashboardScreen() {
       </View>
 
       {/* Season segmented control */}
-      {seasons && seasons.length > 1 && (
+      {seasons && seasons.length > 0 && (
         <View style={[styles.seasonSegment, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
-          <Feather name="layers" size={13} color={colors.mutedForeground} style={styles.seasonIcon} />
+          <Feather name="layers" size={15} color={colors.mutedForeground} style={styles.seasonIcon} />
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.seasonScrollContent}>
             {seasons.map((s) => {
               const active = (selectedSeason ?? seasons[0]) === s;
               return (
                 <TouchableOpacity
                   key={s}
+                  testID={`button-season-${s}`}
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
                   style={[styles.seasonTab, active && { backgroundColor: colors.primary }]}
                   onPress={() => setSelectedSeason(s === seasons[0] ? undefined : s)}
                   activeOpacity={0.8}
@@ -352,15 +359,15 @@ export default function DashboardScreen() {
       {isWide ? (
         <View style={styles.statsRow}>
           {summaryLoading ? (
-            <><StatCardSkeleton /><StatCardSkeleton /><StatCardSkeleton /><StatCardSkeleton /></>
+            <><StatCardSkeleton /><StatCardSkeleton /><StatCardSkeleton /></>
           ) : (
             <>
               <StatCard compact accentColor={metrics.passages.color} label={t.passages} value={(summary?.totalPassages ?? 0).toLocaleString()} />
               <StatCard compact accentColor={metrics.primiIngressi.color} label={t.guestsOnLifts} value={(summary?.totalGuests ?? 0).toLocaleString()} />
               <StatCard compact label={t.activeLifts} value={`${summary?.activeLifts ?? 0} / ${summary?.totalLifts ?? 0}`} />
-              <StatCard compact label={t.season} value={summary?.season ? formatSeason(summary.season) : "—"} />
             </>
           )}
+          {forecastTile(true)}
         </View>
       ) : (
         <>
@@ -376,18 +383,16 @@ export default function DashboardScreen() {
           </View>
           <View style={styles.statsRow}>
             {summaryLoading ? (
-              <><StatCardSkeleton /><StatCardSkeleton /></>
+              <StatCardSkeleton />
             ) : (
               <>
                 <StatCard label={t.activeLifts} value={`${summary?.activeLifts ?? 0} / ${summary?.totalLifts ?? 0}`} />
-                <StatCard label={t.season} value={summary?.season ? formatSeason(summary.season) : "—"} />
               </>
             )}
+            {forecastTile(false)}
           </View>
         </>
       )}
-
-      <FirstEntriesForecast date={selectedDate} season={effectiveSeason} extraction={selectedExtraction} />
     </View>
   );
 
@@ -482,12 +487,12 @@ const styles = StyleSheet.create({
   seasonSegment: {
     flexDirection: "row", alignItems: "center",
     marginHorizontal: 16, marginBottom: 10,
-    borderRadius: 10, borderWidth: 1, padding: 3, gap: 2,
+    borderRadius: 10, borderWidth: 1, padding: 4, gap: 4, minHeight: 44,
   },
-  seasonIcon: { marginLeft: 4, marginRight: 2 },
-  seasonScrollContent: { flexDirection: "row", gap: 2 },
-  seasonTab: { alignItems: "center", paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8 },
-  seasonText: { fontSize: 12, fontFamily: "Inter_600SemiBold" },
+  seasonIcon: { marginLeft: 6, marginRight: 2 },
+  seasonScrollContent: { flexDirection: "row", gap: 4, alignItems: "center" },
+  seasonTab: { alignItems: "center", paddingVertical: 8, paddingHorizontal: 14, borderRadius: 8, minHeight: 36, justifyContent: "center" },
+  seasonText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
   syncRow: {
     flexDirection: "row", alignItems: "center", gap: 6,
     paddingHorizontal: 12, paddingVertical: 8,
