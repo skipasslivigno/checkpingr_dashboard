@@ -47,3 +47,59 @@ mtime_ms = 1794481740024
 storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:292e37f8-2dcf-45c1-a5fb-c2522672089d/a5a0fbe3-9235-42b6-8a79-16a61def65db/4f1b9979-c8dc-4fc1-b1d2-d5b09d6c2a5e"
 storage_version_token = "1794481774834418"
 content_type = "image/png"
+
+[[outputs]]
+id = "PcZ5Y7tXUK8LRC5M40Qeu"
+uri = "file://attached_assets/favicon-options/confronto.png"
+type = "image"
+title = "Tre favicon a confronto"
+description = "Classica, Blu e Fucsia, con anteprime anche a 32 e 16 pixel."
+logical_id = "e0e59f9f-6ade-443f-ae44-1fc4adb67692"
+content_hash = "sha256:afc2bfdb33b5d237dba9912c9b0cb150424d6f7aded2a8e5f01b73035bd0f99d"
+size = 134905
+mtime_ms = 1794481878611
+storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:292e37f8-2dcf-45c1-a5fb-c2522672089d/e0e59f9f-6ade-443f-ae44-1fc4adb67692/4673ae08-67a7-447b-9dab-44f8ab53eeca"
+storage_version_token = "1794481906104210"
+content_type = "image/png"
+
+[[outputs]]
+id = "f938VjISuGd-GMbbZEC52"
+uri = "file://attached_assets/favicon-options/01-classica.png"
+type = "image"
+title = "1 · Classica"
+description = "S blu su bianco con sottolineatura fucsia."
+logical_id = "5c4d406c-ec04-4456-857f-682e82d49f4c"
+content_hash = "sha256:8bd3fe0ca47330d00250aeede7e03adc7aaec7fad74df29fbe7291e8c5e3a9b1"
+size = 25021
+mtime_ms = 1794481861203
+storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:292e37f8-2dcf-45c1-a5fb-c2522672089d/5c4d406c-ec04-4456-857f-682e82d49f4c/b03c9e78-1bed-4509-9791-1e1d2d4bfe72"
+storage_version_token = "1794481906726982"
+content_type = "image/png"
+
+[[outputs]]
+id = "a4ZV8i51FDubEnWfMXS6e"
+uri = "file://attached_assets/favicon-options/02-blu.png"
+type = "image"
+title = "2 · Blu"
+description = "S bianca su blu con dettaglio fucsia."
+logical_id = "04e11a19-2ea5-44c2-91ce-c053bf3c112a"
+content_hash = "sha256:d7bac152d1eeb2748ef911ecf0b8555dc23f09949b483e2fdd24469f3d4c5544"
+size = 29993
+mtime_ms = 1794481861359
+storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:292e37f8-2dcf-45c1-a5fb-c2522672089d/04e11a19-2ea5-44c2-91ce-c053bf3c112a/75ab8d32-8c6c-4328-829d-e25435111faa"
+storage_version_token = "1794481907356880"
+content_type = "image/png"
+
+[[outputs]]
+id = "lW9Yjh96g_clz2OFu2qi3"
+uri = "file://attached_assets/favicon-options/03-fucsia.png"
+type = "image"
+title = "3 · Fucsia"
+description = "S bianca su fucsia con fascia blu."
+logical_id = "6f69092d-7f3a-463e-8a52-61dc78797d7a"
+content_hash = "sha256:81dbdff91d6a150fa940d60bd52872082392e0c729fa9d97cdc2e1b6d0a29469"
+size = 27796
+mtime_ms = 1794481861535
+storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:292e37f8-2dcf-45c1-a5fb-c2522672089d/6f69092d-7f3a-463e-8a52-61dc78797d7a/22f1287b-38fb-418d-8750-322b8fcc97e6"
+storage_version_token = "1794481908027805"
+content_type = "image/png"
