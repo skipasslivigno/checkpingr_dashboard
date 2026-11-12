@@ -11,7 +11,6 @@ import {
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   View,
 } from "react-native";
@@ -28,6 +27,7 @@ import { FirstEntriesForecast } from "@/components/FirstEntriesForecast";
 import { DateExtractionPicker } from "@/components/DateExtractionPicker";
 import { LiftRowSkeleton, StatCardSkeleton } from "@/components/SkeletonLoader";
 import { StatCard } from "@/components/StatCard";
+import { DashboardLiftSearch } from "@/components/DashboardLiftSearch";
 import { useColors } from "@/hooks/useColors";
 import { useResponsive, CONTENT_MAX_WIDTH } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
@@ -184,6 +184,7 @@ export default function DashboardScreen() {
   const { maxSeasons } = useTenantSettings();
   const seasons = allSeasons.slice(0, maxSeasons);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchOpen, setSearchOpen] = useState(false);
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const { selectedDate, setSelectedDate, selectedExtraction, setSelectedExtraction } = useSelectedDate();
 
@@ -284,8 +285,9 @@ export default function DashboardScreen() {
 
   const { logoBase64 } = useTenantSettings();
 
-  const forecastTile = (compact: boolean) => (
-    <FirstEntriesForecast compact={compact} date={selectedDate} season={effectiveSeason} extraction={selectedExtraction} />
+  // Inline estimate embedded under PRIMI INGRESSI; modal also shows the actual metric.
+  const forecastInline = (
+    <FirstEntriesForecast date={selectedDate} season={effectiveSeason} extraction={selectedExtraction} actualEntries={summary?.totalGuests ?? null} />
   );
 
   const renderHeader = () => (
@@ -358,44 +360,19 @@ export default function DashboardScreen() {
         onExtractionChange={setSelectedExtraction}
       />
 
-      {/* Stat cards */}
-      {isWide ? (
-        <View style={styles.statsRow}>
-          {summaryLoading ? (
-            <><StatCardSkeleton /><StatCardSkeleton /><StatCardSkeleton /></>
-          ) : (
-            <>
-              <StatCard compact accentColor={metrics.passages.color} label={t.passages} value={(summary?.totalPassages ?? 0).toLocaleString()} />
-              <StatCard compact accentColor={metrics.primiIngressi.color} label={t.guestsOnLifts} value={(summary?.totalGuests ?? 0).toLocaleString()} />
-              <StatCard compact label={t.activeLifts} value={`${summary?.activeLifts ?? 0} / ${summary?.totalLifts ?? 0}`} />
-            </>
-          )}
-          {forecastTile(true)}
-        </View>
-      ) : (
-        <>
-          <View style={styles.statsRow}>
-            {summaryLoading ? (
-              <><StatCardSkeleton /><StatCardSkeleton /></>
-            ) : (
-              <>
-                <StatCard accentColor={metrics.passages.color} label={t.passages} value={(summary?.totalPassages ?? 0).toLocaleString()} />
-                <StatCard accentColor={metrics.primiIngressi.color} label={t.guestsOnLifts} value={(summary?.totalGuests ?? 0).toLocaleString()} />
-              </>
-            )}
-          </View>
-          <View style={styles.statsRow}>
-            {summaryLoading ? (
-              <StatCardSkeleton />
-            ) : (
-              <>
-                <StatCard label={t.activeLifts} value={`${summary?.activeLifts ?? 0} / ${summary?.totalLifts ?? 0}`} />
-              </>
-            )}
-            {forecastTile(false)}
-          </View>
-        </>
-      )}
+      {/* Stat cards (active lifts live in the search strip below) */}
+      <View style={styles.statsRow}>
+        {summaryLoading ? (
+          <><StatCardSkeleton /><StatCardSkeleton /></>
+        ) : (
+          <>
+            <StatCard compact={isWide} accentColor={metrics.passages.color} label={t.passages} value={(summary?.totalPassages ?? 0).toLocaleString()} />
+            <StatCard compact={isWide} accentColor={metrics.primiIngressi.color} label={t.guestsOnLifts} value={(summary?.totalGuests ?? 0).toLocaleString()}>
+              {forecastInline}
+            </StatCard>
+          </>
+        )}
+      </View>
 
       <PeriodComparison date={selectedDate} season={effectiveSeason} extraction={selectedExtraction} />
     </View>
@@ -405,6 +382,7 @@ export default function DashboardScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.listWrap, isWide && styles.listWrapWide]}>
         <FlatList
+          keyboardShouldPersistTaps="handled"
           data={listData}
           keyExtractor={(item) => {
             if (item.type === "header") return "header";
@@ -421,22 +399,15 @@ export default function DashboardScreen() {
             if (item.type === "header") return renderHeader();
             if (item.type === "search") {
               return (
-                <View style={[styles.searchBox, { backgroundColor: colors.card, borderColor: colors.border }]}>
-                  <Feather name="search" size={16} color={colors.mutedForeground} />
-                  <TextInput
-                    style={[styles.searchInput, { color: colors.foreground }]}
-                    placeholder={t.searchGroup}
-                    placeholderTextColor={colors.mutedForeground}
-                    value={searchQuery}
-                    onChangeText={setSearchQuery}
-                    clearButtonMode="while-editing"
-                  />
-                  {searchQuery.length > 0 && Platform.OS !== "ios" && (
-                    <TouchableOpacity onPress={() => setSearchQuery("")} hitSlop={8}>
-                      <Feather name="x" size={15} color={colors.mutedForeground} />
-                    </TouchableOpacity>
-                  )}
-                </View>
+                <DashboardLiftSearch
+                  activeLifts={summary?.activeLifts}
+                  totalLifts={summary?.totalLifts}
+                  loading={summaryLoading}
+                  query={searchQuery}
+                  onQueryChange={setSearchQuery}
+                  open={searchOpen}
+                  onOpenChange={setSearchOpen}
+                />
               );
             }
             if (item.type === "skeleton") return <LiftRowSkeleton />;

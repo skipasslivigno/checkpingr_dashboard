@@ -1,3 +1,4 @@
+// Fresh copy of app FirstEntriesForecast (inline); API/context boundaries stubbed.
 import { Feather } from "./_stubs";
 import React, { useEffect, useMemo, useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "./_native";
@@ -7,22 +8,28 @@ import {
 } from "./_fixtures";
 import type { FirstEntriesForecastPoint } from "./_fixtures";
 import { useColors } from "./_theme";
-import { useMetricColors, useTranslation, useAuth } from "./_stubs";
+import { useMetricColors } from "./_stubs";
+import { useTranslation } from "./_stubs";
+import { useAuth } from "./_stubs";
 import { extractionBelongsToDate, defaultForecastSlot, forecastDateAllowed } from "./_forecast-view";
-import { ForecastDetails, fmtExtractionTime, fmtNum, type ForecastPanelState } from "./_ForecastDetails";
+import { ForecastDetails, fmtExtractionTime, fmtGrouped, type ForecastPanelState } from "./_ForecastDetails";
 
 interface Props {
   date: string;
   season?: string;
   extraction?: string;
-  /** Desktop stats-row size (matches StatCard compact). */
-  compact?: boolean;
+  /** Actual first entries for the selected date/extraction (summary.totalGuests). */
+  actualEntries?: number | null;
 }
 
-export function FirstEntriesForecast({ date, season, extraction, compact }: Props) {
+/**
+ * Inline first-entries estimate, rendered inside the PRIMI INGRESSI StatCard.
+ * Tapping opens the full ForecastDetails modal (including the actual metric).
+ */
+export function FirstEntriesForecast({ date, season, extraction, actualEntries }: Props) {
   const colors = useColors();
   const accent = useMetricColors().primiIngressi;
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { user } = useAuth();
   const isAdmin = user?.role === "admin";
   const userKey = user ? `${user.tenantId}:${user.id}` : "";
@@ -78,64 +85,46 @@ export function FirstEntriesForecast({ date, season, extraction, compact }: Prop
   else if (data.forecasts.length === 0) state = "empty";
   else state = "data";
 
-  // Viewers/operators: only a ready live estimate, a tile-sized loading state, or a compact error entry.
+  // Viewers/operators: only a ready live estimate, a loading line, or a compact error entry.
   if (!isAdmin && !ready && state !== "loading" && state !== "error") return null;
   if (!isAdmin && state === "loading" && (!dateAllowed || !season)) return null;
 
-  const cardStyle = [
-    styles.card,
-    compact && styles.cardCompact,
-    ready
-      ? { backgroundColor: accent.light, borderColor: accent.border, borderStyle: "dashed" as const }
-      : { backgroundColor: colors.card, borderColor: colors.border },
-  ];
-
   if (state === "loading" && !ready && !open) {
     return (
-      <View testID="forecast-loading-tile" style={cardStyle} accessibilityLabel={t.fcTitle}>
-        <View style={[styles.skel, { backgroundColor: colors.secondary, width: "55%", height: compact ? 22 : 26 }]} />
-        <View style={[styles.skel, { backgroundColor: colors.secondary, width: "80%" }]} />
+      <View testID="forecast-loading-inline" style={styles.line} accessibilityLabel={t.fcTitle}>
+        <View style={[styles.skel, { backgroundColor: accent.border }]} />
       </View>
     );
   }
 
+  const estimate = ready ? fmtGrouped(focus!.predictedTotal, language) : "";
   const time = ready ? fmtExtractionTime(focus!.extraction) : "";
   const a11y = ready
-    ? `${t.fcTileLabel}: ${fmtNum(focus!.predictedTotal)}. ${t.fcTileAt.replace("{time}", time)}. ${t.fcTileOpen}`
-    : `${t.fcTitle}: ${t.fcTileUnavailable}. ${t.fcTileOpen}`;
+    ? `${t.fcTileLabel}: ${estimate}. ${t.fcTileAt.replace("{time}", time)}. ${t.fcTileOpen}`
+    : `${t.fcTitle}: ${isAdmin ? t.fcTileVerify : t.fcTileUnavailable}. ${t.fcTileOpen}`;
 
   return (
     <>
       <TouchableOpacity
-        testID="button-forecast-tile"
+        testID="button-forecast-inline"
         accessibilityRole="button"
         accessibilityLabel={a11y}
         accessibilityHint={t.fcTileOpen}
         onPress={() => setOpen(true)}
-        activeOpacity={0.75}
-        style={cardStyle}
+        activeOpacity={0.6}
+        hitSlop={{ top: 10, bottom: 10, left: 8, right: 8 }}
+        style={styles.line}
       >
-        <View style={styles.topRow}>
-          <Text
-            testID={ready ? "text-forecast-tile-value" : "text-forecast-tile-empty"}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            style={[styles.value, compact && styles.valueCompact, { color: ready ? accent.color : colors.mutedForeground }]}
-          >
-            {ready ? fmtNum(focus!.predictedTotal) : "—"}
-          </Text>
-          <Feather name="maximize-2" size={13} color={ready ? accent.color : colors.mutedForeground} style={styles.affordance} />
-        </View>
-        <Text numberOfLines={1} style={[styles.label, { color: ready ? accent.color : colors.mutedForeground }]}>
-          {ready ? t.fcTileLabel : isAdmin ? t.fcTileVerify : t.fcTileUnavailable}
-        </Text>
         {ready ? (
-          <Text testID="text-forecast-tile-time" numberOfLines={1} style={[styles.sub, { color: colors.mutedForeground }]}>
-            {t.fcTileAt.replace("{time}", time)}
+          <Text testID="text-forecast-inline-value" numberOfLines={1} style={[styles.text, { color: accent.color }]}>
+            {t.fcInlineEstimate.replace("{n}", estimate)}
           </Text>
-        ) : isAdmin ? (
-          <Text numberOfLines={1} style={[styles.sub, { color: colors.mutedForeground }]}>{t.fcTitle}</Text>
-        ) : null}
+        ) : (
+          <Text testID="text-forecast-inline-empty" numberOfLines={1} style={[styles.text, styles.muted, { color: colors.mutedForeground }]}>
+            {isAdmin ? `${t.fcInlineDetails} · ${t.fcTileVerify}` : t.fcTileUnavailable}
+          </Text>
+        )}
+        <Feather name={ready ? "maximize-2" : isAdmin ? "sliders" : "info"} size={10} color={ready ? accent.color : colors.mutedForeground} />
       </TouchableOpacity>
       {open && (
         <ForecastDetails
@@ -151,6 +140,8 @@ export function FirstEntriesForecast({ date, season, extraction, compact }: Prop
           onVerificationChange={(enabled) => setVerificationSetting({ userKey, enabled })}
           onRetry={() => query.refetch()}
           retrying={query.isFetching}
+          actualEntries={actualEntries}
+          actualExtraction={extraction}
         />
       )}
     </>
@@ -158,13 +149,8 @@ export function FirstEntriesForecast({ date, season, extraction, compact }: Prop
 }
 
 const styles = StyleSheet.create({
-  card: { flex: 1, borderRadius: 12, padding: 16, borderWidth: 1, gap: 4, minHeight: 88, justifyContent: "center", minWidth: 0 },
-  cardCompact: { padding: 12, minHeight: 72, gap: 2 },
-  topRow: { flexDirection: "row", alignItems: "flex-start", gap: 6 },
-  value: { flex: 1, fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: -0.5 },
-  valueCompact: { fontSize: 24 },
-  affordance: { marginTop: 4 },
-  label: { fontSize: 12, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
-  sub: { fontSize: 11, fontFamily: "Inter_400Regular" },
-  skel: { height: 12, borderRadius: 6 },
+  line: { flexDirection: "row", alignItems: "center", alignSelf: "flex-start", gap: 4, marginTop: 2, minHeight: 16, maxWidth: "100%" },
+  text: { fontSize: 11, fontFamily: "Inter_600SemiBold", letterSpacing: 0.2, flexShrink: 1, textDecorationLine: "underline", textDecorationStyle: "dotted" },
+  muted: { fontFamily: "Inter_500Medium" },
+  skel: { height: 10, width: 72, borderRadius: 5, opacity: 0.6 },
 });

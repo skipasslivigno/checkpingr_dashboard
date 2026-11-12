@@ -1,3 +1,4 @@
+// Fresh copy of app ForecastDetails; API/context boundaries stubbed.
 import { Feather } from "./_stubs";
 import React from "react";
 import {
@@ -15,7 +16,8 @@ import {
 import { useSafeAreaInsets } from "./_stubs";
 import type { FirstEntriesForecast, FirstEntriesForecastPoint } from "./_fixtures";
 import { useColors } from "./_theme";
-import { useMetricColors, useTranslation } from "./_stubs";
+import { useMetricColors } from "./_stubs";
+import { useTranslation } from "./_stubs";
 import { FORECAST_VIEW_SLOTS as SLOTS } from "./_forecast-view";
 
 export type ForecastPanelState = "no_season" | "live_only" | "loading" | "error" | "empty" | "data";
@@ -33,6 +35,10 @@ interface Props {
   onVerificationChange: (enabled: boolean) => void;
   onRetry: () => void;
   retrying: boolean;
+  /** Actual first entries backing the dashboard metric (summary.totalGuests). */
+  actualEntries?: number | null;
+  /** Selected extraction (YYYYMMDDHHmmss) for the actual metric; undefined = latest. */
+  actualExtraction?: string;
 }
 
 export function fmtExtractionTime(e: string | null | undefined): string {
@@ -42,15 +48,22 @@ export function fmtExtractionTime(e: string | null | undefined): string {
 export function fmtNum(n: number | null | undefined): string {
   return n == null || !Number.isFinite(n) ? "—" : Math.round(n).toLocaleString();
 }
+/** Locale-stable integer grouping: IT uses dots, EN commas (independent of runtime Intl). */
+export function fmtGrouped(n: number | null | undefined, language: string): string {
+  if (n == null || !Number.isFinite(n)) return "—";
+  const r = Math.round(n);
+  const sep = language === "it" ? "." : ",";
+  return (r < 0 ? "-" : "") + Math.abs(r).toString().replace(/\B(?=(\d{3})+(?!\d))/g, sep);
+}
 function fmtPct(f: number | null | undefined): string {
   return f == null || !Number.isFinite(f) ? "—" : `${(f * 100).toFixed(1)}%`;
 }
 
 export function ForecastDetails(props: Props) {
-  const { visible, onClose, state, data, points, slot, onPickSlot, isAdmin, verification, onVerificationChange, onRetry, retrying } = props;
+  const { visible, onClose, state, data, points, slot, onPickSlot, isAdmin, verification, onVerificationChange, onRetry, retrying, actualEntries, actualExtraction } = props;
   const colors = useColors();
   const accent = useMetricColors().primiIngressi;
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const wide = width >= 768;
@@ -238,6 +251,15 @@ export function ForecastDetails(props: Props) {
             {verification && (
               <Text testID="forecast-verification-banner" style={[styles.note, { color: colors.primary }]}>{t.fcVerificationActive}</Text>
             )}
+            <View testID="forecast-actual" style={[styles.actualRow, { borderColor: colors.border }]}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.focusLabel, { color: colors.mutedForeground }]}>{t.fcActualEntries}</Text>
+                <Text style={[styles.scope, { color: colors.mutedForeground, marginTop: 1 }]}>
+                  {actualExtraction ? t.fcActualAt.replace("{time}", fmtExtractionTime(actualExtraction)) : t.fcActualLatest}
+                </Text>
+              </View>
+              <Text testID="text-forecast-actual" style={[styles.actualValue, { color: colors.foreground }]}>{fmtGrouped(actualEntries, language)}</Text>
+            </View>
             {body()}
           </ScrollView>
         </View>
@@ -285,5 +307,7 @@ const styles = StyleSheet.create({
   rowLabel: { fontSize: 12, fontFamily: "Inter_400Regular", flex: 1 },
   rowValue: { fontSize: 12, fontFamily: "Inter_600SemiBold", textAlign: "right", flex: 1, flexShrink: 1 },
   method: { fontSize: 11, fontFamily: "Inter_400Regular", lineHeight: 16, marginTop: 6 },
+  actualRow: { flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderRadius: 10, paddingVertical: 8, paddingHorizontal: 12 },
+  actualValue: { fontSize: 20, fontFamily: "Inter_700Bold", letterSpacing: -0.3 },
   verificationRow: { flexDirection: "row", alignItems: "center", gap: 12, borderWidth: 1, borderRadius: 10, padding: 10 },
 });

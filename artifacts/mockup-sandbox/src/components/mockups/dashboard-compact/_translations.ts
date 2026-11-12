@@ -295,6 +295,8 @@ export interface Translations {
   fcConfidence: Record<"unavailable"|"low"|"medium"|"high", string>;
   fcVerificationMode: string; fcVerificationHint: string; fcVerificationActive: string; fcLiveOnly: string;
   fcTileLabel: string; fcTileAt: string; fcTileOpen: string; fcTileVerify: string; fcTileUnavailable: string; fcClose: string; fcSlots: string;
+  fcInlineEstimate: string; fcInlineDetails: string; fcActualEntries: string; fcActualLatest: string; fcActualAt: string;
+  searchOpen: string; searchClose: string;
   pc: Record<"weekly"|"progressive"|"title"|"prev"|"diff"|"na"|"error"|"retry"|"config"|"configAdmin"|"openSettings"|"beforeSeason"|"noData"|"partial"|"missing"|"missingCur"|"missingPrev"|"noPrevSeason"|"ssTitle"|"ssHint"|"ssFirstData"|"ssSuggested"|"ssUseSuggested"|"ssConfigured"|"ssNotSet"|"ssSave"|"ssClear"|"ssSaved"|"ssInvalid"|"ssNotSaturday"|"ssError"|"ssLoadError"|"ssEmpty"|"colSeason"|"colStart"|"colAction", string>;
 }
 
@@ -595,6 +597,13 @@ const it: Translations = {
   fcTileVerify: "Verifica",
   fcTileUnavailable: "Previsione non disponibile",
   fcClose: "Chiudi",
+  fcInlineEstimate: "stimati {n}",
+  fcInlineDetails: "Previsione",
+  fcActualEntries: "Primi ingressi reali",
+  fcActualLatest: "ultima estrazione",
+  fcActualAt: "estrazione delle {time}",
+  searchOpen: "Cerca gruppo o impianto",
+  searchClose: "Chiudi ricerca",
   fcSlots: "Orari di previsione",
   fcVerificationMode: "Modalità verifica",
   fcVerificationHint: "Calcola anche su giornate passate o già a consuntivo. Solo amministratori.",
@@ -924,6 +933,13 @@ const en: Translations = {
   fcTileVerify: "Verify",
   fcTileUnavailable: "Forecast unavailable",
   fcClose: "Close",
+  fcInlineEstimate: "est. {n}",
+  fcInlineDetails: "Forecast",
+  fcActualEntries: "Actual first entries",
+  fcActualLatest: "latest extraction",
+  fcActualAt: "extraction at {time}",
+  searchOpen: "Search group or lift",
+  searchClose: "Close search",
   fcSlots: "Forecast times",
   fcVerificationMode: "Verification mode",
   fcVerificationHint: "Also calculate for past or already closed days. Administrators only.",

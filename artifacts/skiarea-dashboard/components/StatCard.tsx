@@ -14,9 +14,11 @@ interface StatCardProps {
   /** Hex color (#RRGGBB) — derives tinted bg, border, and text automatically. */
   accentColor?: string;
   compact?: boolean;
+  /** Optional inline content rendered below the label/sub (e.g. forecast estimate). */
+  children?: React.ReactNode;
 }
 
-export function StatCard({ label, value, sub, accentColor, compact }: StatCardProps) {
+export function StatCard({ label, value, sub, accentColor, compact, children }: StatCardProps) {
   const colors = useColors();
 
   const bg          = accentColor ? withAlpha(accentColor, 0.12) : colors.card;
@@ -35,6 +37,7 @@ export function StatCard({ label, value, sub, accentColor, compact }: StatCardPr
       <Text style={[styles.value, { color: valueColor }]}>{value}</Text>
       <Text style={[styles.label, { color: labelColor }]}>{label}</Text>
       {sub ? <Text style={[styles.sub, { color: labelColor }]}>{sub}</Text> : null}
+      {children}
     </View>
   );
 }

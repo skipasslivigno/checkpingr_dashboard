@@ -13,3 +13,7 @@ export const Pressable = native.Pressable;
 export const Switch = native.Switch;
 export const ActivityIndicator = native.ActivityIndicator;
 export const useWindowDimensions: () => { width: number; height: number; scale: number; fontScale: number } = native.useWindowDimensions;
+export const Platform: { OS: string } = native.Platform;
+export const TextInput = native.TextInput;
+// eslint-disable-next-line @typescript-eslint/no-redeclare
+export type TextInput = { focus: () => void; blur: () => void };
