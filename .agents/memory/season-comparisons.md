@@ -20,7 +20,8 @@ I consuntivi sono i record delle **23:30**. Senza consuntivo della giornata,
 alle 10:30/11:30 i totali si fermano al giorno precedente e si confrontano
 con il precedente giorno equivalente dell'altra stagione. Alle 14:00,
 16:30 e 18:00 si include anche il parziale della giornata. Se il consuntivo
-esiste già, si include la giornata anche selezionando un'estrazione mattutina.
+esiste già, si usa sempre il consuntivo delle 23:30 per quella giornata,
+anche selezionando 10:30, 11:30, 14:00, 16:30 o 18:00.
 
 **Why:** regola esplicita dell'utente; ha confermato separatamente l'inclusione
 alle 14:00. Le 18:00 non sono quindi il consuntivo.
