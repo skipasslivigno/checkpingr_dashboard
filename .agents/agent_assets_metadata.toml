@@ -1,8 +1,35 @@
 uploads = []
-outputs = []
 
 [[generated]]
 id = "f4DCPEEq7evcNFJOqiNrL"
 uri = "file://artifacts/skiarea-dashboard/assets/images/icon.png"
 type = "image"
 title = "generated_image"
+
+[[outputs]]
+id = "Zg80sy6uTIuEWIyqRHUGj"
+uri = "file://artifacts/skiarea-dashboard/assets/images/favicon.png"
+type = "image"
+title = "Favicon Ski Area Dashboard"
+description = "Montagna bianca su fondo blu, con dettaglio azzurro. Già collegata alla scheda del browser nell’app di test."
+logical_id = "f8ca0293-e0f9-4320-9cb5-666bfe6e2d3f"
+content_hash = "sha256:a8b90ac00d2c7f91c7f272adec25fc814288834a454fc6c90eb4b1fcf2d6e265"
+size = 39680
+mtime_ms = 1794480861290
+storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:292e37f8-2dcf-45c1-a5fb-c2522672089d/f8ca0293-e0f9-4320-9cb5-666bfe6e2d3f/91d95246-7a7e-415b-8b7b-3370b4c19313"
+storage_version_token = "1794480929368537"
+content_type = "image/png"
+
+[[outputs]]
+id = "XR0sq-qL-BvaYMQrxDODf"
+uri = "file://artifacts/skiarea-dashboard/assets/images/favicon-skipassion.png"
+type = "image"
+title = "Favicon con i colori SkiPassion"
+description = "Blu e fucsia ripresi dal logo fornito, con montagna bianca per la leggibilità."
+logical_id = "26c6b9b2-e8d0-4fcc-b0ef-73b9eaaeece6"
+content_hash = "sha256:3483be3bf168bf2782673944ef32b641c6a9c0ae849da6400d82d183e0e0711e"
+size = 11417
+mtime_ms = 1794481000308
+storage_uri = "gcs://replit-rams-assets-kirk/rams/assets/repl:292e37f8-2dcf-45c1-a5fb-c2522672089d/26c6b9b2-e8d0-4fcc-b0ef-73b9eaaeece6/ee3351d0-69fc-41ec-a11e-8402c8539f10"
+storage_version_token = "1794481030245715"
+content_type = "image/png"
