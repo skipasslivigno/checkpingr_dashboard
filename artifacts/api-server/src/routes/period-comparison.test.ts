@@ -160,3 +160,44 @@ test("closing date validation and permissions prevent invalid or unauthorized bo
   assert.equal(dates.find(s => s.season === previous)?.startDate, "2024-11-30");
   assert.equal(dates.find(s => s.season === previous)?.endDate, null);
 });
+
+test("API includes the current day's partial or final even after the configured season end", async () => {
+  assert.equal((await saveBounds(season, { endDate: "2025-12-07" })).status, 200);
+  const extra = ["20251208113000", "20251208163000", "20251208233000"];
+  try {
+    await db.insert(liftSnapshotsTable).values(extra.slice(0, 2).map(dupd => ({
+      tenantId, eser: season, dtgg: "2025-12-08", dupd, ggnr: 1, ggbz: "Temporary test",
+      nuin: dupd.endsWith("163000") ? 80 : 15, npas: 1000,
+    })));
+    for (const [hour, total] of [["140000", 960], ["163000", 980], ["180000", 960]] as const) {
+      const response = await fetch(`${base}${url}&extraction=20251208${hour}`);
+      assert.equal(response.status, 200);
+      const r = GetPeriodComparisonResponse.parse(await response.json());
+      assert.equal(r.progressive.currentTotal, total);
+      assert.equal(r.progressive.currentToDate, "2025-12-08");
+      assert.equal(r.includedSelectedDay, true);
+      assert.equal(r.progressive.currentDefinitive, false);
+    }
+    for (const hour of ["103000", "113000"]) {
+      const r = GetPeriodComparisonResponse.parse(await (await fetch(`${base}${url}&extraction=20251208${hour}`)).json());
+      assert.equal(r.progressive.currentTotal, 900);
+      assert.equal(r.includedSelectedDay, false);
+      assert.equal(r.progressive.currentDefinitive, false);
+    }
+    await db.insert(liftSnapshotsTable).values({
+      tenantId, eser: season, dtgg: "2025-12-08", dupd: extra[2], ggnr: 1,
+      ggbz: "Temporary test", nuin: 120, npas: 1000,
+    });
+    for (const hour of ["103000", "113000", "140000", "163000", "180000", "233000"]) {
+      const r = GetPeriodComparisonResponse.parse(await (await fetch(`${base}${url}&extraction=20251208${hour}`)).json());
+      assert.equal(r.progressive.currentTotal, 1020);
+      assert.equal(r.weekly.currentTotal, 320);
+      assert.equal(r.progressive.currentToDate, "2025-12-08");
+      assert.equal(r.sourceExtraction, extra[2]);
+      assert.equal(r.includedSelectedDay, true);
+    }
+  } finally {
+    await db.delete(liftSnapshotsTable).where(and(eq(liftSnapshotsTable.tenantId, tenantId), inArray(liftSnapshotsTable.dupd, extra)));
+    await saveBounds(season, { endDate: null });
+  }
+});

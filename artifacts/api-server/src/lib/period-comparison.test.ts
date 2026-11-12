@@ -162,9 +162,9 @@ test("the closing day's missing 23:30 final is still incomplete, never a definit
   assert.deepEqual(r.weekly.missingPreviousDays, ["2024-12-07"]);
 });
 
-test("current season also stops at its configured end and becomes final only with a closing batch", () => {
+test("current season stops at its configured end only when no later eligible data exists", () => {
   const r = comparePeriods({ date, season, previousSeason, starts, ends: { [season]: "2025-12-06" },
-    rows: data(), extraction: "20251208140000" });
+    rows: data().filter(r => r.season !== season || r.date <= "2025-12-06") });
   assert.equal(r.progressive.currentToDate, "2025-12-06");
   assert.equal(r.progressive.currentTotal, 800);
   assert.equal(r.progressive.currentDefinitive, true);
@@ -173,4 +173,55 @@ test("current season also stops at its configured end and becomes final only wit
   const stillOpen = comparePeriods({ date, season, previousSeason, starts, ends: { [season]: date },
     rows: data(), extraction: "20251208140000" });
   assert.equal(stillOpen.progressive.currentDefinitive, false);
+});
+
+test("afternoon and final selections cannot lose the selected day to an earlier configured end", () => {
+  for (const [hour, value] of [["140000", 60], ["163000", 80], ["180000", 90], ["233000", 120]] as const) {
+    const rows = hour === "233000" ? [...data(), batch(date, season, value)] : data();
+    const r = comparePeriods({ date, season, previousSeason, starts, ends: { [season]: "2025-12-07" },
+      rows, extraction: "20251208" + hour });
+    assert.equal(r.progressive.currentToDate, date);
+    assert.equal(r.progressive.currentTotal, 900 + value);
+    assert.equal(r.weekly.currentTotal, 200 + value);
+    assert.equal(r.includedSelectedDay, true);
+    assert.equal(r.sourceExtraction, "20251208" + hour);
+    assert.equal(r.progressive.currentDefinitive, false, "A contradicted end date does not confirm season closure");
+  }
+});
+
+test("a closing batch overrides either morning selection even beyond the configured end", () => {
+  for (const hour of ["103000", "113000"]) {
+    const r = comparePeriods({ date, season, previousSeason, starts, ends: { [season]: "2025-12-07" },
+      rows: [...data(), batch(date, season, 120)], extraction: "20251208" + hour });
+    assert.equal(r.progressive.currentToDate, date);
+    assert.equal(r.progressive.currentTotal, 1020);
+    assert.equal(r.weekly.currentTotal, 320);
+    assert.equal(r.sourceExtraction, "20251208233000");
+    assert.equal(r.includedSelectedDay, true);
+  }
+});
+
+test("without today's final, a morning selection retains yesterday's observed final beyond a stale end", () => {
+  const r = comparePeriods({ date, season, previousSeason, starts, ends: { [season]: "2025-12-06" },
+    rows: data(), extraction: "20251208103000" });
+  assert.equal(r.progressive.currentToDate, "2025-12-07");
+  assert.equal(r.progressive.currentTotal, 900);
+  assert.equal(r.includedSelectedDay, false);
+});
+
+test("May 3 final adds the day's 325 entries to 998904 and leaves the previous closed season capped", () => {
+  const r = comparePeriods({
+    date: "2026-05-03", season, previousSeason,
+    starts: { [season]: "2026-05-01", [previousSeason]: "2025-05-01" },
+    ends: { [season]: "2026-05-02", [previousSeason]: "2025-05-01" },
+    rows: [batch("2026-05-01", season, 997893), batch("2026-05-02", season, 1011),
+      batch("2026-05-03", season, 325), batch("2025-05-01", previousSeason, 1315024)],
+    extraction: "20260503233000",
+  });
+  assert.equal(r.progressive.currentTotal, 999229);
+  assert.equal(r.weekly.currentTotal, 1336);
+  assert.equal(r.progressive.currentToDate, "2026-05-03");
+  assert.equal(r.progressive.previousTotal, 1315024);
+  assert.equal(r.progressive.previousToDate, "2025-05-01");
+  assert.equal(r.progressive.previousDefinitive, true);
 });

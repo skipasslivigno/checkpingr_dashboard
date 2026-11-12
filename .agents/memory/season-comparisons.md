@@ -51,3 +51,19 @@ di apertura incluso. Il progressivo precedente si ferma al totale annuale;
 il settimanale usa l'ultima settimana di apertura. Mostrare «Definitivo» solo
 quando i consuntivi entro la chiusura sono completi. Non dedurre la chiusura
 da un ultimo record isolato e non nascondere buchi interni alla stagione.
+
+## Precedenza dei dati nella stagione selezionata
+
+La data di fine configurata non deve far perdere la giornata visualizzata
+quando contiene un'estrazione includibile o il consuntivo, né consuntivi
+precedenti già presenti oltre quel limite.
+
+**Why:** l'utente ha segnalato un progressivo fermo al 2 maggio mentre
+visualizzava il consuntivo del 3 maggio; ha ribadito che le 14:00, 16:30,
+18:00 e 23:30 includono la giornata, e la mattina la include se esiste il
+consuntivo.
+
+**How to apply:** per la stagione selezionata usare la fine configurata
+solo per limitare giorni successivi senza dati. I dati osservati hanno
+precedenza; una data finale contraddetta dai dati non certifica un totale
+definitivo. Conservare il limite configurato per il confronto precedente.

@@ -73,9 +73,18 @@ di chiusura incluso, non un totale annuale al posto di una settimana.
 Le date effettive restano visibili accanto ai valori e le percentuali vengono
 calcolate sui valori effettivamente mostrati.
 
-Anche i totali della stagione selezionata si fermano alla propria chiusura,
-se configurata. Un parziale del giorno di chiusura non diventa definitivo:
-serve ancora il consuntivo delle 23:30.
+Per la stagione selezionata la chiusura configurata limita solo i giorni
+successivi senza dati: non esclude consuntivi già presenti oltre quella data
+né il parziale selezionato delle 14:00, 16:30 o 18:00. Un consuntivo presente
+include sempre la giornata, anche con un'estrazione mattutina selezionata.
+Senza consuntivo, la mattina si usa il giorno precedente, conservando gli
+eventuali consuntivi osservati oltre una data di chiusura non aggiornata.
+
+Un parziale del giorno di chiusura non diventa definitivo: serve ancora il
+consuntivo delle 23:30. Se sono presenti dati successivi alla chiusura
+configurata, il totale della stagione selezionata non viene indicato come
+definitivo finché la data configurata non corrisponde al termine effettivo.
+Il limite della stagione precedente resta invece quello impostato dall'admin.
 
 I giorni successivi alla fine configurata non sono buchi; i consuntivi mancanti
 **entro** la stagione rimangono invece incompleti e non vengono nascosti dalla
