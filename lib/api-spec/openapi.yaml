@@ -19,6 +19,89 @@ tags:
   - name: users
     description: User management operations (admin only)
 paths:
+  /email/settings:
+    get:
+      operationId: getEmailSettings
+      tags: [users]
+      summary: Current administrator's Gmail settings, without secrets
+      responses:
+        "200":
+          description: Personal settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EmailSettings" }
+    put:
+      operationId: saveEmailSettings
+      tags: [users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EmailSettingsInput" }
+      responses:
+        "200":
+          description: Saved settings
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EmailSettings" }
+    delete:
+      operationId: deleteEmailSettings
+      tags: [users]
+      responses:
+        "204": { description: Personal Gmail configuration removed }
+  /email/test:
+    post:
+      operationId: sendTestEmail
+      tags: [users]
+      summary: Send a test message only to the current administrator
+      responses:
+        "200":
+          description: Accepted by Gmail SMTP, not a delivery guarantee
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EmailReceipt" }
+  /email/preview:
+    post:
+      operationId: previewCredentialEmail
+      tags: [users]
+      summary: Preview a draft with an example password, without sending
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EmailPreviewInput" }
+      responses:
+        "200":
+          description: Rendered preview
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EmailPreview" }
+  /users/{id}/send-credentials:
+    post:
+      operationId: sendUserCredentials
+      tags: [users]
+      summary: Send a new temporary password and require a password change
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/CredentialEmailInput" }
+      responses:
+        "200":
+          description: Accepted by Gmail and password updated
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/EmailReceipt" }
+        "400": { description: Missing confirmation or invalid configuration }
+        "404": { description: User not found in current tenant }
+        "409": { description: Recipient changed or inactive }
+        "429": { description: Wait before sending again }
+        "502": { description: Gmail could not confirm sending; password unchanged }
   /auth/me:
     get:
       operationId: getCurrentUser
@@ -471,6 +554,61 @@ components:
       in: header
       name: X-API-Key
   schemas:
+    EmailSettings:
+      type: object
+      required: [senderEmail, senderName, hasPassword, configured, loginUrl, subject, body, defaultSubject, defaultBody, placeholders]
+      properties:
+        senderEmail: { type: string }
+        senderName: { type: string }
+        hasPassword: { type: boolean }
+        configured: { type: boolean }
+        loginUrl: { type: string }
+        subject: { type: string }
+        body: { type: string }
+        defaultSubject: { type: string }
+        defaultBody: { type: string }
+        placeholders:
+          type: array
+          items: { type: string }
+    EmailSettingsInput:
+      type: object
+      required: [senderName, loginUrl, subject, body]
+      properties:
+        senderName: { type: string, minLength: 1, maxLength: 120 }
+        appPassword: { type: string, writeOnly: true, maxLength: 64 }
+        loginUrl: { type: string, format: uri }
+        subject: { type: string, minLength: 1, maxLength: 200 }
+        body: { type: string, minLength: 1, maxLength: 12000 }
+    EmailPreviewInput:
+      type: object
+      required: [loginUrl, subject, body]
+      properties:
+        loginUrl: { type: string }
+        subject: { type: string }
+        body: { type: string }
+        userId: { type: string }
+    EmailPreview:
+      type: object
+      required: [subject, text, html, recipient, senderEmail]
+      properties:
+        subject: { type: string }
+        text: { type: string }
+        html: { type: string }
+        recipient: { type: string }
+        senderEmail: { type: string }
+    CredentialEmailInput:
+      type: object
+      required: [confirmReset, expectedEmail]
+      properties:
+        confirmReset: { type: boolean }
+        expectedEmail: { type: string, format: email }
+    EmailReceipt:
+      type: object
+      required: [sentAt, recipient, messageId]
+      properties:
+        sentAt: { type: string, format: date-time }
+        recipient: { type: string }
+        messageId: { type: string }
     HealthStatus:
       type: object
       properties:
@@ -792,6 +930,9 @@ components:
       type: object
       required: [id, email, name, role, isActive, mustChangePassword]
       properties:
+        credentialsSentAt:
+          type: ["string", "null"]
+          format: date-time
         id:
           type: string
         email:

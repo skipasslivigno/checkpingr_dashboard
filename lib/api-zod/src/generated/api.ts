@@ -9,6 +9,103 @@ import * as zod from 'zod';
 
 
 /**
+ * @summary Current administrator's Gmail settings, without secrets
+ */
+export const GetEmailSettingsResponse = zod.object({
+  "senderEmail": zod.string(),
+  "senderName": zod.string(),
+  "hasPassword": zod.boolean(),
+  "configured": zod.boolean(),
+  "loginUrl": zod.string(),
+  "subject": zod.string(),
+  "body": zod.string(),
+  "defaultSubject": zod.string(),
+  "defaultBody": zod.string(),
+  "placeholders": zod.array(zod.string())
+})
+
+
+export const saveEmailSettingsBodySenderNameMax = 120;
+
+export const saveEmailSettingsBodyAppPasswordMax = 64;
+
+export const saveEmailSettingsBodySubjectMax = 200;
+
+export const saveEmailSettingsBodyBodyMax = 12000;
+
+
+
+export const SaveEmailSettingsBody = zod.object({
+  "senderName": zod.string().min(1).max(saveEmailSettingsBodySenderNameMax),
+  "appPassword": zod.string().max(saveEmailSettingsBodyAppPasswordMax).optional(),
+  "loginUrl": zod.string().url(),
+  "subject": zod.string().min(1).max(saveEmailSettingsBodySubjectMax),
+  "body": zod.string().min(1).max(saveEmailSettingsBodyBodyMax)
+})
+
+export const SaveEmailSettingsResponse = zod.object({
+  "senderEmail": zod.string(),
+  "senderName": zod.string(),
+  "hasPassword": zod.boolean(),
+  "configured": zod.boolean(),
+  "loginUrl": zod.string(),
+  "subject": zod.string(),
+  "body": zod.string(),
+  "defaultSubject": zod.string(),
+  "defaultBody": zod.string(),
+  "placeholders": zod.array(zod.string())
+})
+
+
+/**
+ * @summary Send a test message only to the current administrator
+ */
+export const SendTestEmailResponse = zod.object({
+  "sentAt": zod.coerce.date(),
+  "recipient": zod.string(),
+  "messageId": zod.string()
+})
+
+
+/**
+ * @summary Preview a draft with an example password, without sending
+ */
+export const PreviewCredentialEmailBody = zod.object({
+  "loginUrl": zod.string(),
+  "subject": zod.string(),
+  "body": zod.string(),
+  "userId": zod.string().optional()
+})
+
+export const PreviewCredentialEmailResponse = zod.object({
+  "subject": zod.string(),
+  "text": zod.string(),
+  "html": zod.string(),
+  "recipient": zod.string(),
+  "senderEmail": zod.string()
+})
+
+
+/**
+ * @summary Send a new temporary password and require a password change
+ */
+export const SendUserCredentialsParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const SendUserCredentialsBody = zod.object({
+  "confirmReset": zod.boolean(),
+  "expectedEmail": zod.string().email()
+})
+
+export const SendUserCredentialsResponse = zod.object({
+  "sentAt": zod.coerce.date(),
+  "recipient": zod.string(),
+  "messageId": zod.string()
+})
+
+
+/**
  * @summary Get the authenticated user's current account state
  */
 export const GetCurrentUserResponse = zod.object({
@@ -122,6 +219,7 @@ export const UploadLogoResponse = zod.object({
  * @summary List all users in the tenant (admin only)
  */
 export const GetUsersResponseItem = zod.object({
+  "credentialsSentAt": zod.coerce.date().nullish(),
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string(),
@@ -163,6 +261,7 @@ export const UpdateUserBody = zod.object({
 })
 
 export const UpdateUserResponse = zod.object({
+  "credentialsSentAt": zod.coerce.date().nullish(),
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string(),

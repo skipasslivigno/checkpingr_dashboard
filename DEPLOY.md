@@ -56,6 +56,12 @@ NODE_ENV=production
 > **Note:** `SYNC_API_KEY` is no longer used. The sync endpoint now authenticates
 > via per-tenant API keys stored in the database (set up in step 4b below).
 
+> **Gmail:** l'invio delle credenziali richiede `SESSION_SECRET` stabile
+> (almeno 32 caratteri) e accesso in uscita a `smtp.gmail.com:465`.
+> Ogni amministratore configura la propria password per app nell'interfaccia.
+> Cambiare `SESSION_SECRET` richiede di reinserire le password per app salvate.
+> Vedi [configurazione e template Gmail](docs/gmail-credentials.md).
+
 ---
 
 ## 4 — Database migration (first deploy only)

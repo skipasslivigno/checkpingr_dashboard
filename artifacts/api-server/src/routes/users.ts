@@ -26,7 +26,7 @@ const UpdateUserBody = z.object({
 router.get("/users", requireRole("admin"), async (req, res): Promise<void> => {
   const tenantId = req.user!.tenantId;
   const users = await db
-    .select({ id: usersTable.id, email: usersTable.email, name: usersTable.name, role: usersTable.role, isActive: usersTable.isActive, mustChangePassword: usersTable.mustChangePassword, createdAt: usersTable.createdAt })
+    .select({ id: usersTable.id, email: usersTable.email, name: usersTable.name, role: usersTable.role, isActive: usersTable.isActive, mustChangePassword: usersTable.mustChangePassword, credentialsSentAt: usersTable.credentialsSentAt, createdAt: usersTable.createdAt })
     .from(usersTable)
     .where(eq(usersTable.tenantId, tenantId))
     .orderBy(usersTable.createdAt);

@@ -23,12 +23,15 @@ import {
   useUpdateUser,
   useDeleteUser,
   getGetUsersQueryKey,
+  getGetEmailSettingsQueryKey,
+  useGetEmailSettings,
 } from "@workspace/api-client-react";
 import type { User } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useResponsive } from "@/hooks/useResponsive";
+import { SendCredentialsCell, SendCredentialsDialog } from "@/components/email/SendCredentials";
 
 type Role = "admin" | "operator" | "viewer";
 
@@ -86,13 +89,14 @@ const pickerStyles = StyleSheet.create({
 });
 
 type SortColumn = "name" | "email" | "role" | "status" | "password" | "id";
-const COLS = { name: 200, email: 230, role: 150, status: 125, password: 160, id: 310, actions: 96 };
+const COLS = { name: 200, email: 230, role: 150, status: 125, password: 160, id: 310, send: 190, actions: 96 };
 const TABLE_WIDTH = Object.values(COLS).reduce((sum, width) => sum + width, 24);
 
-function UserRow({ user, onEdit, onDelete, currentUserId, colors, t, last }: {
+function UserRow({ user, onEdit, onDelete, onSend, currentUserId, colors, t, last }: {
   user: User;
   onEdit: (u: User) => void;
   onDelete: (u: User) => void;
+  onSend: (u: User) => void;
   currentUserId: string;
   colors: ReturnType<typeof useColors>;
   t: ReturnType<typeof useTranslation>["t"];
@@ -139,6 +143,7 @@ function UserRow({ user, onEdit, onDelete, currentUserId, colors, t, last }: {
       <View style={[styles.td, { width: COLS.id }]}>
         <Text selectable style={[styles.userEmail, { color: colors.mutedForeground }]}>{user.id}</Text>
       </View>
+      <SendCredentialsCell user={user} onSend={onSend} colors={colors} width={COLS.send} />
       <View style={[styles.td, { width: COLS.actions, flexDirection: "row", gap: 6, justifyContent: "flex-end" }]}>
         <TouchableOpacity
           testID={`edit-user-${user.id}`}
@@ -262,6 +267,19 @@ export default function AdminScreen() {
       direction: current.column === column && current.direction === "asc" ? "desc" : "asc",
     }));
   }
+  const isAdmin = me?.role === "admin";
+  const { data: emailSettings, isError: emailSettingsError, isFetching: emailSettingsFetching, refetch: refetchEmailSettings } = useGetEmailSettings({
+    query: { enabled: !!isAdmin, queryKey: getGetEmailSettingsQueryKey(), staleTime: 0 },
+  });
+  const [sendTarget, setSendTarget] = useState<User | null>(null);
+  const [sendBlocked, setSendBlocked] = useState(false);
+  function requestSend(u: User) {
+    if (!u.isActive) return;
+    if (emailSettingsError || (!emailSettings && emailSettingsFetching)) { setSendBlocked(true); if (emailSettingsError) refetchEmailSettings(); return; }
+    setSendBlocked(false);
+    if (!emailSettings?.configured || !emailSettings.hasPassword) { router.push("/email-settings"); return; }
+    setSendTarget(u);
+  }
   const createMutation = useCreateUser();
   const updateMutation = useUpdateUser();
   const deleteMutation = useDeleteUser();
@@ -381,12 +399,24 @@ export default function AdminScreen() {
         <TouchableOpacity testID="admin-back" accessibilityRole="button" accessibilityLabel={t.back} onPress={() => router.back()} style={styles.backBtn} activeOpacity={0.7}>
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.foreground }]}>{t.adminTitle}</Text>
+        <Text style={[styles.headerTitle, { color: colors.foreground, flex: 1, marginLeft: 8 }]}>{t.adminTitle}</Text>
+        <TouchableOpacity testID="email-settings-link" accessibilityRole="button" accessibilityLabel={t.emLink} onPress={() => router.push("/email-settings")} style={[styles.addBtn, { borderWidth: 1, borderColor: colors.border, marginRight: 8 }]} activeOpacity={0.7}>
+          <Feather name="mail" size={18} color={colors.primary} />
+        </TouchableOpacity>
         <TouchableOpacity testID="add-user" accessibilityRole="button" accessibilityLabel={t.adminCreateUser} onPress={openCreate} style={[styles.addBtn, { backgroundColor: colors.primary }]} activeOpacity={0.7}>
           <Feather name="plus" size={20} color={colors.primaryForeground} />
         </TouchableOpacity>
       </View>
 
+      {sendBlocked && (emailSettingsError || emailSettingsFetching) ? (
+        <View testID="email-settings-load-error" style={[styles.errorBox, { margin: 16, marginBottom: 0, backgroundColor: colors.destructive + "15", borderColor: colors.destructive + "40" }]}>
+          <Feather name="alert-circle" size={14} color={colors.destructive} />
+          <Text style={[styles.errorText, { color: colors.destructive }]}>{emailSettingsFetching ? t.emSendPreviewLoading : t.emLoadError}</Text>
+          <TouchableOpacity testID="email-settings-retry" accessibilityRole="button" disabled={emailSettingsFetching} onPress={() => refetchEmailSettings()}>
+            <Text style={[styles.errorText, { color: colors.primary, flex: 0, fontFamily: "Inter_600SemiBold" }]}>{t.emRetry}</Text>
+          </TouchableOpacity>
+        </View>
+      ) : null}
       {/* User table */}
       <ScrollView
         contentContainerStyle={[styles.list, isWide && { maxWidth: TABLE_WIDTH + 32, alignSelf: "center", width: "100%" }]}
@@ -433,6 +463,9 @@ export default function AdminScreen() {
                       />
                     </TouchableOpacity>
                   ))}
+                  <Text style={[styles.th, { width: COLS.send, color: colors.mutedForeground }]}>
+                    {t.emSendColumn.toUpperCase()}
+                  </Text>
                   <Text style={[styles.th, { width: COLS.actions, color: colors.mutedForeground, textAlign: "right" }]}>
                     {t.adminActions.toUpperCase()}
                   </Text>
@@ -443,6 +476,7 @@ export default function AdminScreen() {
                     user={u}
                     onEdit={openEdit}
                     onDelete={requestDelete}
+                    onSend={requestSend}
                     currentUserId={me?.id ?? ""}
                     colors={colors}
                     t={t}
@@ -619,6 +653,13 @@ export default function AdminScreen() {
         colors={colors}
         t={t}
       /> : null}
+      <SendCredentialsDialog
+        user={sendTarget}
+        settings={emailSettings}
+        isSelf={sendTarget?.id === me?.id}
+        onClose={() => setSendTarget(null)}
+        colors={colors}
+      />
     </SafeAreaView>
   );
 }

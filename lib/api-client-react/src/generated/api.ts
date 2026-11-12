@@ -24,7 +24,13 @@ import type {
   ChangeOwnPasswordRequest,
   ChangePassword200,
   CreateUserRequest,
+  CredentialEmailInput,
   DashboardSummary,
+  EmailPreview,
+  EmailPreviewInput,
+  EmailReceipt,
+  EmailSettings,
+  EmailSettingsInput,
   GetDashboardSummaryParams,
   GetLatestLiftsParams,
   GetLiftDatesParams,
@@ -58,6 +64,425 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
+
+export const getGetEmailSettingsUrl = () => {
+
+
+
+
+  return `/api/email/settings`
+}
+
+/**
+ * @summary Current administrator's Gmail settings, without secrets
+ */
+export const getEmailSettings = async ( options?: RequestInit): Promise<EmailSettings> => {
+
+  return customFetch<EmailSettings>(getGetEmailSettingsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetEmailSettingsQueryKey = () => {
+    return [
+    `/api/email/settings`
+    ] as const;
+    }
+
+
+export const getGetEmailSettingsQueryOptions = <TData = Awaited<ReturnType<typeof getEmailSettings>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEmailSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetEmailSettingsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getEmailSettings>>> = ({ signal }) => getEmailSettings({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getEmailSettings>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetEmailSettingsQueryResult = NonNullable<Awaited<ReturnType<typeof getEmailSettings>>>
+export type GetEmailSettingsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Current administrator's Gmail settings, without secrets
+ */
+
+export function useGetEmailSettings<TData = Awaited<ReturnType<typeof getEmailSettings>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getEmailSettings>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetEmailSettingsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getSaveEmailSettingsUrl = () => {
+
+
+
+
+  return `/api/email/settings`
+}
+
+export const saveEmailSettings = async (emailSettingsInput: EmailSettingsInput, options?: RequestInit): Promise<EmailSettings> => {
+
+  return customFetch<EmailSettings>(getSaveEmailSettingsUrl(),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      emailSettingsInput,)
+  }
+);}
+
+
+
+
+export const getSaveEmailSettingsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveEmailSettings>>, TError,{data: BodyType<EmailSettingsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof saveEmailSettings>>, TError,{data: BodyType<EmailSettingsInput>}, TContext> => {
+
+const mutationKey = ['saveEmailSettings'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof saveEmailSettings>>, {data: BodyType<EmailSettingsInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  saveEmailSettings(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SaveEmailSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof saveEmailSettings>>>
+    export type SaveEmailSettingsMutationBody = BodyType<EmailSettingsInput>
+    export type SaveEmailSettingsMutationError = ErrorType<unknown>
+
+    export const useSaveEmailSettings = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof saveEmailSettings>>, TError,{data: BodyType<EmailSettingsInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof saveEmailSettings>>,
+        TError,
+        {data: BodyType<EmailSettingsInput>},
+        TContext
+      > => {
+      return useMutation(getSaveEmailSettingsMutationOptions(options));
+    }
+
+export const getDeleteEmailSettingsUrl = () => {
+
+
+
+
+  return `/api/email/settings`
+}
+
+export const deleteEmailSettings = async ( options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteEmailSettingsUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteEmailSettingsMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteEmailSettings>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteEmailSettings>>, TError,void, TContext> => {
+
+const mutationKey = ['deleteEmailSettings'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteEmailSettings>>, void> = () => {
+
+
+          return  deleteEmailSettings(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteEmailSettingsMutationResult = NonNullable<Awaited<ReturnType<typeof deleteEmailSettings>>>
+
+    export type DeleteEmailSettingsMutationError = ErrorType<unknown>
+
+    export const useDeleteEmailSettings = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteEmailSettings>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteEmailSettings>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getDeleteEmailSettingsMutationOptions(options));
+    }
+
+export const getSendTestEmailUrl = () => {
+
+
+
+
+  return `/api/email/test`
+}
+
+/**
+ * @summary Send a test message only to the current administrator
+ */
+export const sendTestEmail = async ( options?: RequestInit): Promise<EmailReceipt> => {
+
+  return customFetch<EmailReceipt>(getSendTestEmailUrl(),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getSendTestEmailMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendTestEmail>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendTestEmail>>, TError,void, TContext> => {
+
+const mutationKey = ['sendTestEmail'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendTestEmail>>, void> = () => {
+
+
+          return  sendTestEmail(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendTestEmailMutationResult = NonNullable<Awaited<ReturnType<typeof sendTestEmail>>>
+
+    export type SendTestEmailMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Send a test message only to the current administrator
+ */
+export const useSendTestEmail = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendTestEmail>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendTestEmail>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getSendTestEmailMutationOptions(options));
+    }
+
+export const getPreviewCredentialEmailUrl = () => {
+
+
+
+
+  return `/api/email/preview`
+}
+
+/**
+ * @summary Preview a draft with an example password, without sending
+ */
+export const previewCredentialEmail = async (emailPreviewInput: EmailPreviewInput, options?: RequestInit): Promise<EmailPreview> => {
+
+  return customFetch<EmailPreview>(getPreviewCredentialEmailUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      emailPreviewInput,)
+  }
+);}
+
+
+
+
+export const getPreviewCredentialEmailMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof previewCredentialEmail>>, TError,{data: BodyType<EmailPreviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof previewCredentialEmail>>, TError,{data: BodyType<EmailPreviewInput>}, TContext> => {
+
+const mutationKey = ['previewCredentialEmail'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof previewCredentialEmail>>, {data: BodyType<EmailPreviewInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  previewCredentialEmail(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PreviewCredentialEmailMutationResult = NonNullable<Awaited<ReturnType<typeof previewCredentialEmail>>>
+    export type PreviewCredentialEmailMutationBody = BodyType<EmailPreviewInput>
+    export type PreviewCredentialEmailMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Preview a draft with an example password, without sending
+ */
+export const usePreviewCredentialEmail = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof previewCredentialEmail>>, TError,{data: BodyType<EmailPreviewInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof previewCredentialEmail>>,
+        TError,
+        {data: BodyType<EmailPreviewInput>},
+        TContext
+      > => {
+      return useMutation(getPreviewCredentialEmailMutationOptions(options));
+    }
+
+export const getSendUserCredentialsUrl = (id: string,) => {
+
+
+
+
+  return `/api/users/${id}/send-credentials`
+}
+
+/**
+ * @summary Send a new temporary password and require a password change
+ */
+export const sendUserCredentials = async (id: string,
+    credentialEmailInput: CredentialEmailInput, options?: RequestInit): Promise<EmailReceipt> => {
+
+  return customFetch<EmailReceipt>(getSendUserCredentialsUrl(id),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      credentialEmailInput,)
+  }
+);}
+
+
+
+
+export const getSendUserCredentialsMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendUserCredentials>>, TError,{id: string;data: BodyType<CredentialEmailInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof sendUserCredentials>>, TError,{id: string;data: BodyType<CredentialEmailInput>}, TContext> => {
+
+const mutationKey = ['sendUserCredentials'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof sendUserCredentials>>, {id: string;data: BodyType<CredentialEmailInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  sendUserCredentials(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type SendUserCredentialsMutationResult = NonNullable<Awaited<ReturnType<typeof sendUserCredentials>>>
+    export type SendUserCredentialsMutationBody = BodyType<CredentialEmailInput>
+    export type SendUserCredentialsMutationError = ErrorType<void>
+
+    /**
+ * @summary Send a new temporary password and require a password change
+ */
+export const useSendUserCredentials = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof sendUserCredentials>>, TError,{id: string;data: BodyType<CredentialEmailInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof sendUserCredentials>>,
+        TError,
+        {id: string;data: BodyType<CredentialEmailInput>},
+        TContext
+      > => {
+      return useMutation(getSendUserCredentialsMutationOptions(options));
+    }
 
 export const getGetCurrentUserUrl = () => {
 

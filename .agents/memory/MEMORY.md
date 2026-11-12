@@ -2,3 +2,5 @@
 - [Responsive layout pattern](responsive-layout-pattern.md) — useResponsive() + CONTENT_MAX_WIDTH wrapper used across skiarea-dashboard screens to fix wide-screen row/stat-card layout.
 - [Dev vs prod auth credentials](dev-vs-prod-auth-credentials.md) — AUTH_USERS differs between dev and prod; don't assume a prod login works in dev.
 - [Multi-tenant auth architecture](multi-tenant-auth.md) — tenants+users DB tables, JWT with tenantId+role, sync via per-tenant apiKey; first-run via POST /api/setup/init.
+- [Gmail personale](gmail-sending.md) — posta interna Gmail; invii dalla casella dell’amministratore collegato, con password per app.
+- [Runtime dei test Node](workspace-node-tests.md) — i test server richiedono bundling: Node ESM non risolve i barrel TypeScript dei pacchetti workspace.

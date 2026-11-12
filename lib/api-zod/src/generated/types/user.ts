@@ -8,6 +8,8 @@
 import type { UserRole } from './userRole';
 
 export interface User {
+  /** @nullable */
+  credentialsSentAt?: Date | null;
   id: string;
   email: string;
   name: string;

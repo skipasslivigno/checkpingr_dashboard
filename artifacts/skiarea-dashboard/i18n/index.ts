@@ -220,6 +220,70 @@ export interface Translations {
   adminPwdRequired: string;
   adminPwdOk: string;
   periodViewGroups: string;
+  emTitle: string;
+  emLink: string;
+  emAdminOnly: string;
+  emLoadError: string;
+  emStatusConfigured: string;
+  emStatusNotConfigured: string;
+  emStatusNote: string;
+  emSender: string;
+  emSenderHint: string;
+  emSenderName: string;
+  emAppPassword: string;
+  emAppPasswordHint: string;
+  emAppPasswordSaved: string;
+  emAppPasswordMissing: string;
+  emLoginUrl: string;
+  emLoginUrlHint: string;
+  emSubject: string;
+  emBody: string;
+  emPlaceholders: string;
+  emResetDefaults: string;
+  emSmtpInfo: string;
+  emGuideTitle: string;
+  emGuide1: string;
+  emGuide2: string;
+  emGuide3: string;
+  emGuideWorkspace: string;
+  emSave: string;
+  emSaving: string;
+  emSaved: string;
+  emRequired: string;
+  emUnsaved: string;
+  emPreview: string;
+  emPreviewing: string;
+  emPreviewNote: string;
+  emPreviewSubject: string;
+  emTest: string;
+  emTesting: string;
+  emTestDisabled: string;
+  emTestConfirmTitle: string;
+  emTestConfirmBody: string;
+  emTestSent: string;
+  emDelete: string;
+  emDeleting: string;
+  emDeleteTitle: string;
+  emDeleteBody: string;
+  emDeleted: string;
+  emCancel: string;
+  emConfirm: string;
+  emClose: string;
+  emErrorGeneric: string;
+  emSendColumn: string;
+  emSendCreds: string;
+  emNeverSent: string;
+  emInactive: string;
+  emSendTitle: string;
+  emSendFrom: string;
+  emSendTo: string;
+  emSendWarn: string;
+  emSendSelfWarn: string;
+  emSendConfirm: string;
+  emSending: string;
+  emSendSuccess: string;
+  emSendPreviewLoading: string;
+  emRetry: string;
 }
 
 const it: Translations = {
@@ -442,6 +506,70 @@ const it: Translations = {
   adminPwdRequired: "Cambio richiesto",
   adminPwdOk: "OK",
   periodViewGroups: "Gruppi",
+  emTitle: "Email credenziali",
+  emLink: "Impostazioni Gmail",
+  emAdminOnly: "Solo gli amministratori possono accedere a questa pagina.",
+  emLoadError: "Impossibile caricare le impostazioni email.",
+  emStatusConfigured: "Configurazione salvata",
+  emStatusNotConfigured: "Non configurato",
+  emStatusNote: "\"Salvata\" significa solo che i dati sono memorizzati: la connessione a Gmail non è verificata finché non invii un test.",
+  emSender: "Mittente (il tuo account)",
+  emSenderHint: "Derivato dall'amministratore connesso, non modificabile.",
+  emSenderName: "Nome mittente",
+  emAppPassword: "Nuova password per le app Gmail",
+  emAppPasswordHint: "Non è la password del tuo account Google. Lascia vuoto per mantenere quella salvata.",
+  emAppPasswordSaved: "Una password per le app è salvata (non viene mai mostrata).",
+  emAppPasswordMissing: "Nessuna password per le app salvata.",
+  emLoginUrl: "URL di accesso (HTTPS)",
+  emLoginUrlHint: "Inserisci manualmente l'indirizzo HTTPS che gli utenti useranno per accedere.",
+  emSubject: "Oggetto",
+  emBody: "Testo del messaggio",
+  emPlaceholders: "Segnaposto supportati",
+  emResetDefaults: "Ripristina modello predefinito",
+  emSmtpInfo: "Server SMTP fisso: smtp.gmail.com, porta 465, TLS.",
+  emGuideTitle: "Come ottenere una password per le app",
+  emGuide1: "1. Attiva la verifica in due passaggi sul tuo account Google.",
+  emGuide2: "2. Apri Account Google > Password per le app:",
+  emGuide3: "3. Crea una password per questa app e incollala qui sotto.",
+  emGuideWorkspace: "Negli account Google Workspace l'amministratore può vietare le password per le app.",
+  emSave: "Salva",
+  emSaving: "Salvataggio…",
+  emSaved: "Configurazione salvata. Nessuna email è stata inviata.",
+  emRequired: "Nome mittente, URL di accesso, oggetto e testo sono obbligatori.",
+  emUnsaved: "Modifiche non salvate",
+  emPreview: "Anteprima",
+  emPreviewing: "Anteprima…",
+  emPreviewNote: "Anteprima: non viene inviato nulla. La password mostrata è un esempio non utilizzabile.",
+  emPreviewSubject: "Oggetto",
+  emTest: "Invia email di prova",
+  emTesting: "Invio…",
+  emTestDisabled: "Salva una configurazione valida senza modifiche in sospeso per inviare una prova.",
+  emTestConfirmTitle: "Inviare email di prova?",
+  emTestConfirmBody: "Verrà inviata un'email reale solo a te:",
+  emTestSent: "Accettata da Gmail per {email}. La consegna in casella non è garantita.",
+  emDelete: "Elimina configurazione",
+  emDeleting: "Eliminazione…",
+  emDeleteTitle: "Eliminare la configurazione Gmail?",
+  emDeleteBody: "Rimuove nome mittente, URL, modelli e password per le app salvati solo per il tuo account amministratore.",
+  emDeleted: "Configurazione eliminata.",
+  emCancel: "Annulla",
+  emConfirm: "Conferma",
+  emClose: "Chiudi",
+  emErrorGeneric: "Operazione non riuscita. Riprova.",
+  emSendColumn: "Credenziali",
+  emSendCreds: "Invia credenziali",
+  emNeverSent: "Mai inviate",
+  emInactive: "Utente inattivo",
+  emSendTitle: "Inviare nuove credenziali?",
+  emSendFrom: "Da",
+  emSendTo: "A",
+  emSendWarn: "Verrà generata una NUOVA password che sostituisce quella attuale. Le sessioni attive dell'utente verranno revocate e dovrà cambiare password al prossimo accesso.",
+  emSendSelfWarn: "Stai inviando le credenziali a te stesso: la tua sessione potrebbe terminare dopo l'invio.",
+  emSendConfirm: "Reimposta e invia",
+  emSending: "Invio…",
+  emSendSuccess: "Accettata da Gmail per {email}. La consegna non è garantita.",
+  emSendPreviewLoading: "Caricamento anteprima…",
+  emRetry: "Riprova",
 };
 
 const en: Translations = {
@@ -664,6 +792,70 @@ const en: Translations = {
   adminPwdRequired: "Change required",
   adminPwdOk: "OK",
   periodViewGroups: "Groups",
+  emTitle: "Credential email",
+  emLink: "Gmail settings",
+  emAdminOnly: "Only administrators can access this page.",
+  emLoadError: "Could not load email settings.",
+  emStatusConfigured: "Configuration saved",
+  emStatusNotConfigured: "Not configured",
+  emStatusNote: "\"Saved\" only means the data is stored: the Gmail connection is not verified until you send a test.",
+  emSender: "Sender (your account)",
+  emSenderHint: "Derived from the signed-in administrator, cannot be changed.",
+  emSenderName: "Sender name",
+  emAppPassword: "New Gmail app password",
+  emAppPasswordHint: "Not your Google account password. Leave blank to keep the saved one.",
+  emAppPasswordSaved: "An app password is stored (never displayed).",
+  emAppPasswordMissing: "No app password stored.",
+  emLoginUrl: "Login URL (HTTPS)",
+  emLoginUrlHint: "Enter manually the HTTPS address users will use to sign in.",
+  emSubject: "Subject",
+  emBody: "Message body",
+  emPlaceholders: "Supported placeholders",
+  emResetDefaults: "Reset to default template",
+  emSmtpInfo: "Fixed SMTP server: smtp.gmail.com, port 465, TLS.",
+  emGuideTitle: "How to get an app password",
+  emGuide1: "1. Turn on 2-Step Verification on your Google account.",
+  emGuide2: "2. Open Google Account > App passwords:",
+  emGuide3: "3. Create a password for this app and paste it below.",
+  emGuideWorkspace: "On Google Workspace accounts, your admin may prohibit app passwords.",
+  emSave: "Save",
+  emSaving: "Saving…",
+  emSaved: "Configuration saved. No email was sent.",
+  emRequired: "Sender name, login URL, subject and body are required.",
+  emUnsaved: "Unsaved changes",
+  emPreview: "Preview",
+  emPreviewing: "Previewing…",
+  emPreviewNote: "Preview: nothing is sent. The password shown is a non-usable sample.",
+  emPreviewSubject: "Subject",
+  emTest: "Send test email",
+  emTesting: "Sending…",
+  emTestDisabled: "Save a valid configuration with no pending changes to send a test.",
+  emTestConfirmTitle: "Send test email?",
+  emTestConfirmBody: "A real email will be sent only to you:",
+  emTestSent: "Accepted by Gmail for {email}. Inbox delivery is not guaranteed.",
+  emDelete: "Delete configuration",
+  emDeleting: "Deleting…",
+  emDeleteTitle: "Delete Gmail configuration?",
+  emDeleteBody: "Removes the sender name, URL, templates and stored app password for your admin account only.",
+  emDeleted: "Configuration deleted.",
+  emCancel: "Cancel",
+  emConfirm: "Confirm",
+  emClose: "Close",
+  emErrorGeneric: "Operation failed. Please try again.",
+  emSendColumn: "Credentials",
+  emSendCreds: "Send credentials",
+  emNeverSent: "Never sent",
+  emInactive: "Inactive user",
+  emSendTitle: "Send new credentials?",
+  emSendFrom: "From",
+  emSendTo: "To",
+  emSendWarn: "A NEW password will be generated and will replace the current one. The user's active sessions will be revoked and they must change password at next sign-in.",
+  emSendSelfWarn: "You are sending credentials to yourself: your own session may end after sending.",
+  emSendConfirm: "Reset and send",
+  emSending: "Sending…",
+  emSendSuccess: "Accepted by Gmail for {email}. Delivery is not guaranteed.",
+  emSendPreviewLoading: "Loading preview…",
+  emRetry: "Retry",
 };
 
 export const translations: Record<Language, Translations> = { it, en };

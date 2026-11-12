@@ -5,6 +5,66 @@
  * Ski Area Dashboard API
  * OpenAPI spec version: 0.1.0
  */
+export interface EmailSettings {
+  senderEmail: string;
+  senderName: string;
+  hasPassword: boolean;
+  configured: boolean;
+  loginUrl: string;
+  subject: string;
+  body: string;
+  defaultSubject: string;
+  defaultBody: string;
+  placeholders: string[];
+}
+
+export interface EmailSettingsInput {
+  /**
+     * @minLength 1
+     * @maxLength 120
+     */
+  senderName: string;
+  /** @maxLength 64 */
+  appPassword?: string;
+  loginUrl: string;
+  /**
+     * @minLength 1
+     * @maxLength 200
+     */
+  subject: string;
+  /**
+     * @minLength 1
+     * @maxLength 12000
+     */
+  body: string;
+}
+
+export interface EmailPreviewInput {
+  loginUrl: string;
+  subject: string;
+  body: string;
+  userId?: string;
+}
+
+export interface EmailPreview {
+  subject: string;
+  text: string;
+  html: string;
+  recipient: string;
+  senderEmail: string;
+}
+
+export interface CredentialEmailInput {
+  confirmReset: boolean;
+  expectedEmail: string;
+}
+
+export interface EmailReceipt {
+  sentAt: string;
+  recipient: string;
+  messageId: string;
+}
+
 export interface HealthStatus {
   status: string;
 }
@@ -292,6 +352,8 @@ export const UserRole = {
 } as const;
 
 export interface User {
+  /** @nullable */
+  credentialsSentAt?: string | null;
   id: string;
   email: string;
   name: string;
