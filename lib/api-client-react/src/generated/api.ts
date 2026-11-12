@@ -31,7 +31,9 @@ import type {
   EmailReceipt,
   EmailSettings,
   EmailSettingsInput,
+  FirstEntriesForecast,
   GetDashboardSummaryParams,
+  GetFirstEntriesForecastParams,
   GetLatestLiftsParams,
   GetLiftDatesParams,
   GetLiftExtractionsParams,
@@ -1378,6 +1380,91 @@ export function useGetDashboardSummary<TData = Awaited<ReturnType<typeof getDash
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetDashboardSummaryQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetFirstEntriesForecastUrl = (params: GetFirstEntriesForecastParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/lifts/first-entries-forecast?${stringifiedParams}` : `/api/lifts/first-entries-forecast`
+}
+
+/**
+ * Tenant-scoped historical estimates of the dashboard first-entry metric (nuin). Training and rolling validation use only preceding dates. No estimate is returned without sufficient history and validation.
+ * @summary Forecast end-of-day first entries at three extraction times
+ */
+export const getFirstEntriesForecast = async (params: GetFirstEntriesForecastParams, options?: RequestInit): Promise<FirstEntriesForecast> => {
+
+  return customFetch<FirstEntriesForecast>(getGetFirstEntriesForecastUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFirstEntriesForecastQueryKey = (params?: GetFirstEntriesForecastParams,) => {
+    return [
+    `/api/lifts/first-entries-forecast`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetFirstEntriesForecastQueryOptions = <TData = Awaited<ReturnType<typeof getFirstEntriesForecast>>, TError = ErrorType<void>>(params: GetFirstEntriesForecastParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFirstEntriesForecast>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFirstEntriesForecastQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFirstEntriesForecast>>> = ({ signal }) => getFirstEntriesForecast(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFirstEntriesForecast>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFirstEntriesForecastQueryResult = NonNullable<Awaited<ReturnType<typeof getFirstEntriesForecast>>>
+export type GetFirstEntriesForecastQueryError = ErrorType<void>
+
+
+/**
+ * @summary Forecast end-of-day first entries at three extraction times
+ */
+
+export function useGetFirstEntriesForecast<TData = Awaited<ReturnType<typeof getFirstEntriesForecast>>, TError = ErrorType<void>>(
+ params: GetFirstEntriesForecastParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFirstEntriesForecast>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFirstEntriesForecastQueryOptions(params,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

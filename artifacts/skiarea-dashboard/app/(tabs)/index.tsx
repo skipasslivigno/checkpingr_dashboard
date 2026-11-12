@@ -20,7 +20,9 @@ import {
   useGetLatestLifts,
   getGetDashboardSummaryQueryKey,
   getGetLatestLiftsQueryKey,
+  getGetFirstEntriesForecastQueryKey,
 } from "@workspace/api-client-react";
+import { FirstEntriesForecast } from "@/components/FirstEntriesForecast";
 import { DateExtractionPicker } from "@/components/DateExtractionPicker";
 import { LiftRowSkeleton, StatCardSkeleton } from "@/components/SkeletonLoader";
 import { StatCard } from "@/components/StatCard";
@@ -197,6 +199,7 @@ export default function DashboardScreen() {
     setRefreshing(true);
     await queryClient.invalidateQueries({ queryKey: getGetDashboardSummaryQueryKey() });
     await queryClient.invalidateQueries({ queryKey: getGetLatestLiftsQueryKey() });
+    await queryClient.invalidateQueries({ queryKey: getGetFirstEntriesForecastQueryKey() });
     setRefreshing(false);
   };
 
@@ -383,6 +386,8 @@ export default function DashboardScreen() {
           </View>
         </>
       )}
+
+      <FirstEntriesForecast date={selectedDate} season={effectiveSeason} extraction={selectedExtraction} />
     </View>
   );
 

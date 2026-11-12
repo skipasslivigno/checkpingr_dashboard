@@ -5,3 +5,4 @@
 - [Gmail personale](gmail-sending.md) — posta interna Gmail; invii dalla casella dell’amministratore collegato, con password per app.
 - [Runtime dei test Node](workspace-node-tests.md) — i test server richiedono bundling: Node ESM non risolve i barrel TypeScript dei pacchetti workspace.
 - [Navigazione nelle stagioni](season-navigation.md) — Dashboard e Impianti devono mantenere la navigazione giornaliera entro la stagione selezionata.
+- [Previsione primi ingressi](first-entries-forecast.md) — prevedere la metrica già mostrata nella dashboard, senza reinterpretare i nomi dei contatori importati.

@@ -7,6 +7,7 @@ import usersRouter from "./users";
 import setupRouter from "./setup";
 import settingsRouter from "./settings";
 import emailRouter from "./email";
+import forecastRouter from "./forecast";
 
 const router: IRouter = Router();
 
@@ -18,5 +19,6 @@ router.use(usersRouter);
 router.use(setupRouter);
 router.use(settingsRouter);
 router.use(emailRouter);
+router.use(forecastRouter);
 
 export default router;

@@ -342,6 +342,55 @@ export const GetDashboardSummaryResponse = zod.object({
 
 
 /**
+ * Tenant-scoped historical estimates of the dashboard first-entry metric (nuin). Training and rolling validation use only preceding dates. No estimate is returned without sufficient history and validation.
+ * @summary Forecast end-of-day first entries at three extraction times
+ */
+export const getFirstEntriesForecastQueryDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const getFirstEntriesForecastQuerySeasonMax = 40;
+
+export const getFirstEntriesForecastQueryExtractionRegExp = new RegExp('^\\d{14}$');
+
+
+export const GetFirstEntriesForecastQueryParams = zod.object({
+  "date": zod.coerce.string().regex(getFirstEntriesForecastQueryDateRegExp),
+  "season": zod.coerce.string().min(1).max(getFirstEntriesForecastQuerySeasonMax),
+  "extraction": zod.coerce.string().regex(getFirstEntriesForecastQueryExtractionRegExp).optional().describe('Selected dupd; later extractions must not influence forecasts.')
+})
+
+export const GetFirstEntriesForecastResponse = zod.object({
+  "date": zod.string(),
+  "season": zod.string(),
+  "metric": zod.enum(['nuin']),
+  "modelVersion": zod.string(),
+  "timeZone": zod.enum(['Europe/Rome']),
+  "history": zod.object({
+  "daysExamined": zod.number(),
+  "completeDays": zod.number(),
+  "fromDate": zod.string().nullable(),
+  "toDate": zod.string().nullable()
+}),
+  "forecasts": zod.array(zod.object({
+  "slot": zod.enum(['10:30', '11:30', '14:00']),
+  "status": zod.enum(['ready', 'before_extraction', 'missing_extraction', 'incomplete_extraction', 'insufficient_history', 'insufficient_validation', 'no_data', 'zero_entries']),
+  "extraction": zod.string().nullable(),
+  "observedEntries": zod.number().nullable(),
+  "predictedTotal": zod.number().nullable(),
+  "lowerBound": zod.number().nullable(),
+  "upperBound": zod.number().nullable(),
+  "sampleDays": zod.number(),
+  "comparisonScope": zod.enum(['similar_days', 'broader_history']),
+  "confidence": zod.enum(['unavailable', 'low', 'medium', 'high']),
+  "validation": zod.object({
+  "sampleDays": zod.number(),
+  "medianAbsolutePercentageError": zod.number().nullable().describe('Fraction, not percentage points; chronological out-of-sample errors.'),
+  "meanAbsoluteError": zod.number().nullable(),
+  "intervalCoverage": zod.number().nullable().describe('Fraction of held-out finals inside the indicative interval, calibrated on still earlier errors.')
+})
+}))
+})
+
+
+/**
  * Returns distinct dates (YYYY-MM-DD) ordered most recent first
  * @summary List all dates that have lift data
  */

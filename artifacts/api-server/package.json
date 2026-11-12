@@ -9,7 +9,9 @@
     "start": "node --enable-source-maps ./dist/index.mjs",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test:email": "esbuild src/routes/email.test.ts --bundle --platform=node --format=cjs --external:pg-native --external:nodemailer --outfile=node_modules/.cache/email-tests.cjs && NODE_ENV=test node --test \"$PWD/node_modules/.cache/email-tests.cjs\"",
-    "test:charts": "esbuild src/routes/chart-seasons.test.ts --bundle --platform=node --format=cjs --external:pg-native --outfile=node_modules/.cache/chart-tests.cjs && NODE_ENV=test node --test \"$PWD/node_modules/.cache/chart-tests.cjs\""
+    "test:charts": "esbuild src/routes/chart-seasons.test.ts --bundle --platform=node --format=cjs --external:pg-native --outfile=node_modules/.cache/chart-tests.cjs && NODE_ENV=test node --test \"$PWD/node_modules/.cache/chart-tests.cjs\"",
+    "test:forecasts": "esbuild src/lib/first-entries-forecast.test.ts src/routes/forecast.test.ts --bundle --platform=node --format=cjs --external:pg-native --outdir=node_modules/.cache/forecast-tests && NODE_ENV=test node --test \"$PWD/node_modules/.cache/forecast-tests/lib/first-entries-forecast.test.js\" \"$PWD/node_modules/.cache/forecast-tests/routes/forecast.test.js\"",
+    "analyze:forecasts": "esbuild scripts/forecast-analysis.ts --bundle --platform=node --format=cjs --external:pg-native --outfile=node_modules/.cache/forecast-analysis.cjs && node node_modules/.cache/forecast-analysis.cjs"
   },
   "dependencies": {
     "@workspace/api-zod": "workspace:*",

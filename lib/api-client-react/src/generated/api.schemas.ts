@@ -148,6 +148,115 @@ export interface DashboardSummary {
   lastSyncAt: string | null;
 }
 
+export interface ForecastValidation {
+  sampleDays: number;
+  /**
+     * Fraction, not percentage points; chronological out-of-sample errors.
+     * @nullable
+     */
+  medianAbsolutePercentageError: number | null;
+  /** @nullable */
+  meanAbsoluteError: number | null;
+  /**
+     * Fraction of held-out finals inside the indicative interval, calibrated on still earlier errors.
+     * @nullable
+     */
+  intervalCoverage: number | null;
+}
+
+export type FirstEntriesForecastPointSlot = typeof FirstEntriesForecastPointSlot[keyof typeof FirstEntriesForecastPointSlot];
+
+
+export const FirstEntriesForecastPointSlot = {
+  '10:30': '10:30',
+  '11:30': '11:30',
+  '14:00': '14:00',
+} as const;
+
+export type FirstEntriesForecastPointStatus = typeof FirstEntriesForecastPointStatus[keyof typeof FirstEntriesForecastPointStatus];
+
+
+export const FirstEntriesForecastPointStatus = {
+  ready: 'ready',
+  before_extraction: 'before_extraction',
+  missing_extraction: 'missing_extraction',
+  incomplete_extraction: 'incomplete_extraction',
+  insufficient_history: 'insufficient_history',
+  insufficient_validation: 'insufficient_validation',
+  no_data: 'no_data',
+  zero_entries: 'zero_entries',
+} as const;
+
+export type FirstEntriesForecastPointComparisonScope = typeof FirstEntriesForecastPointComparisonScope[keyof typeof FirstEntriesForecastPointComparisonScope];
+
+
+export const FirstEntriesForecastPointComparisonScope = {
+  similar_days: 'similar_days',
+  broader_history: 'broader_history',
+} as const;
+
+export type FirstEntriesForecastPointConfidence = typeof FirstEntriesForecastPointConfidence[keyof typeof FirstEntriesForecastPointConfidence];
+
+
+export const FirstEntriesForecastPointConfidence = {
+  unavailable: 'unavailable',
+  low: 'low',
+  medium: 'medium',
+  high: 'high',
+} as const;
+
+export interface FirstEntriesForecastPoint {
+  slot: FirstEntriesForecastPointSlot;
+  status: FirstEntriesForecastPointStatus;
+  /** @nullable */
+  extraction: string | null;
+  /** @nullable */
+  observedEntries: number | null;
+  /** @nullable */
+  predictedTotal: number | null;
+  /** @nullable */
+  lowerBound: number | null;
+  /** @nullable */
+  upperBound: number | null;
+  sampleDays: number;
+  comparisonScope: FirstEntriesForecastPointComparisonScope;
+  confidence: FirstEntriesForecastPointConfidence;
+  validation: ForecastValidation;
+}
+
+export type FirstEntriesForecastMetric = typeof FirstEntriesForecastMetric[keyof typeof FirstEntriesForecastMetric];
+
+
+export const FirstEntriesForecastMetric = {
+  nuin: 'nuin',
+} as const;
+
+export type FirstEntriesForecastTimeZone = typeof FirstEntriesForecastTimeZone[keyof typeof FirstEntriesForecastTimeZone];
+
+
+export const FirstEntriesForecastTimeZone = {
+  'Europe/Rome': 'Europe/Rome',
+} as const;
+
+export type FirstEntriesForecastHistory = {
+  daysExamined: number;
+  completeDays: number;
+  /** @nullable */
+  fromDate: string | null;
+  /** @nullable */
+  toDate: string | null;
+};
+
+export interface FirstEntriesForecast {
+  date: string;
+  season: string;
+  metric: FirstEntriesForecastMetric;
+  modelVersion: string;
+  timeZone: FirstEntriesForecastTimeZone;
+  history: FirstEntriesForecastHistory;
+  forecasts: FirstEntriesForecastPoint[];
+}
+
 export interface SnapshotInput {
   /** @nullable */
   idin?: string | null;
@@ -450,6 +559,23 @@ season?: string;
 date?: string;
 /**
  * Pin to a specific extraction time (dupd value)
+ */
+extraction?: string;
+};
+
+export type GetFirstEntriesForecastParams = {
+/**
+ * @pattern ^\d{4}-\d{2}-\d{2}$
+ */
+date: string;
+/**
+ * @minLength 1
+ * @maxLength 40
+ */
+season: string;
+/**
+ * Selected dupd; later extractions must not influence forecasts.
+ * @pattern ^\d{14}$
  */
 extraction?: string;
 };

@@ -285,6 +285,13 @@ export interface Translations {
   emSendSuccess: string;
   emSendPreviewLoading: string;
   emRetry: string;
+  fcTitle: string; fcSubtitle: string; fcEstimate: string; fcNoSeason: string; fcError: string; fcEmpty: string;
+  fcPredictedAt: string; fcInterval: string; fcObserved: string; fcTrainingDays: string; fcReliability: string;
+  fcScopeSimilar: string; fcScopeBroader: string; fcDetails: string; fcMape: string; fcMae: string;
+  fcValidationDays: string; fcCoverage: string; fcHistory: string; fcMethod: string; fcIntervalNote: string; fcModel: string;
+  fcStatus: Record<"ready"|"before_extraction"|"missing_extraction"|"incomplete_extraction"|"insufficient_history"|"insufficient_validation"|"no_data"|"zero_entries", string>;
+  fcStatusHelp: Record<"ready"|"before_extraction"|"missing_extraction"|"incomplete_extraction"|"insufficient_history"|"insufficient_validation"|"no_data"|"zero_entries", string>;
+  fcConfidence: Record<"unavailable"|"low"|"medium"|"high", string>;
 }
 
 const it: Translations = {
@@ -572,6 +579,31 @@ const it: Translations = {
   emSendSuccess: "Accettata da Gmail per {email}. La consegna non è garantita.",
   emSendPreviewLoading: "Caricamento anteprima…",
   emRetry: "Riprova",
+  fcTitle: "Previsione primi ingressi",
+  fcSubtitle: "Stima del totale giornaliero, separata dai dati reali",
+  fcEstimate: "Stima",
+  fcNoSeason: "Seleziona una stagione per vedere la previsione.",
+  fcError: "Impossibile caricare la previsione.",
+  fcEmpty: "Nessuna previsione disponibile per questa data.",
+  fcPredictedAt: "Totale previsto (orario {slot})",
+  fcInterval: "Intervallo indicativo",
+  fcObserved: "Osservati alle {time}",
+  fcTrainingDays: "Giorni di addestramento",
+  fcReliability: "Affidabilità",
+  fcScopeSimilar: "Confronto con giorni simili.",
+  fcScopeBroader: "Confronto con lo storico più ampio (pochi giorni simili).",
+  fcDetails: "Dettagli del modello",
+  fcMape: "Errore percentuale mediano (backtest)",
+  fcMae: "Errore medio assoluto (ingressi)",
+  fcValidationDays: "Giorni di validazione",
+  fcCoverage: "Copertura intervallo nel backtest",
+  fcHistory: "Giorni storici completi / esaminati",
+  fcMethod: "Il totale è stimato confrontando i primi ingressi osservati all'orario programmato con giornate complete precedenti, anche di altre stagioni, negli ultimi 5 anni. Sono favoriti lo stesso giorno della settimana, periodi simili e festività nazionali italiane, Natale e Pasqua. Servono almeno 12 giorni di addestramento e 12 di validazione. Meteo e aperture non sono considerati. Il consuntivo del giorno previsto non entra nel calcolo; all'ultima estrazione resta la previsione più recente disponibile, al massimo delle 14:00.",
+  fcIntervalNote: "L'intervallo indicativo è l'80% centrale degli errori passati: non garantisce l'80% di copertura.",
+  fcModel: "Modello",
+  fcStatus: { ready: "Pronta", before_extraction: "Non ancora", missing_extraction: "Estrazione mancante", incomplete_extraction: "Estrazione incompleta", insufficient_history: "Storico insufficiente", insufficient_validation: "Validazione insufficiente", no_data: "Nessun dato", zero_entries: "Zero ingressi" },
+  fcStatusHelp: { ready: "", before_extraction: "L'estrazione selezionata è precedente a questo orario.", missing_extraction: "Nessuna estrazione disponibile a questo orario.", incomplete_extraction: "L'estrazione a questo orario è incompleta.", insufficient_history: "Meno di 12 giorni storici utilizzabili.", insufficient_validation: "Meno di 12 giorni di validazione.", no_data: "Nessun dato per questa data.", zero_entries: "Nessun primo ingresso registrato a questo orario." },
+  fcConfidence: { unavailable: "Non disponibile", low: "Bassa", medium: "Media", high: "Alta" },
 };
 
 const en: Translations = {
@@ -859,6 +891,31 @@ const en: Translations = {
   emSendSuccess: "Accepted by Gmail for {email}. Delivery is not guaranteed.",
   emSendPreviewLoading: "Loading preview…",
   emRetry: "Retry",
+  fcTitle: "First entries forecast",
+  fcSubtitle: "Estimated daily total, separate from actual counts",
+  fcEstimate: "Estimate",
+  fcNoSeason: "Select a season to see the forecast.",
+  fcError: "Could not load the forecast.",
+  fcEmpty: "No forecast available for this date.",
+  fcPredictedAt: "Predicted total ({slot} slot)",
+  fcInterval: "Indicative interval",
+  fcObserved: "Observed at {time}",
+  fcTrainingDays: "Training days",
+  fcReliability: "Reliability",
+  fcScopeSimilar: "Compared with similar days.",
+  fcScopeBroader: "Compared with broader history (few similar days).",
+  fcDetails: "Model details",
+  fcMape: "Median percentage error (backtest)",
+  fcMae: "Mean absolute error (entries)",
+  fcValidationDays: "Validation days",
+  fcCoverage: "Interval coverage in backtest",
+  fcHistory: "Complete / examined history days",
+  fcMethod: "The total compares observed first entries at the scheduled time with earlier complete days across seasons in the last 5 years. Matching weekdays, similar periods, Italian national holidays, Christmas and Easter receive more weight. At least 12 training and 12 validation days are required. Weather and lift openings are not considered. The predicted day's final count is never used; at the final extraction the latest available forecast remains, no later than 14:00.",
+  fcIntervalNote: "The indicative interval is the central 80% of earlier errors: it does not guarantee 80% coverage.",
+  fcModel: "Model",
+  fcStatus: { ready: "Ready", before_extraction: "Not yet", missing_extraction: "Missing extraction", incomplete_extraction: "Incomplete extraction", insufficient_history: "Insufficient history", insufficient_validation: "Insufficient validation", no_data: "No data", zero_entries: "Zero entries" },
+  fcStatusHelp: { ready: "", before_extraction: "The selected extraction is before this time.", missing_extraction: "No extraction available at this time.", incomplete_extraction: "The extraction at this time is incomplete.", insufficient_history: "Fewer than 12 usable history days.", insufficient_validation: "Fewer than 12 validation days.", no_data: "No data for this date.", zero_entries: "No first entries recorded at this time." },
+  fcConfidence: { unavailable: "Unavailable", low: "Low", medium: "Medium", high: "High" },
 };
 
 export const translations: Record<Language, Translations> = { it, en };
