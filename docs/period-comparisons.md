@@ -2,7 +2,7 @@
 
 I due riepiloghi della dashboard sommano i **primi ingressi (`nuin`)**.
 Il primo giorno di ogni stagione viene configurato dall'amministratore in
-**Impostazioni → Inizio stagione**, separatamente per ciascun tenant.
+**Impostazioni → Date della stagione**, separatamente per ciascun tenant.
 Il sabato suggerito dai primi dati disponibili non è una data di apertura
 confermata: deve essere salvato esplicitamente.
 
@@ -58,6 +58,29 @@ Non vengono salvati nuovi totali o modificati gli snapshot importati.
 La configurazione delle aperture è persistente e l'aggiornamento di una
 stagione modifica atomicamente solo quella voce, preservando colori,
 logo e salvataggi simultanei di altre stagioni.
+
+## Durate diverse e chiusura della stagione
+
+Nella stessa tabella admin si può impostare l'**ultimo giorno di apertura,
+incluso**, senza modificare la data di inizio già salvata. La fine è facoltativa,
+deve essere una data reale e non può precedere l'inizio. Può essere rimossa
+separatamente lasciando il campo vuoto e salvando.
+
+Quando il giorno equivalente supera la chiusura configurata della stagione
+precedente, il progressivo usa il totale dell'intera stagione chiusa e mostra
+**Definitivo**. Il settimanale usa l'ultima settimana di apertura, fino al giorno
+di chiusura incluso, non un totale annuale al posto di una settimana.
+Le date effettive restano visibili accanto ai valori e le percentuali vengono
+calcolate sui valori effettivamente mostrati.
+
+Anche i totali della stagione selezionata si fermano alla propria chiusura,
+se configurata. Un parziale del giorno di chiusura non diventa definitivo:
+serve ancora il consuntivo delle 23:30.
+
+I giorni successivi alla fine configurata non sono buchi; i consuntivi mancanti
+**entro** la stagione rimangono invece incompleti e non vengono nascosti dalla
+dicitura Definitivo. Senza una data finale configurata non si deduce la chiusura
+dal semplice ultimo record disponibile.
 
 ## Verifica
 

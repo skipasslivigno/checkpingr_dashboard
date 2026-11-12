@@ -395,13 +395,21 @@ export interface SeasonStartInput {
      * @nullable
      * @pattern ^\d{4}-\d{2}-\d{2}$
      */
-  startDate: string | null;
+  startDate?: string | null;
+  /**
+     * Last operating date, inclusive. Null clears only the closing date. At least one field is required.
+     * @nullable
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  endDate?: string | null;
 }
 
 export interface SeasonStart {
   season: string;
   /** @nullable */
   startDate: string | null;
+  /** @nullable */
+  endDate: string | null;
   /** @nullable */
   firstDataDate: string | null;
   /**
@@ -418,6 +426,10 @@ export interface PeriodComparisonValue {
   previousTotal: number | null;
   /** @nullable */
   changePercent: number | null;
+  /** Configured season end reached and complete 23:30 finals available through that date */
+  currentDefinitive: boolean;
+  /** Prior period capped at configured season end, with complete finals. Weekly uses the last operating week; progressive uses the complete season. */
+  previousDefinitive: boolean;
   /** @nullable */
   currentFromDate: string | null;
   /** @nullable */

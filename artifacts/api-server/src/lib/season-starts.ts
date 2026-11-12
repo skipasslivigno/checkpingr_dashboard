@@ -9,13 +9,14 @@ export async function loadSeasonStarts(tenantId: string): Promise<SeasonStart[]>
       season: liftSnapshotsTable.eser,
       firstDataDate: sql<string>`MIN(LEFT(${liftSnapshotsTable.dtgg}, 10))`,
     }).from(liftSnapshotsTable).where(eq(liftSnapshotsTable.tenantId, tenantId)).groupBy(liftSnapshotsTable.eser),
-    db.select({ starts: tenantSettingsTable.seasonStartDates }).from(tenantSettingsTable)
+    db.select({ starts: tenantSettingsTable.seasonStartDates, ends: tenantSettingsTable.seasonEndDates }).from(tenantSettingsTable)
       .where(eq(tenantSettingsTable.tenantId, tenantId)),
   ]);
   const starts = settings[0]?.starts ?? {};
+  const ends = settings[0]?.ends ?? {};
   const firstDates = new Map(available.map(r => [r.season, r.firstDataDate]));
-  return [...new Set([...firstDates.keys(), ...Object.keys(starts)])].sort().reverse().map(season => ({
-    season, startDate: starts[season] ?? null, firstDataDate: firstDates.get(season) ?? null,
+  return [...new Set([...firstDates.keys(), ...Object.keys(starts), ...Object.keys(ends)])].sort().reverse().map(season => ({
+    season, startDate: starts[season] ?? null, endDate: ends[season] ?? null, firstDataDate: firstDates.get(season) ?? null,
     suggestedStartDate: firstDates.get(season) ? saturday(firstDates.get(season)!) : null,
   }));
 }

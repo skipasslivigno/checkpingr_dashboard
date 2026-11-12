@@ -34,6 +34,9 @@ function Column({ title, v, id, showMissing, onToggle }: { title: string; v: Per
         {cur ?? "—"}
       </Text>
       <Text style={[styles.dates, { color: colors.mutedForeground }]} numberOfLines={1}>{range(v.currentFromDate, v.currentToDate)}</Text>
+      {v.currentDefinitive && (
+        <Text testID={`text-${id}-current-definitive`} style={[styles.dates, { color: colors.primary }]}>{t.seasonBounds.definitive}</Text>
+      )}
       <View style={styles.cmpRow}>
         <Text testID={`text-${id}-diff`} style={[styles.pct, { color: pctColor }]}>{pct ?? t.pc.na}</Text>
         <Text style={[styles.prev, { color: colors.mutedForeground }]} numberOfLines={1}>
@@ -41,6 +44,9 @@ function Column({ title, v, id, showMissing, onToggle }: { title: string; v: Per
         </Text>
       </View>
       <Text style={[styles.dates, { color: colors.mutedForeground }]} numberOfLines={1}>{range(v.previousFromDate, v.previousToDate)}</Text>
+      {v.previousDefinitive && (
+        <Text testID={`text-${id}-previous-definitive`} style={[styles.dates, { color: colors.primary }]}>{t.seasonBounds.definitive}</Text>
+      )}
       {missing > 0 && (
         <TouchableOpacity testID={`button-${id}-missing`} onPress={onToggle} accessibilityRole="button" style={styles.missBtn}>
           <Feather name="alert-triangle" size={11} color={colors.destructive} />

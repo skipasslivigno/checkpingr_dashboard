@@ -12,5 +12,11 @@ export interface SeasonStartInput {
      * @nullable
      * @pattern ^\d{4}-\d{2}-\d{2}$
      */
-  startDate: string | null;
+  startDate?: string | null;
+  /**
+     * Last operating date, inclusive. Null clears only the closing date. At least one field is required.
+     * @nullable
+     * @pattern ^\d{4}-\d{2}-\d{2}$
+     */
+  endDate?: string | null;
 }

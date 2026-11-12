@@ -29,6 +29,7 @@ function emptyPeriod(): PeriodComparisonValue {
     currentTotal: null, previousTotal: null, changePercent: null,
     currentFromDate: null, currentToDate: null, previousFromDate: null, previousToDate: null,
     missingCurrentDays: [], missingPreviousDays: [],
+    currentDefinitive: false, previousDefinitive: false,
   };
 }
 function dailyFinals(rows: EntryBatch[], season: string) {
@@ -59,11 +60,13 @@ function total(
 /** No guessed opening dates, latest-per-lift mixing, partial historical days, or fake zero denominators. */
 export function comparePeriods(input: {
   date: string; season: string; previousSeason: string | null;
-  starts: Record<string, string>; rows: EntryBatch[]; extraction?: string;
+  starts: Record<string, string>; ends?: Record<string, string>; rows: EntryBatch[]; extraction?: string;
 }): PeriodComparison {
   const { date, season, previousSeason, starts, extraction } = input;
   const start = starts[season] ?? null;
   const previousStart = previousSeason ? starts[previousSeason] ?? null : null;
+  const end = input.ends?.[season];
+  const previousEnd = previousSeason ? input.ends?.[previousSeason] : undefined;
   const rows = input.rows.filter(r => validCalendarDate(r.date)
     && /^\d{14}$/.test(r.extraction) && r.extraction.slice(0, 8) === r.date.replaceAll("-", ""));
   const day = rows.filter(r => r.season === season && r.date === date)
@@ -72,8 +75,10 @@ export function comparePeriods(input: {
   const selected = extraction ? day.find(r => r.extraction === extraction) : day.at(-1);
   // A final already present overrides a morning selection, as requested.
   const source = closing ?? selected;
-  const includeDay = !!closing || !!selected && selected.extraction.slice(8, 12) >= "1400";
-  const through = includeDay ? date : shiftDate(date, -1);
+  const eligibleDay = !!closing || !!selected && selected.extraction.slice(8, 12) >= "1400";
+  const requestedThrough = eligibleDay ? date : shiftDate(date, -1);
+  const through = end && requestedThrough > end ? end : requestedThrough;
+  const includeDay = eligibleDay && through === date;
   const missingConfiguration = [!start ? season : null, previousSeason && !previousStart ? previousSeason : null]
     .filter((s): s is string => !!s);
   const result: PeriodComparison = {
@@ -88,14 +93,16 @@ export function comparePeriods(input: {
     result.weekly.currentTotal = result.progressive.currentTotal = 0;
     return result;
   }
-  if (!source && !missingConfiguration.length) result.status = "no_data";
-
   const currentDaily = dailyFinals(rows, season);
   // Only the included selected day may use a non-final batch. All earlier days require 23:30.
   if (includeDay && source) currentDaily.set(date, source);
+  if (end && through === end && date > end) result.sourceExtraction = currentDaily.get(end)?.extraction ?? null;
+  if (!result.sourceExtraction && !missingConfiguration.length) result.status = "no_data";
   const previousDaily = previousSeason ? dailyFinals(rows, previousSeason) : new Map<string, EntryBatch>();
-  const previousThrough = previousStart
+  const mappedPreviousThrough = previousStart
     ? shiftDate(saturday(previousStart), dayDistance(saturday(start), through)) : null;
+  const previousThrough = previousEnd && mappedPreviousThrough && mappedPreviousThrough > previousEnd
+    ? previousEnd : mappedPreviousThrough;
   const currentWeekStart = [saturday(through), start].sort().at(-1)!;
   const previousWeekStart = previousStart && previousThrough
     ? [saturday(previousThrough), previousStart].sort().at(-1)! : null;
@@ -108,6 +115,10 @@ export function comparePeriods(input: {
       currentTotal: current.total, previousTotal: previous.total,
       changePercent: current.total != null && previous.total != null && previous.total !== 0
         ? (current.total - previous.total) / previous.total * 100 : null,
+      currentDefinitive: !!end && through === end && current.total != null
+        && isFinalExtraction(currentDaily.get(end)?.extraction ?? ""),
+      previousDefinitive: !!previousEnd && previousThrough === previousEnd
+        && previous.total != null,
       currentFromDate: from, currentToDate: through,
       previousFromDate: previousFrom, previousToDate: previousThrough,
       missingCurrentDays: current.missing, missingPreviousDays: previous.missing,

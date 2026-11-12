@@ -193,7 +193,7 @@ paths:
     put:
       operationId: updateSeasonStart
       tags: [settings]
-      summary: Set or clear a season opening date (admin only)
+      summary: Set or clear season opening and closing dates (admin only)
       parameters:
         - name: season
           in: path
@@ -1012,19 +1012,23 @@ components:
 
     SeasonStartInput:
       type: object
-      required: [startDate]
       properties:
         startDate:
           type: ["string", "null"]
           pattern: '^\d{4}-\d{2}-\d{2}$'
           description: Real calendar date; null clears the configuration
+        endDate:
+          type: ["string", "null"]
+          pattern: '^\d{4}-\d{2}-\d{2}$'
+          description: Last operating date, inclusive. Null clears only the closing date. At least one field is required.
 
     SeasonStart:
       type: object
-      required: [season, startDate, firstDataDate, suggestedStartDate]
+      required: [season, startDate, endDate, firstDataDate, suggestedStartDate]
       properties:
         season: { type: string }
         startDate: { type: ["string", "null"] }
+        endDate: { type: ["string", "null"] }
         firstDataDate: { type: ["string", "null"] }
         suggestedStartDate:
           type: ["string", "null"]
@@ -1032,11 +1036,17 @@ components:
 
     PeriodComparisonValue:
       type: object
-      required: [currentTotal, previousTotal, changePercent, currentFromDate, currentToDate, previousFromDate, previousToDate, missingCurrentDays, missingPreviousDays]
+      required: [currentTotal, previousTotal, changePercent, currentFromDate, currentToDate, previousFromDate, previousToDate, missingCurrentDays, missingPreviousDays, currentDefinitive, previousDefinitive]
       properties:
         currentTotal: { type: ["integer", "null"] }
         previousTotal: { type: ["integer", "null"] }
         changePercent: { type: ["number", "null"] }
+        currentDefinitive:
+          type: boolean
+          description: Configured season end reached and complete 23:30 finals available through that date
+        previousDefinitive:
+          type: boolean
+          description: Prior period capped at configured season end, with complete finals. Weekly uses the last operating week; progressive uses the complete season.
         currentFromDate: { type: ["string", "null"] }
         currentToDate: { type: ["string", "null"] }
         previousFromDate: { type: ["string", "null"] }

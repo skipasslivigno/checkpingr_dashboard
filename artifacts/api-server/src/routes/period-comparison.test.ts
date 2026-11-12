@@ -126,3 +126,37 @@ test("removing and restoring a start date is persisted and makes missing configu
   assert.ok(r.missingConfiguration.includes(previous));
   assert.equal((await save(previous, "2024-12-02")).status, 200, "Non-Saturday opening is permitted");
 });
+
+async function saveBounds(s: string, data: { startDate?: string | null; endDate?: string | null }, role = "admin") {
+  return fetch(`${base}/settings/season-starts/${s}`, {
+    method: "PUT", headers: { "content-type": "application/json", "x-test-role": role },
+    body: JSON.stringify(data),
+  });
+}
+test("closing dates persist and produce a definitive prior total without altering opening dates", async () => {
+  await save(previous, "2024-11-30");
+  assert.equal((await saveBounds(previous, { endDate: "2024-12-07" })).status, 200);
+  let dates = GetSeasonStartsResponse.parse(await (await fetch(`${base}/settings/season-starts`)).json());
+  assert.equal(dates.find(s => s.season === previous)?.startDate, "2024-11-30");
+  assert.equal(dates.find(s => s.season === previous)?.endDate, "2024-12-07");
+  const r = GetPeriodComparisonResponse.parse(await (await fetch(`${base}${url}&extraction=20251208140000`)).json());
+  assert.equal(r.progressive.previousTotal, 400);
+  assert.equal(r.progressive.previousDefinitive, true);
+  assert.deepEqual(r.progressive.missingPreviousDays, []);
+  // The old start-only API still preserves the closing date.
+  assert.equal((await save(previous, "2024-11-30")).status, 200);
+  dates = GetSeasonStartsResponse.parse(await (await fetch(`${base}/settings/season-starts`)).json());
+  assert.equal(dates.find(s => s.season === previous)?.endDate, "2024-12-07");
+});
+test("closing date validation and permissions prevent invalid or unauthorized bounds", async () => {
+  for (const role of ["viewer", "operator"])
+    assert.equal((await saveBounds(previous, { endDate: "2025-05-01" }, role)).status, 403);
+  for (const data of [
+    { endDate: "2025-02-29" }, { endDate: "2024-11-29" }, { endDate: "2099-05-01" },
+    { startDate: "2024-12-08" }, {},
+  ]) assert.equal((await saveBounds(previous, data)).status, 400);
+  assert.equal((await saveBounds(previous, { endDate: null })).status, 200);
+  const dates = GetSeasonStartsResponse.parse(await (await fetch(`${base}/settings/season-starts`)).json());
+  assert.equal(dates.find(s => s.season === previous)?.startDate, "2024-11-30");
+  assert.equal(dates.find(s => s.season === previous)?.endDate, null);
+});

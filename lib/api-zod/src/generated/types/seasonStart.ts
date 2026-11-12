@@ -11,6 +11,8 @@ export interface SeasonStart {
   /** @nullable */
   startDate: string | null;
   /** @nullable */
+  endDate: string | null;
+  /** @nullable */
   firstDataDate: string | null;
   /**
      * Saturday on or before first recorded day; suggestion only, never silently saved

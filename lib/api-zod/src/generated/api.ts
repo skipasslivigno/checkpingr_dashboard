@@ -199,6 +199,7 @@ export const UpdateSettingsResponse = zod.object({
 export const GetSeasonStartsResponseItem = zod.object({
   "season": zod.string(),
   "startDate": zod.string().nullable(),
+  "endDate": zod.string().nullable(),
   "firstDataDate": zod.string().nullable(),
   "suggestedStartDate": zod.string().nullable().describe('Saturday on or before first recorded day; suggestion only, never silently saved')
 })
@@ -206,7 +207,7 @@ export const GetSeasonStartsResponse = zod.array(GetSeasonStartsResponseItem)
 
 
 /**
- * @summary Set or clear a season opening date (admin only)
+ * @summary Set or clear season opening and closing dates (admin only)
  */
 export const updateSeasonStartPathSeasonMax = 40;
 
@@ -217,15 +218,18 @@ export const UpdateSeasonStartParams = zod.object({
 })
 
 export const updateSeasonStartBodyStartDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const updateSeasonStartBodyEndDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
 
 
 export const UpdateSeasonStartBody = zod.object({
-  "startDate": zod.string().regex(updateSeasonStartBodyStartDateRegExp).nullable().describe('Real calendar date; null clears the configuration')
+  "startDate": zod.string().regex(updateSeasonStartBodyStartDateRegExp).nullish().describe('Real calendar date; null clears the configuration'),
+  "endDate": zod.string().regex(updateSeasonStartBodyEndDateRegExp).nullish().describe('Last operating date, inclusive. Null clears only the closing date. At least one field is required.')
 })
 
 export const UpdateSeasonStartResponse = zod.object({
   "season": zod.string(),
   "startDate": zod.string().nullable(),
+  "endDate": zod.string().nullable(),
   "firstDataDate": zod.string().nullable(),
   "suggestedStartDate": zod.string().nullable().describe('Saturday on or before first recorded day; suggestion only, never silently saved')
 })
@@ -409,6 +413,8 @@ export const GetPeriodComparisonResponse = zod.object({
   "currentTotal": zod.number().nullable(),
   "previousTotal": zod.number().nullable(),
   "changePercent": zod.number().nullable(),
+  "currentDefinitive": zod.boolean().describe('Configured season end reached and complete 23:30 finals available through that date'),
+  "previousDefinitive": zod.boolean().describe('Prior period capped at configured season end, with complete finals. Weekly uses the last operating week; progressive uses the complete season.'),
   "currentFromDate": zod.string().nullable(),
   "currentToDate": zod.string().nullable(),
   "previousFromDate": zod.string().nullable(),
@@ -420,6 +426,8 @@ export const GetPeriodComparisonResponse = zod.object({
   "currentTotal": zod.number().nullable(),
   "previousTotal": zod.number().nullable(),
   "changePercent": zod.number().nullable(),
+  "currentDefinitive": zod.boolean().describe('Configured season end reached and complete 23:30 finals available through that date'),
+  "previousDefinitive": zod.boolean().describe('Prior period capped at configured season end, with complete finals. Weekly uses the last operating week; progressive uses the complete season.'),
   "currentFromDate": zod.string().nullable(),
   "currentToDate": zod.string().nullable(),
   "previousFromDate": zod.string().nullable(),

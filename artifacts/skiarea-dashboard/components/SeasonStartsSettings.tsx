@@ -25,19 +25,25 @@ function Row({ row }: { row: SeasonStart }) {
   const qc = useQueryClient();
   // Draft is null until the user edits: poll results never overwrite unsaved input.
   const [draft, setDraft] = useState<string | null>(null);
+  const [endDraft, setEndDraft] = useState<string | null>(null);
   const [msg, setMsg] = useState<{ ok: boolean; text: string } | null>(null);
   const m = useUpdateSeasonStart();
   const value = draft ?? row.startDate ?? "";
-  const dirty = draft !== null && draft !== (row.startDate ?? "");
-  const ok = value === "" || validIso(value);
+  const endValue = endDraft ?? row.endDate ?? "";
+  const dirty = (draft !== null && draft !== (row.startDate ?? ""))
+    || (endDraft !== null && endDraft !== (row.endDate ?? ""));
+  const validDates = (value === "" || validIso(value)) && (endValue === "" || validIso(endValue));
+  const validOrder = !value || !endValue || endValue >= value;
+  const ok = validDates && validOrder;
 
-  const submit = (startDate: string | null) => {
+  const submit = (startDate: string | null, endDate: string | null) => {
     setMsg(null);
-    m.mutate({ season: row.season, data: { startDate } }, {
+    m.mutate({ season: row.season, data: { startDate, endDate } }, {
       onSuccess: async (updated) => {
         qc.setQueryData<SeasonStart[]>(getGetSeasonStartsQueryKey(), (old) =>
           old ? old.map((r) => (r.season === updated.season ? updated : r)) : old);
         setDraft(null);
+        setEndDraft(null);
         setMsg({ ok: true, text: t.pc.ssSaved });
         await qc.invalidateQueries({ queryKey: getGetSeasonStartsQueryKey() });
         await qc.invalidateQueries({ queryKey: getGetPeriodComparisonQueryKey() });
@@ -60,6 +66,8 @@ function Row({ row }: { row: SeasonStart }) {
             {row.startDate ? t.pc.ssConfigured : t.pc.ssNotSet}
           </Text>
         </View>
+        <View style={styles.cDate}>
+        <Text style={[styles.meta, { color: colors.mutedForeground }]}>{t.pc.colStart}</Text>
         <TextInput
           testID={`input-season-start-${id}`}
           accessibilityLabel={`${t.pc.ssTitle} ${formatSeason(row.season)}`}
@@ -71,13 +79,26 @@ function Row({ row }: { row: SeasonStart }) {
           maxLength={10}
           style={[styles.input, { color: colors.foreground, backgroundColor: colors.card, borderColor: ok ? colors.border : colors.destructive, opacity: m.isPending ? 0.6 : 1 }]}
         />
+        <Text style={[styles.meta, { color: colors.mutedForeground }]}>{t.seasonBounds.end}</Text>
+        <TextInput
+          testID={`input-season-end-${id}`}
+          accessibilityLabel={`${t.seasonBounds.end} ${formatSeason(row.season)}`}
+          value={endValue}
+          editable={!m.isPending}
+          onChangeText={v => { setEndDraft(v.replace(/[^0-9-]/g, "")); setMsg(null); }}
+          placeholder={t.seasonBounds.optional}
+          placeholderTextColor={colors.mutedForeground}
+          maxLength={10}
+          style={[styles.input, { color: colors.foreground, backgroundColor: colors.card, borderColor: ok ? colors.border : colors.destructive, opacity: m.isPending ? 0.6 : 1 }]}
+        />
+        </View>
         <TouchableOpacity
           testID={`button-save-season-start-${id}`}
           accessibilityRole="button"
           accessibilityLabel={`${t.pc.ssSave} ${formatSeason(row.season)}`}
-          disabled={!dirty || !ok || value === "" || m.isPending}
-          onPress={() => submit(value)}
-          style={[styles.btn, { backgroundColor: colors.primary, opacity: !dirty || !ok || value === "" ? 0.4 : 1 }]}
+          disabled={!dirty || !ok || m.isPending}
+          onPress={() => submit(value || null, endValue || null)}
+          style={[styles.btn, { backgroundColor: colors.primary, opacity: !dirty || !ok || m.isPending ? 0.4 : 1 }]}
         >
           {m.isPending ? <ActivityIndicator size="small" color={colors.primaryForeground} /> : <Text style={[styles.btnText, { color: colors.primaryForeground }]}>{t.pc.ssSave}</Text>}
         </TouchableOpacity>
@@ -91,13 +112,13 @@ function Row({ row }: { row: SeasonStart }) {
             <Text style={[styles.link, { color: colors.primary }]}>{t.pc.ssUseSuggested}</Text>
           </TouchableOpacity>
         )}
-        {row.startDate && (
-          <TouchableOpacity testID={`button-clear-season-start-${id}`} disabled={m.isPending} onPress={() => submit(null)}>
-            <Text style={[styles.link, { color: colors.destructive }]}>{t.pc.ssClear}</Text>
+        {(row.startDate || row.endDate) && (
+          <TouchableOpacity testID={`button-clear-season-start-${id}`} disabled={m.isPending} onPress={() => submit(null, null)}>
+            <Text style={[styles.link, { color: colors.destructive }]}>{t.seasonBounds.clear}</Text>
           </TouchableOpacity>
         )}
       </View>
-      {!ok && <Text style={[styles.meta, { color: colors.destructive }]}>{t.pc.ssInvalid}</Text>}
+      {!ok && <Text style={[styles.meta, { color: colors.destructive }]}>{!validDates ? t.pc.ssInvalid : t.seasonBounds.invalidRange}</Text>}
       {ok && value !== "" && !isSaturday(value) && (
         <Text testID={`text-not-saturday-${id}`} style={[styles.meta, { color: colors.destructive }]}>{t.pc.ssNotSaturday}</Text>
       )}
@@ -112,9 +133,9 @@ export function SeasonStartsSettings() {
   const q = useGetSeasonStarts();
   return (
     <>
-      <Text style={[styles.section, { color: colors.foreground }]}>{t.pc.ssTitle}</Text>
+      <Text style={[styles.section, { color: colors.foreground }]}>{t.seasonBounds.title}</Text>
       <View testID="card-season-starts" style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Text style={[styles.hint, { color: colors.mutedForeground }]}>{t.pc.ssHint}</Text>
+        <Text style={[styles.hint, { color: colors.mutedForeground }]}>{t.seasonBounds.hint}</Text>
         {q.isLoading ? (
           <ActivityIndicator color={colors.primary} />
         ) : q.isError ? (
@@ -127,7 +148,7 @@ export function SeasonStartsSettings() {
           <View accessibilityRole="list">
             <View style={[styles.tr, styles.th, { borderBottomColor: colors.border }]}>
               <Text style={[styles.thText, styles.cSeason, { color: colors.mutedForeground }]}>{t.pc.colSeason}</Text>
-              <Text style={[styles.thText, styles.cDate, { color: colors.mutedForeground }]}>{t.pc.colStart}</Text>
+              <Text style={[styles.thText, styles.cDate, { color: colors.mutedForeground }]}>{t.seasonBounds.dates}</Text>
               <Text style={[styles.thText, styles.cAct, { color: colors.mutedForeground }]}>{t.pc.colAction}</Text>
             </View>
             {q.data.map((r) => <Row key={r.season} row={r} />)}
@@ -152,7 +173,7 @@ const styles = StyleSheet.create({
   season: { fontSize: 15, fontFamily: "Inter_700Bold" },
   badge: { fontSize: 11, fontFamily: "Inter_600SemiBold", textTransform: "uppercase" },
   meta: { fontSize: 12, fontFamily: "Inter_400Regular" },
-  input: { flex: 1, minWidth: 0, height: 44, borderWidth: 1, borderRadius: 8, paddingHorizontal: 10, fontSize: 14, fontFamily: "Inter_500Medium" },
+  input: { width: "100%", minWidth: 0, height: 44, borderWidth: 1, borderRadius: 8, paddingHorizontal: 8, fontSize: 14, fontFamily: "Inter_500Medium", marginVertical: 3 },
   btn: { height: 44, width: 72, paddingHorizontal: 8, borderRadius: 8, alignItems: "center", justifyContent: "center" },
   btnText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
   actions: { flexDirection: "row", gap: 16 },

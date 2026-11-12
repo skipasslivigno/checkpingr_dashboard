@@ -13,6 +13,10 @@ export interface PeriodComparisonValue {
   previousTotal: number | null;
   /** @nullable */
   changePercent: number | null;
+  /** Configured season end reached and complete 23:30 finals available through that date */
+  currentDefinitive: boolean;
+  /** Prior period capped at configured season end, with complete finals. Weekly uses the last operating week; progressive uses the complete season. */
+  previousDefinitive: boolean;
   /** @nullable */
   currentFromDate: string | null;
   /** @nullable */

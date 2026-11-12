@@ -36,3 +36,18 @@ quando il riferimento è assente o zero.
 
 **How to apply:** indicare indisponibilità e rendere consultabili le date mancanti;
 conservare gli zeri effettivamente importati.
+
+## Durate diverse e fine stagione
+
+Le stagioni possono finire in giorni diversi, per esempio il primo maggio o
+dopo. L'utente vuole il totale definitivo precedente, non «dati incompleti»,
+quando il confronto supera la fine della stagione precedente.
+
+**Why:** richiesta esplicita dell'utente; l'assenza di dati dopo la chiusura non
+è un buco negli import.
+
+**How to apply:** consentire agli admin di configurare anche l'ultimo giorno
+di apertura incluso. Il progressivo precedente si ferma al totale annuale;
+il settimanale usa l'ultima settimana di apertura. Mostrare «Definitivo» solo
+quando i consuntivi entro la chiusura sono completi. Non dedurre la chiusura
+da un ultimo record isolato e non nascondere buchi interni alla stagione.

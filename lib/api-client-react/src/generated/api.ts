@@ -873,7 +873,7 @@ export const getUpdateSeasonStartUrl = (season: string,) => {
 }
 
 /**
- * @summary Set or clear a season opening date (admin only)
+ * @summary Set or clear season opening and closing dates (admin only)
  */
 export const updateSeasonStart = async (season: string,
     seasonStartInput: SeasonStartInput, options?: RequestInit): Promise<SeasonStart> => {
@@ -923,7 +923,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type UpdateSeasonStartMutationError = ErrorType<void>
 
     /**
- * @summary Set or clear a season opening date (admin only)
+ * @summary Set or clear season opening and closing dates (admin only)
  */
 export const useUpdateSeasonStart = <TError = ErrorType<void>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateSeasonStart>>, TError,{season: string;data: BodyType<SeasonStartInput>}, TContext>, request?: SecondParameter<typeof customFetch>}

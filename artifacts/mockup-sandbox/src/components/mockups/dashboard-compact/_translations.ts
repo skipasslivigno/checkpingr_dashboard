@@ -1,6 +1,7 @@
 export type Language = "it" | "en";
 
 export interface Translations {
+  seasonBounds: Record<"title"|"hint"|"dates"|"end"|"optional"|"invalidRange"|"clear"|"definitive", string>;
   today: string;
   yesterday: string;
   dashboard: string;
@@ -298,6 +299,11 @@ export interface Translations {
 }
 
 const it: Translations = {
+  seasonBounds: {
+    title: "Date della stagione", dates: "Date", end: "Ultimo giorno", optional: "Facoltativo",
+    hint: "Imposta il primo e l'ultimo giorno di apertura, inclusi. La fine è facoltativa: oltre quella data il confronto usa il dato definitivo, se i consuntivi sono completi.",
+    invalidRange: "La fine non può precedere l'inizio.", clear: "Rimuovi date", definitive: "Definitivo",
+  },
   today: "Oggi",
   yesterday: "Ieri",
   dashboard: "Dashboard",
@@ -622,6 +628,11 @@ const it: Translations = {
 };
 
 const en: Translations = {
+  seasonBounds: {
+    title: "Season dates", dates: "Dates", end: "Last day", optional: "Optional",
+    hint: "Set the first and last operating days, inclusive. The end is optional: later comparisons use the final figure if closing imports are complete.",
+    invalidRange: "The end must not precede the start.", clear: "Clear dates", definitive: "Final",
+  },
   today: "Today",
   yesterday: "Yesterday",
   dashboard: "Dashboard",

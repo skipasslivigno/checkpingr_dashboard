@@ -8,6 +8,7 @@ export const tenantSettingsTable = pgTable("tenant_settings", {
   colors:       jsonb("colors").$type<string[]>().notNull().default([]),
   maxSeasons:   integer("max_seasons").notNull().default(3),
   seasonStartDates: jsonb("season_start_dates").$type<Record<string, string>>().notNull().default({}),
+  seasonEndDates: jsonb("season_end_dates").$type<Record<string, string>>().notNull().default({}),
   updatedAt:    timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

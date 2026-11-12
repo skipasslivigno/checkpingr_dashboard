@@ -112,3 +112,65 @@ test("non-Saturday opening dates still align identical weekdays and leap/DST dat
   assert.equal(r.weekly.previousToDate, "2024-12-09");
   assert.equal(r.progressive.currentFromDate, "2025-12-01");
 });
+
+test("a shorter previous season uses its final annual total and its last operating week", () => {
+  const r = comparePeriods({ date, season, previousSeason, starts,
+    ends: { [previousSeason]: "2024-12-07" }, rows: data(), extraction: "20251208140000" });
+  assert.equal(r.progressive.currentTotal, 960);
+  assert.equal(r.progressive.previousTotal, 400);
+  assert.equal(r.progressive.previousToDate, "2024-12-07");
+  assert.equal(r.progressive.previousDefinitive, true);
+  assert.equal(r.progressive.changePercent, 140);
+  assert.deepEqual(r.progressive.missingPreviousDays, []);
+  // Do not mix an annual total into a weekly comparison.
+  assert.equal(r.weekly.previousFromDate, "2024-12-07");
+  assert.equal(r.weekly.previousToDate, "2024-12-07");
+  assert.equal(r.weekly.previousTotal, 50);
+  assert.equal(r.weekly.previousDefinitive, true);
+  assert.equal(r.weekly.changePercent, 420);
+});
+
+test("without a configured end, trailing absent imports are not guessed to be season closure", () => {
+  const rows = data().filter(r => r.season !== previousSeason || r.date <= "2024-12-07");
+  const unknown = run("140000", rows);
+  assert.equal(unknown.progressive.previousTotal, null);
+  assert.equal(unknown.progressive.previousDefinitive, false);
+  const closed = comparePeriods({ date, season, previousSeason, starts,
+    ends: { [previousSeason]: "2024-12-07" }, rows, extraction: "20251208140000" });
+  assert.equal(closed.progressive.previousTotal, 400);
+  assert.equal(closed.progressive.previousDefinitive, true);
+});
+
+test("closure never conceals missing imports within the operating season", () => {
+  const r = comparePeriods({ date, season, previousSeason, starts,
+    ends: { [previousSeason]: "2024-12-07" },
+    rows: data().filter(r => r.season !== previousSeason || r.date !== "2024-12-04"),
+    extraction: "20251208140000" });
+  assert.equal(r.progressive.previousTotal, null);
+  assert.equal(r.progressive.previousDefinitive, false);
+  assert.equal(r.progressive.changePercent, null);
+  assert.deepEqual(r.progressive.missingPreviousDays, ["2024-12-04"]);
+});
+
+test("the closing day's missing 23:30 final is still incomplete, never a definitive partial", () => {
+  const r = comparePeriods({ date, season, previousSeason, starts,
+    ends: { [previousSeason]: "2024-12-07" },
+    rows: [...data().filter(r => r.season !== previousSeason || r.date !== "2024-12-07"),
+      batch("2024-12-07", previousSeason, 50, "180000")], extraction: "20251208140000" });
+  assert.equal(r.weekly.previousTotal, null);
+  assert.equal(r.weekly.previousDefinitive, false);
+  assert.deepEqual(r.weekly.missingPreviousDays, ["2024-12-07"]);
+});
+
+test("current season also stops at its configured end and becomes final only with a closing batch", () => {
+  const r = comparePeriods({ date, season, previousSeason, starts, ends: { [season]: "2025-12-06" },
+    rows: data(), extraction: "20251208140000" });
+  assert.equal(r.progressive.currentToDate, "2025-12-06");
+  assert.equal(r.progressive.currentTotal, 800);
+  assert.equal(r.progressive.currentDefinitive, true);
+  assert.equal(r.includedSelectedDay, false);
+  assert.equal(r.sourceExtraction, "20251206233000");
+  const stillOpen = comparePeriods({ date, season, previousSeason, starts, ends: { [season]: date },
+    rows: data(), extraction: "20251208140000" });
+  assert.equal(stillOpen.progressive.currentDefinitive, false);
+});
