@@ -7,7 +7,8 @@
  */
 
 export interface ChangeOwnPasswordRequest {
-  currentPassword: string;
+  /** Required for voluntary changes. May be omitted when the authenticated account requires a password change. */
+  currentPassword?: string;
   /**
      * @minLength 8
      * @maxLength 72

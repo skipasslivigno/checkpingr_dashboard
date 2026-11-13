@@ -127,7 +127,7 @@ export const changePasswordBodyNewPasswordMax = 72;
 
 
 export const ChangePasswordBody = zod.object({
-  "currentPassword": zod.string(),
+  "currentPassword": zod.string().optional().describe('Required for voluntary changes. May be omitted when the authenticated account requires a password change.'),
   "newPassword": zod.string().min(changePasswordBodyNewPasswordMin).max(changePasswordBodyNewPasswordMax)
 })
 

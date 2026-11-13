@@ -1139,10 +1139,11 @@ components:
 
     ChangeOwnPasswordRequest:
       type: object
-      required: [currentPassword, newPassword]
+      required: [newPassword]
       properties:
         currentPassword:
           type: string
+          description: Required for voluntary changes. May be omitted when the authenticated account requires a password change.
         newPassword:
           type: string
           minLength: 8

@@ -49,7 +49,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
 });
 
 const ChangePasswordBody = z.object({
-  currentPassword: z.string().min(1),
+  currentPassword: z.string().optional(),
   newPassword: z.string().min(8).max(72).refine((value) => Buffer.byteLength(value, "utf8") <= 72),
 });
 
@@ -61,7 +61,10 @@ router.post("/auth/change-password", async (req, res): Promise<void> => {
   }
   const [user] = await db.select().from(usersTable)
     .where(and(eq(usersTable.id, req.user!.userId), eq(usersTable.tenantId, req.user!.tenantId), eq(usersTable.isActive, true))).limit(1);
-  if (!user?.passwordHash || !await bcrypt.compare(parsed.data.currentPassword, user.passwordHash)) {
+  // Only the persisted flag permits this shortcut; a client cannot opt into it.
+  // requireAuth has already checked the authenticated account and session version.
+  if (!user?.passwordHash || (!user.mustChangePassword &&
+    (!parsed.data.currentPassword || !await bcrypt.compare(parsed.data.currentPassword, user.passwordHash)))) {
     res.status(400).json({ error: "Current password is incorrect", code: "INVALID_CURRENT_PASSWORD" });
     return;
   }

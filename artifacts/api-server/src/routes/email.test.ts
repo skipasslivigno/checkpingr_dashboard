@@ -9,6 +9,7 @@ import { db, pool, tenantsTable, usersTable, emailSettingsTable } from "@workspa
 import authRouter from "./auth";
 import { requireAuth } from "../middleware/requireAuth";
 import { createEmailRouter } from "./email";
+import { generateTemporaryPassword } from "../lib/temporary-password";
 import {
   DEFAULT_EMAIL_BODY, DEFAULT_EMAIL_SUBJECT, EmailError, encryptAppPassword,
   decryptAppPassword, renderEmail, validateTemplate, type GmailMessage,
@@ -124,6 +125,30 @@ test("template escapes HTML, forbids unknown variables, subject secrets and miss
   assert.throws(() => decryptAppPassword(encrypted, "another-owner"), EmailError);
 });
 
+test("temporary passwords use a readable word, exactly four digits and one symbol", () => {
+  const generated = new Set<string>();
+  for (let i = 0; i < 500; i++) {
+    const password = generateTemporaryPassword();
+    assert.match(password, /^[A-Z][a-z]+[0-9]{4}[!@#$%&*?]$/);
+    assert.ok(password.length >= 8 && password.length <= 13);
+    generated.add(password);
+  }
+  assert.ok(generated.size > 450);
+});
+
+test("normal changes still require the correct current password; client flags cannot bypass it", async () => {
+  const newPassword = randomBytes(20).toString("base64url");
+  assert.equal((await request("/auth/change-password", "", "POST", { newPassword })).status, 401);
+  for (const body of [
+    { newPassword }, { currentPassword: "", newPassword },
+    { currentPassword: "wrong", newPassword },
+    { newPassword, mustChangePassword: true },
+  ]) {
+    assert.equal((await request("/auth/change-password", viewerToken, "POST", body)).status, 400);
+  }
+  assert.equal((await login(viewerEmail)).status, 200);
+});
+
 test("admin-only access; settings are personal and never expose saved credentials", async () => {
   assert.equal((await request("/email/settings", "")).status, 401);
   assert.equal((await request("/email/settings", viewerToken)).status, 403);
@@ -205,15 +230,31 @@ test("confirmed send resets once, revokes old sessions and forces change; new pa
   assert.equal((await request("/auth/me", viewerToken)).status, 401);
   const temporaryPassword = message.text.match(/Password temporanea: (.+)/)?.[1];
   assert.ok(temporaryPassword);
+  assert.match(temporaryPassword, /^[A-Z][a-z]+[0-9]{4}[!@#$%&*?]$/);
   const fresh = await login(viewerEmail, temporaryPassword);
   assert.equal(fresh.status, 200);
   assert.equal(fresh.data.user.mustChangePassword, true);
   assert.equal((await request("/email/settings", fresh.data.token)).status, 403);
+  assert.equal((await request("/auth/change-password", fresh.data.token, "POST", { newPassword: "short" })).status, 400);
+  assert.equal((await request("/auth/change-password", fresh.data.token, "POST", { newPassword: temporaryPassword })).status, 400);
+  const newPassword = randomBytes(20).toString("base64url");
   const changed = await request("/auth/change-password", fresh.data.token, "POST", {
-    currentPassword: temporaryPassword, newPassword: randomBytes(20).toString("base64url"),
+    newPassword,
   });
   assert.equal(changed.status, 200);
   assert.equal(changed.data.user.mustChangePassword, false);
+  assert.equal((await request("/auth/me", fresh.data.token)).status, 401);
+  assert.equal((await request("/auth/me", changed.data.token)).status, 200);
+  assert.equal((await login(viewerEmail, temporaryPassword)).status, 401);
+  assert.equal((await login(viewerEmail, newPassword)).status, 200);
+  assert.equal((await request("/auth/change-password", changed.data.token, "POST", {
+    newPassword: randomBytes(20).toString("base64url"),
+  })).status, 400);
+  const voluntary = await request("/auth/change-password", changed.data.token, "POST", {
+    currentPassword: newPassword, newPassword: randomBytes(20).toString("base64url"),
+  });
+  assert.equal(voluntary.status, 200);
+  assert.equal(voluntary.data.user.mustChangePassword, false);
   const [account] = await db.select({ sentAt: usersTable.credentialsSentAt }).from(usersTable).where(eq(usersTable.id, viewerId));
   assert.ok(account.sentAt instanceof Date);
   assert.ok(!JSON.stringify(first.data).includes(temporaryPassword));

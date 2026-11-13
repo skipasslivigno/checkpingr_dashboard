@@ -16,7 +16,7 @@ function utf8Bytes(s: string): number {
 export default function ChangePasswordScreen() {
   const colors = useColors();
   const { t } = useTranslation();
-  const { user, changeOwnPassword, logout } = useAuth();
+  const { user, mustChangePassword, changeOwnPassword, logout } = useAuth();
 
   const [values, setValues] = useState<Record<FieldKey, string>>({ current: "", next: "", confirm: "" });
   const [show, setShow] = useState<Record<FieldKey, boolean>>({ current: false, next: false, confirm: false });
@@ -32,10 +32,10 @@ export default function ChangePasswordScreen() {
 
   function validate(): boolean {
     const e: Partial<Record<FieldKey, string>> = {};
-    if (!values.current) e.current = t.cpErrCurrent;
+    if (!mustChangePassword && !values.current) e.current = t.cpErrCurrent;
     if (values.next.length < 8) e.next = t.cpErrMin;
     else if (utf8Bytes(values.next) > 72) e.next = t.cpErrMax;
-    else if (values.next === values.current) e.next = t.cpErrSame;
+    else if (!mustChangePassword && values.next === values.current) e.next = t.cpErrSame;
     if (!e.next && values.confirm !== values.next) e.confirm = t.cpErrMatch;
     setErrors(e);
     return Object.keys(e).length === 0;
@@ -46,7 +46,7 @@ export default function ChangePasswordScreen() {
     setSaving(true);
     setFormError(null);
     try {
-      await changeOwnPassword(values.current, values.next);
+      await changeOwnPassword(mustChangePassword ? undefined : values.current, values.next);
       // AuthGuard redirects to the dashboard once the flag is cleared.
     } catch (e) {
       const code = (e as { data?: { code?: string } })?.data?.code;
@@ -59,7 +59,7 @@ export default function ChangePasswordScreen() {
   }
 
   const fields: { key: FieldKey; label: string; testID: string }[] = [
-    { key: "current", label: t.cpCurrent, testID: "cp-current" },
+    ...(!mustChangePassword ? [{ key: "current" as const, label: t.cpCurrent, testID: "cp-current" }] : []),
     { key: "next", label: t.cpNew, testID: "cp-new" },
     { key: "confirm", label: t.cpConfirm, testID: "cp-confirm" },
   ];
@@ -69,6 +69,7 @@ export default function ChangePasswordScreen() {
       <KeyboardAwareScrollViewCompat
         contentContainerStyle={styles.container}
         bottomOffset={24}
+        keyboardShouldPersistTaps="handled"
       >
         <View style={styles.header}>
           <View style={[styles.iconWrap, { backgroundColor: colors.primary }]}>

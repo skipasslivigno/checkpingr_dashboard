@@ -28,7 +28,7 @@ interface AuthContextValue {
   logout: () => Promise<void>;
   /** Re-fetch /auth/me. Returns false on network failure. */
   refreshSession: () => Promise<boolean>;
-  changeOwnPassword: (currentPassword: string, newPassword: string) => Promise<void>;
+  changeOwnPassword: (currentPassword: string | undefined, newPassword: string) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -146,7 +146,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     await applySession(data.token, { ...data.user, mustChangePassword: data.user.mustChangePassword === true });
   }
 
-  async function changeOwnPassword(currentPassword: string, newPassword: string): Promise<void> {
+  async function changeOwnPassword(currentPassword: string | undefined, newPassword: string): Promise<void> {
     const result = await changePassword({ currentPassword, newPassword });
     await applySession(result.token, result.user);
   }

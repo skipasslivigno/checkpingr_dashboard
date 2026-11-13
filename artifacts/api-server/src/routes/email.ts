@@ -1,6 +1,6 @@
 import { Router, type Request, type Response, type NextFunction, type RequestHandler } from "express";
 import bcrypt from "bcryptjs";
-import { randomBytes } from "node:crypto";
+import { generateTemporaryPassword } from "../lib/temporary-password";
 import { eq, and } from "drizzle-orm";
 import { db, emailSettingsTable, usersTable, tenantsTable } from "@workspace/db";
 import { requireRole } from "../middleware/requireAuth";
@@ -164,7 +164,7 @@ export function createEmailRouter(deliver: GmailSender = sendViaGmail) {
         throw new EmailError(409, "RECIPIENT_CHANGED", "L'indirizzo del destinatario è cambiato. Ricarica l'elenco utenti.");
       }
       cooldown(target.credentialsSentAt);
-      const password = "Tmp!" + randomBytes(18).toString("base64url");
+      const password = generateTemporaryPassword();
       const passwordHash = await bcrypt.hash(password, 12);
       const rendered = renderEmail(config.subject, config.body, {
         ...common, nome_utente: target.name, email_utente: target.email,
