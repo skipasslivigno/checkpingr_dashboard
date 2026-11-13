@@ -28,6 +28,7 @@ export interface Translations {
 
   integration: string;
   integrationSubtitle: string;
+  interfaceWidth: Record<"title"|"hint"|"compact"|"standard"|"wide"|"full"|"unlimited"|"saving"|"loading"|"readError"|"writeError"|"retry", string>;
   syncEndpoint: string;
   syncEndpointDesc: string;
   postUrl: string;
@@ -331,6 +332,16 @@ const it: Translations = {
   lifts: "impianti",
 
   integration: "Info",
+  interfaceWidth: {
+    title: "Larghezza interfaccia",
+    hint: "Salvata solo su questo dispositivo/browser.",
+    compact: "Compatta", standard: "Standard", wide: "Ampia", full: "Tutto schermo",
+    unlimited: "illimitata",
+    saving: "Salvataggio...", loading: "Caricamento preferenza...",
+    readError: "Impossibile leggere la preferenza salvata: in uso Standard.",
+    writeError: "Impossibile salvare la preferenza su questo dispositivo.",
+    retry: "Riprova",
+  },
   integrationSubtitle: "Invia i dati di estrazione dal tuo script MSSQL a questo dashboard",
   syncEndpoint: "Endpoint di sincronizzazione",
   syncEndpointDesc: "Aggiungi un passaggio HTTP POST al tuo script di estrazione MSSQL esistente. Invia i tuoi dati a:",
@@ -667,6 +678,16 @@ const en: Translations = {
   lifts: "lifts",
 
   integration: "Info",
+  interfaceWidth: {
+    title: "Interface width",
+    hint: "Saved on this device/browser only.",
+    compact: "Compact", standard: "Standard", wide: "Wide", full: "Full screen",
+    unlimited: "unlimited",
+    saving: "Saving...", loading: "Loading preference...",
+    readError: "Could not read the saved preference: using Standard.",
+    writeError: "Could not save the preference on this device.",
+    retry: "Retry",
+  },
   integrationSubtitle: "Push extraction data from your on-site MSSQL script to this dashboard",
   syncEndpoint: "Sync Endpoint",
   syncEndpointDesc: "Add an HTTP POST step to your existing MSSQL extraction script. Send your data to:",

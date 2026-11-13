@@ -23,7 +23,7 @@ import { DateExtractionPicker } from "@/components/DateExtractionPicker";
 import { LiftRow } from "@/components/LiftRow";
 import { LiftRowSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
-import { useResponsive, CONTENT_MAX_WIDTH } from "@/hooks/useResponsive";
+import { useResponsive } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
 import { useSeason } from "@/contexts/SeasonContext";
@@ -89,7 +89,7 @@ export default function LiftsScreen() {
 
   const topPadding = Platform.OS === "web" ? 67 : 0;
   const hasCompanies = companies.length > 1;
-  const { isWide } = useResponsive();
+  const { containerStyle } = useResponsive();
 
   const selectedEntry = companies.find((c) => c.name === selectedCompany);
 
@@ -160,7 +160,7 @@ export default function LiftsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: topPadding + 16, backgroundColor: colors.background }]}>
-        <View style={[styles.inner, isWide && styles.innerWide]}>
+        <View style={[styles.inner, containerStyle]}>
           <Text style={[styles.title, { color: colors.foreground }]}>{t.allLifts}</Text>
 
           <DateExtractionPicker
@@ -256,7 +256,7 @@ export default function LiftsScreen() {
         </Modal>
       )}
 
-      <View style={[styles.listWrap, isWide && styles.listWrapWide]}>
+      <View style={[styles.listWrap, containerStyle]}>
         <FlatList
           data={isLoading ? Array.from<(typeof filtered)[number] | undefined>({ length: 10 }) : filtered}
           keyExtractor={(item, i) => (item ? String(item.ggnr) : String(i))}
@@ -302,9 +302,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   header: { paddingBottom: 8 },
   inner: { width: "100%" },
-  innerWide: { maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" },
   listWrap: { flex: 1, width: "100%" },
-  listWrapWide: { maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" },
   title: {
     fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: -0.5,
     marginBottom: 12, paddingHorizontal: 16,

@@ -20,7 +20,7 @@ import {
 import { DateExtractionPicker } from "@/components/DateExtractionPicker";
 import { LiftRowSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
-import { useResponsive, CONTENT_MAX_WIDTH } from "@/hooks/useResponsive";
+import { useResponsive } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
 import { useSeason, formatSeason } from "@/contexts/SeasonContext";
@@ -305,7 +305,7 @@ export default function GroupsScreen() {
   const isGroupExpanded = (name: string) => isSearching || !collapsedGroups.has(name);
 
   const topPadding = Platform.OS === "web" ? 16 : 0;
-  const { isWide } = useResponsive();
+  const { containerStyle } = useResponsive();
 
   type ListItem =
     | { type: "picker" }
@@ -335,7 +335,7 @@ export default function GroupsScreen() {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: topPadding + 16 }]}>
-        <View style={[styles.inner, isWide && styles.innerWide]}>
+        <View style={[styles.inner, containerStyle]}>
           <Text style={[styles.title, { color: colors.foreground }]}>{t.groups}</Text>
           {seasons.length > 1 && (
             <View style={[styles.seasonSegment, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
@@ -360,7 +360,7 @@ export default function GroupsScreen() {
         </View>
       </View>
 
-      <View style={[styles.listWrap, isWide && styles.listWrapWide]}>
+      <View style={[styles.listWrap, containerStyle]}>
         <FlatList
           data={listData}
           keyExtractor={(item) => {
@@ -444,11 +444,9 @@ export default function GroupsScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  header: { paddingBottom: 4, paddingHorizontal: 16 },
-  inner: { width: "100%" },
-  innerWide: { maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" },
+  header: { paddingBottom: 4 },
+  inner: { width: "100%", paddingHorizontal: 16 },
   listWrap: { flex: 1, width: "100%" },
-  listWrapWide: { maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" },
   title: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: -0.5, marginBottom: 4 },
   list: { paddingHorizontal: 16, paddingTop: 8, gap: 10 },
   searchBox: {

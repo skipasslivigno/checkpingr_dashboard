@@ -25,6 +25,7 @@ import type { PeriodResult } from "@workspace/api-client-react";
 import { StatCard } from "@/components/StatCard";
 import { StatCardSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
+import { useResponsive } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSeason, formatSeason } from "@/contexts/SeasonContext";
 import { useTenantSettings } from "@/contexts/TenantSettingsContext";
@@ -422,6 +423,7 @@ const pgStyles = StyleSheet.create({
 
 export default function PeriodScreen() {
   const colors = useColors();
+  const { containerStyle } = useResponsive();
   const { t, language } = useTranslation();
   const queryClient = useQueryClient();
   const [refreshing, setRefreshing] = useState(false);
@@ -584,7 +586,7 @@ export default function PeriodScreen() {
     <>
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={[styles.content, { paddingTop: topPadding + 16 }]}
+      contentContainerStyle={[styles.content, containerStyle, { paddingTop: topPadding + 16 }]}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
       }

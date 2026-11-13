@@ -20,6 +20,7 @@ import {
   useGetWeekTrend,
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
+import { useResponsive } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSeason, formatSeason } from "@/contexts/SeasonContext";
 import { useTenantSettings } from "@/contexts/TenantSettingsContext";
@@ -595,6 +596,7 @@ function WeekBarChartWithWidth({
 
 export default function ChartsScreen() {
   const colors = useColors();
+  const { containerStyle } = useResponsive();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { colors: tenantColors, maxSeasons } = useTenantSettings();
@@ -673,7 +675,7 @@ export default function ChartsScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={[styles.content, { paddingTop: topPadding + 16 }]}
+      contentContainerStyle={[styles.content, containerStyle, { paddingTop: topPadding + 16 }]}
       showsVerticalScrollIndicator={false}
       refreshControl={
         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />

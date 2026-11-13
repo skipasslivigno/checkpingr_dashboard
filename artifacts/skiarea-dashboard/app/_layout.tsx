@@ -23,6 +23,7 @@ import { SelectedDateProvider } from "@/contexts/SelectedDateContext";
 import { SeasonProvider } from "@/contexts/SeasonContext";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { TenantSettingsProvider } from "@/contexts/TenantSettingsContext";
+import { InterfaceWidthProvider } from "@/contexts/InterfaceWidthContext";
 
 // Configure API base URL for Expo (runs outside the shared proxy)
 if (process.env.EXPO_PUBLIC_DOMAIN) {
@@ -116,6 +117,7 @@ export default function RootLayout() {
 
   return (
     <SafeAreaProvider>
+      <InterfaceWidthProvider>
       <LanguageProvider>
         <ErrorBoundary>
           <QueryClientProvider client={queryClient}>
@@ -137,6 +139,7 @@ export default function RootLayout() {
           </QueryClientProvider>
         </ErrorBoundary>
       </LanguageProvider>
+      </InterfaceWidthProvider>
     </SafeAreaProvider>
   );
 }

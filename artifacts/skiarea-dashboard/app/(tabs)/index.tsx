@@ -29,7 +29,7 @@ import { LiftRowSkeleton, StatCardSkeleton } from "@/components/SkeletonLoader";
 import { StatCard } from "@/components/StatCard";
 import { DashboardLiftSearch } from "@/components/DashboardLiftSearch";
 import { useColors } from "@/hooks/useColors";
-import { useResponsive, CONTENT_MAX_WIDTH } from "@/hooks/useResponsive";
+import { useResponsive } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSeason, formatSeason } from "@/contexts/SeasonContext";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
@@ -256,7 +256,7 @@ export default function DashboardScreen() {
 
   const topPadding = Platform.OS === "web" ? 16 : 0;
   const isToday = selectedDate === todayIso();
-  const { isWide } = useResponsive();
+  const { isContentWide: isWide, containerStyle } = useResponsive();
 
   type ListItem =
     | { type: "header" }
@@ -380,7 +380,7 @@ export default function DashboardScreen() {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <View style={[styles.listWrap, isWide && styles.listWrapWide]}>
+      <View style={[styles.listWrap, containerStyle]}>
         <FlatList
           keyboardShouldPersistTaps="handled"
           data={listData}
@@ -439,7 +439,6 @@ export default function DashboardScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   listWrap: { flex: 1, width: "100%" },
-  listWrapWide: { maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" },
   list: { paddingHorizontal: 16, gap: 10 },
   headerBlock: { marginHorizontal: -16, paddingHorizontal: 0, marginBottom: 4 },
   headerRow: {

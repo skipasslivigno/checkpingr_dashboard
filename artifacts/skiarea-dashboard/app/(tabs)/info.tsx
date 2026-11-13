@@ -12,9 +12,11 @@ import {
 } from "react-native";
 import { useRouter } from "expo-router";
 import { useColors } from "@/hooks/useColors";
+import { useResponsive } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Translations } from "@/i18n";
+import { InterfaceWidthSelector } from "@/components/InterfaceWidthSelector";
 
 const DOMAIN = process.env.EXPO_PUBLIC_DOMAIN ?? "your-app.replit.app";
 const syncUrl = `https://${DOMAIN}/api/lifts/sync`;
@@ -156,6 +158,7 @@ function CopyBlock({ label, content }: { label: string; content: string }) {
 
 export default function InfoScreen() {
   const colors = useColors();
+  const { containerStyle } = useResponsive();
   const { t } = useTranslation();
   const { logout, user } = useAuth();
   const router = useRouter();
@@ -166,7 +169,7 @@ export default function InfoScreen() {
   return (
     <ScrollView
       style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={[styles.content, { paddingTop: topPadding + 16, paddingBottom: Platform.OS === "web" ? 34 : 100 }]}
+      contentContainerStyle={[styles.content, containerStyle, { paddingTop: topPadding + 16, paddingBottom: Platform.OS === "web" ? 34 : 100 }]}
     >
       <Text style={[styles.title, { color: colors.foreground }]}>{t.integration}</Text>
       <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
@@ -216,6 +219,8 @@ export default function InfoScreen() {
           </View>
         </View>
       )}
+
+      <InterfaceWidthSelector />
 
       {user?.role === "admin" ? (
         <>

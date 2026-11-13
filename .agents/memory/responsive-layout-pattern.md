@@ -1,12 +1,26 @@
 ---
-name: Responsive layout pattern
-description: How wide-screen layout is handled in skiarea-dashboard to keep list rows and stat cards from stretching/disconnecting.
+name: Responsive layout preference
+description: User-approved local device/browser width policy and sizing constraints for the main dashboard screens
 ---
 
-On wide screens (React Native web), unconstrained flex containers stretch full width, which visually disconnects fixed-width number columns (e.g. passages/guests) from labels on the left, and makes stat-card buttons oversized.
+La larghezza massima dell'interfaccia è una preferenza del **dispositivo/browser**,
+non dell'account. Le opzioni approvate sono Compatta (640 px), Standard (960 px,
+predefinita), Ampia (1200 px) e Tutto schermo (senza limite).
 
-Fix pattern: a shared `useResponsive()` hook (breakpoint ~700px, returns `{ isWide, width }`) plus a `CONTENT_MAX_WIDTH` constant (640). Screens wrap their main content in a `View` with `{ maxWidth: CONTENT_MAX_WIDTH, alignSelf: "center" }` applied conditionally when `isWide`. For `FlatList`-based screens, wrap the whole `FlatList` (not just `contentContainerStyle`) in this max-width view, since `renderItem` content otherwise stretches to fill the FlatList's own width regardless of contentContainerStyle. Stat cards get an optional `compact` prop to render smaller/one-row on wide screens.
+**Why:** l'utente ha segnalato Periodo e Grafici troppo larghi su PC e ha scelto
+di poter usare larghezze diverse su PC e telefono senza sincronizzarle.
 
-**Why:** `contentContainerStyle` alone doesn't constrain a FlatList's rendered row width; only wrapping the FlatList itself does.
+**How to apply:** mantenere il contenuto centrato e il limite condiviso fra le
+schede principali. Su telefono è un massimo, non una larghezza fissa. Rendere la
+scelta accessibile anche a visualizzatori e operatori. Non spostarla nelle sole
+impostazioni amministrative né nel database dell'utente.
 
-**How to apply:** Any new list or dashboard screen in `artifacts/skiarea-dashboard` that shows label+numbers rows or stat cards should reuse `useResponsive()`/`CONTENT_MAX_WIDTH` rather than inventing new breakpoint logic.
+Le liste virtualizzate devono essere limitate tramite il loro contenitore,
+non solo tramite lo stile del contenuto interno.
+
+**Why:** uno stile applicato soltanto al contenuto di FlatList non limitava le
+righe: nomi e colonne numeriche restavano distanti su monitor larghi.
+
+**How to apply:** per nuove schede riusare la preferenza condivisa; misurare i
+grafici sul contenitore effettivo, non sul monitor. Non cambiare incidentalmente
+i breakpoint delle schermate amministrative o dei modali non vincolati.
