@@ -11,7 +11,8 @@ predefinita), Ampia (1200 px) e Tutto schermo (senza limite).
 di poter usare larghezze diverse su PC e telefono senza sincronizzarle.
 
 **How to apply:** mantenere il contenuto centrato e il limite condiviso fra le
-schede principali. Su telefono è un massimo, non una larghezza fissa. Rendere la
+schede principali, inclusa la barra di navigazione inferiore nel browser come
+richiesto dall'utente. Su telefono è un massimo, non una larghezza fissa. Rendere la
 scelta accessibile anche a visualizzatori e operatori. Non spostarla nelle sole
 impostazioni amministrative né nel database dell'utente.
 
