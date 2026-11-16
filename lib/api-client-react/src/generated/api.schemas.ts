@@ -5,6 +5,35 @@
  * Ski Area Dashboard API
  * OpenAPI spec version: 0.1.0
  */
+export type AccessLogReason = typeof AccessLogReason[keyof typeof AccessLogReason];
+
+
+export const AccessLogReason = {
+  success: 'success',
+  invalid_credentials: 'invalid_credentials',
+  account_inactive: 'account_inactive',
+} as const;
+
+export interface AccessLog {
+  id: string;
+  /** @nullable */
+  userId: string | null;
+  email: string;
+  /** @nullable */
+  name: string | null;
+  success: boolean;
+  reason: AccessLogReason;
+  userAgent: string;
+  createdAt: string;
+}
+
+export interface AccessLogPage {
+  items: AccessLog[];
+  total: number;
+  page: number;
+  pageSize: number;
+}
+
 export interface EmailSettings {
   senderEmail: string;
   senderName: string;
@@ -636,6 +665,28 @@ export type ChangePassword200 = {
   token: string;
   user: AuthUser;
 };
+
+export type GetAccessLogsParams = {
+/**
+ * @minimum 1
+ * @maximum 100000
+ */
+page?: number;
+outcome?: GetAccessLogsOutcome;
+/**
+ * @maxLength 254
+ */
+search?: string;
+};
+
+export type GetAccessLogsOutcome = typeof GetAccessLogsOutcome[keyof typeof GetAccessLogsOutcome];
+
+
+export const GetAccessLogsOutcome = {
+  all: 'all',
+  success: 'success',
+  failure: 'failure',
+} as const;
 
 export type GetLatestLiftsParams = {
 /**

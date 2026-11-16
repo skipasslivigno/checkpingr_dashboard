@@ -4,6 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:access-logs": "esbuild src/routes/access-logs.test.ts --bundle --platform=node --format=cjs --external:pg-native --external:pino --outfile=node_modules/.cache/access-log-tests.cjs && NODE_ENV=test node --test \"$PWD/node_modules/.cache/access-log-tests.cjs\"",
     "dev": "export NODE_ENV=development && pnpm run build && pnpm run start",
     "build": "node ./build.mjs",
     "start": "node --enable-source-maps ./dist/index.mjs",

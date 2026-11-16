@@ -1,9 +1,10 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, desc } from "drizzle-orm";
 import { db, usersTable, tenantsTable } from "@workspace/db";
 import { z } from "zod";
+import { recordLogin } from "../lib/access-log";
 
 const router = Router();
 
@@ -24,17 +25,20 @@ router.post("/auth/login", async (req, res): Promise<void> => {
   const user = await db
     .select()
     .from(usersTable)
-    .where(and(eq(usersTable.email, email.toLowerCase().trim()), eq(usersTable.isActive, true)))
+    .where(eq(usersTable.email, email.toLowerCase().trim()))
+    .orderBy(desc(usersTable.isActive))
     .limit(1)
     .then((rows) => rows[0] ?? null);
 
-  if (!user || !user.passwordHash) {
+  if (!user || !user.passwordHash || !user.isActive) {
+    if (!await recordLogin(req, res, email, user, user && !user.isActive ? "account_inactive" : "invalid_credentials")) return;
     res.status(401).json({ error: "Invalid credentials" });
     return;
   }
 
   const valid = await bcrypt.compare(password, user.passwordHash);
   if (!valid) {
+    if (!await recordLogin(req, res, email, user, "invalid_credentials")) return;
     res.status(401).json({ error: "Invalid credentials" });
     return;
   }
@@ -45,6 +49,7 @@ router.post("/auth/login", async (req, res): Promise<void> => {
     { expiresIn: "30d" },
   );
 
+  if (!await recordLogin(req, res, email, user, "success")) return;
   res.json({ token, user: { id: user.id, email: user.email, name: user.name, role: user.role, tenantId: user.tenantId, mustChangePassword: user.mustChangePassword } });
 });
 

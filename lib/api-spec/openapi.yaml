@@ -236,6 +236,35 @@ paths:
               schema:
                 $ref: "#/components/schemas/TenantSettings"
 
+  /access-logs:
+    get:
+      operationId: getAccessLogs
+      tags: [users]
+      summary: Paginated login audit log for the authenticated tenant (admin only)
+      parameters:
+        - name: page
+          in: query
+          schema: { type: integer, minimum: 1, maximum: 100000, default: 1 }
+        - name: outcome
+          in: query
+          schema: { type: string, enum: [all, success, failure], default: all }
+        - name: search
+          in: query
+          schema: { type: string, maxLength: 254 }
+      responses:
+        "200":
+          description: Login attempts, newest first; unknown emails are not exposed across tenants
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccessLogPage"
+        "400":
+          description: Invalid filters
+        "401":
+          description: Authentication required
+        "403":
+          description: Administrator required
+
   /users:
     get:
       operationId: getUsers
@@ -668,6 +697,28 @@ components:
       in: header
       name: X-API-Key
   schemas:
+    AccessLog:
+      type: object
+      required: [id, userId, email, name, success, reason, userAgent, createdAt]
+      properties:
+        id: { type: string }
+        userId: { type: [string, "null"] }
+        email: { type: string }
+        name: { type: [string, "null"] }
+        success: { type: boolean }
+        reason: { type: string, enum: [success, invalid_credentials, account_inactive] }
+        userAgent: { type: string }
+        createdAt: { type: string, format: date-time }
+    AccessLogPage:
+      type: object
+      required: [items, total, page, pageSize]
+      properties:
+        items:
+          type: array
+          items: { $ref: "#/components/schemas/AccessLog" }
+        total: { type: integer }
+        page: { type: integer }
+        pageSize: { type: integer }
     EmailSettings:
       type: object
       required: [senderEmail, senderName, hasPassword, configured, loginUrl, subject, body, defaultSubject, defaultBody, placeholders]

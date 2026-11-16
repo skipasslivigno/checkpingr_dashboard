@@ -258,6 +258,40 @@ export const UploadLogoResponse = zod.object({
 
 
 /**
+ * @summary Paginated login audit log for the authenticated tenant (admin only)
+ */
+export const getAccessLogsQueryPageDefault = 1;
+export const getAccessLogsQueryPageMax = 100000;
+
+export const getAccessLogsQueryOutcomeDefault = `all`;
+export const getAccessLogsQuerySearchMax = 254;
+
+
+
+export const GetAccessLogsQueryParams = zod.object({
+  "page": zod.coerce.number().min(1).max(getAccessLogsQueryPageMax).default(getAccessLogsQueryPageDefault),
+  "outcome": zod.enum(['all', 'success', 'failure']).default(getAccessLogsQueryOutcomeDefault),
+  "search": zod.coerce.string().max(getAccessLogsQuerySearchMax).optional()
+})
+
+export const GetAccessLogsResponse = zod.object({
+  "items": zod.array(zod.object({
+  "id": zod.string(),
+  "userId": zod.string().nullable(),
+  "email": zod.string(),
+  "name": zod.string().nullable(),
+  "success": zod.boolean(),
+  "reason": zod.enum(['success', 'invalid_credentials', 'account_inactive']),
+  "userAgent": zod.string(),
+  "createdAt": zod.coerce.date()
+})),
+  "total": zod.number(),
+  "page": zod.number(),
+  "pageSize": zod.number()
+})
+
+
+/**
  * @summary List all users in the tenant (admin only)
  */
 export const GetUsersResponseItem = zod.object({

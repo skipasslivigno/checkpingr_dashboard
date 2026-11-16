@@ -20,6 +20,7 @@ import type {
 } from '@tanstack/react-query';
 
 import type {
+  AccessLogPage,
   AuthUser,
   ChangeOwnPasswordRequest,
   ChangePassword200,
@@ -32,6 +33,7 @@ import type {
   EmailSettings,
   EmailSettingsInput,
   FirstEntriesForecast,
+  GetAccessLogsParams,
   GetDashboardSummaryParams,
   GetFirstEntriesForecastParams,
   GetLatestLiftsParams,
@@ -1006,6 +1008,90 @@ export const useUploadLogo = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getUploadLogoMutationOptions(options));
     }
+
+export const getGetAccessLogsUrl = (params?: GetAccessLogsParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/access-logs?${stringifiedParams}` : `/api/access-logs`
+}
+
+/**
+ * @summary Paginated login audit log for the authenticated tenant (admin only)
+ */
+export const getAccessLogs = async (params?: GetAccessLogsParams, options?: RequestInit): Promise<AccessLogPage> => {
+
+  return customFetch<AccessLogPage>(getGetAccessLogsUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetAccessLogsQueryKey = (params?: GetAccessLogsParams,) => {
+    return [
+    `/api/access-logs`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetAccessLogsQueryOptions = <TData = Awaited<ReturnType<typeof getAccessLogs>>, TError = ErrorType<void>>(params?: GetAccessLogsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAccessLogs>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetAccessLogsQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getAccessLogs>>> = ({ signal }) => getAccessLogs(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getAccessLogs>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetAccessLogsQueryResult = NonNullable<Awaited<ReturnType<typeof getAccessLogs>>>
+export type GetAccessLogsQueryError = ErrorType<void>
+
+
+/**
+ * @summary Paginated login audit log for the authenticated tenant (admin only)
+ */
+
+export function useGetAccessLogs<TData = Awaited<ReturnType<typeof getAccessLogs>>, TError = ErrorType<void>>(
+ params?: GetAccessLogsParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getAccessLogs>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetAccessLogsQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
 
 export const getGetUsersUrl = () => {
 

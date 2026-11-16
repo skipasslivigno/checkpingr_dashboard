@@ -8,3 +8,4 @@
 - [Previsione primi ingressi](first-entries-forecast.md) — prevedere la metrica già mostrata nella dashboard, senza reinterpretare i nomi dei contatori importati.
 - [Confronti tra stagioni](season-comparisons.md) — primi ingressi, settimane dal sabato e aperture configurabili; solo le 23:30 sono consuntivi.
 - [Codegen con Expo attivo](expo-codegen-refresh.md) — Orval ricrea il client; un errore di modulo mancante durante la rigenerazione non richiede di cambiare import validi.
+- [Registro accessi](access-log-policy.md) — richiesti sia accessi riusciti sia tentativi falliti.

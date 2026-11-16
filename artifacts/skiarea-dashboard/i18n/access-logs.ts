@@ -1,0 +1,71 @@
+import type { Language } from "@/i18n";
+
+const it = {
+  link: "Registro accessi",
+  title: "Registro accessi",
+  note: "Sono registrati solo i tentativi di login (non ogni aggiornamento di pagina), a partire dall'attivazione della funzione. Le email sconosciute non sono attribuibili a un'organizzazione e sono escluse da questa vista. Non vengono raccolti indirizzi IP.",
+  all: "Tutti",
+  success: "Riusciti",
+  failure: "Falliti",
+  searchPlaceholder: "Cerca email o nome",
+  search: "Cerca",
+  clear: "Cancella ricerca",
+  refresh: "Aggiorna",
+  colDate: "Data e ora",
+  colUser: "Utente",
+  colOutcome: "Esito",
+  colDevice: "Dispositivo / browser",
+  tz: "Ora di Roma (Europe/Rome)",
+  reasonSuccess: "Accesso riuscito",
+  reasonInvalid: "Credenziali non valide",
+  reasonInactive: "Account disattivato",
+  unknownDevice: "Sconosciuto",
+  noName: "Nome non disponibile",
+  empty: "Nessun accesso registrato",
+  emptyFiltered: "Nessun risultato con questi filtri",
+  error: "Impossibile caricare il registro accessi.",
+  retry: "Riprova",
+  prev: "Precedente",
+  next: "Successiva",
+  pageOf: (p: number, n: number) => `Pagina ${p} di ${n}`,
+  total: (n: number) => `${n} ${n === 1 ? "tentativo" : "tentativi"}`,
+  forbidden: "Solo gli amministratori possono consultare il registro accessi.",
+};
+
+type AccessLogStrings = typeof it;
+
+const en: AccessLogStrings = {
+  link: "Access log",
+  title: "Access log",
+  note: "Only login attempts are recorded (not every page refresh), starting from when this feature was activated. Unknown emails cannot be attributed to an organization and are excluded from this view. No IP addresses are collected.",
+  all: "All",
+  success: "Successful",
+  failure: "Failed",
+  searchPlaceholder: "Search email or name",
+  search: "Search",
+  clear: "Clear search",
+  refresh: "Refresh",
+  colDate: "Date and time",
+  colUser: "User",
+  colOutcome: "Outcome",
+  colDevice: "Device / browser",
+  tz: "Rome time (Europe/Rome)",
+  reasonSuccess: "Signed in",
+  reasonInvalid: "Invalid credentials",
+  reasonInactive: "Account inactive",
+  unknownDevice: "Unknown",
+  noName: "Name not available",
+  empty: "No access attempts recorded",
+  emptyFiltered: "No results for these filters",
+  error: "Could not load the access log.",
+  retry: "Try again",
+  prev: "Previous",
+  next: "Next",
+  pageOf: (p: number, n: number) => `Page ${p} of ${n}`,
+  total: (n: number) => `${n} ${n === 1 ? "attempt" : "attempts"}`,
+  forbidden: "Only administrators can view the access log.",
+};
+
+export function accessLogStrings(language: Language): AccessLogStrings {
+  return language === "it" ? it : en;
+}

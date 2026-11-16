@@ -31,6 +31,7 @@ import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useResponsive } from "@/hooks/useResponsive";
+import { accessLogStrings } from "@/i18n/access-logs";
 import { SendCredentialsCell, SendCredentialsDialog } from "@/components/email/SendCredentials";
 
 type Role = "admin" | "operator" | "viewer";
@@ -400,6 +401,10 @@ export default function AdminScreen() {
           <Feather name="arrow-left" size={22} color={colors.foreground} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.foreground, flex: 1, marginLeft: 8 }]}>{t.adminTitle}</Text>
+        <TouchableOpacity testID="access-logs-link" accessibilityRole="button" accessibilityLabel={accessLogStrings(language).link} onPress={() => router.push("/access-logs")} style={[styles.addBtn, { borderWidth: 1, borderColor: colors.border, marginRight: 8, width: "auto", paddingHorizontal: 12, flexDirection: "row", gap: 6 }]} activeOpacity={0.7}>
+          <Feather name="list" size={16} color={colors.primary} />
+          {isWide ? <Text style={{ color: colors.primary, fontFamily: "Inter_600SemiBold", fontSize: 13 }}>{accessLogStrings(language).link}</Text> : null}
+        </TouchableOpacity>
         <TouchableOpacity testID="email-settings-link" accessibilityRole="button" accessibilityLabel={t.emLink} onPress={() => router.push("/email-settings")} style={[styles.addBtn, { borderWidth: 1, borderColor: colors.border, marginRight: 8 }]} activeOpacity={0.7}>
           <Feather name="mail" size={18} color={colors.primary} />
         </TouchableOpacity>

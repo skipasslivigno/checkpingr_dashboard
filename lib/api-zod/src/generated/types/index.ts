@@ -6,6 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 
+export * from './accessLog';
+export * from './accessLogPage';
+export * from './accessLogReason';
 export * from './authUser';
 export * from './authUserRole';
 export * from './changeOwnPasswordRequest';
@@ -30,6 +33,8 @@ export * from './firstEntriesForecastPointSlot';
 export * from './firstEntriesForecastPointStatus';
 export * from './firstEntriesForecastTimeZone';
 export * from './forecastValidation';
+export * from './getAccessLogsOutcome';
+export * from './getAccessLogsParams';
 export * from './getDashboardSummaryParams';
 export * from './getFirstEntriesForecastMode';
 export * from './getFirstEntriesForecastParams';

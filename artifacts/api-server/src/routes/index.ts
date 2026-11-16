@@ -9,6 +9,7 @@ import settingsRouter from "./settings";
 import emailRouter from "./email";
 import forecastRouter from "./forecast";
 import periodComparisonRouter from "./period-comparison";
+import accessLogsRouter from "./access-logs";
 
 const router: IRouter = Router();
 
@@ -22,5 +23,6 @@ router.use(settingsRouter);
 router.use(emailRouter);
 router.use(forecastRouter);
 router.use(periodComparisonRouter);
+router.use(accessLogsRouter);
 
 export default router;
