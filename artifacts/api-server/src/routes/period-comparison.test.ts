@@ -95,6 +95,56 @@ test("real database comparison uses nuin, not npin, npas, other tenants or parti
   assert.equal(data.progressive.changePercent, 92);
   assert.equal(data.weekly.previousToDate, "2024-12-09");
 });
+test("NULL first entries count as zero despite passages, but negatives remain invalid", async () => {
+  const previousBatch = and(eq(liftSnapshotsTable.tenantId, tenantId),
+    eq(liftSnapshotsTable.dupd, "20241209233000"));
+  const currentBatch = and(eq(liftSnapshotsTable.tenantId, tenantId),
+    eq(liftSnapshotsTable.dupd, "20251208140000"));
+  const extractions = ["20241209233000", "20251208140000"];
+  const extraRows = and(eq(liftSnapshotsTable.tenantId, tenantId),
+    eq(liftSnapshotsTable.ggnr, 2), inArray(liftSnapshotsTable.dupd, extractions));
+  const read = async () => GetPeriodComparisonResponse.parse(
+    await (await fetch(`${base}${url}&extraction=20251208140000`)).json(),
+  );
+  try {
+    await db.insert(liftSnapshotsTable).values(extractions.map((dupd, i) => ({
+      tenantId, eser: i === 0 ? previous : season,
+      dtgg: i === 0 ? "2024-12-09" : "2025-12-08", dupd,
+      ggnr: 2, ggbz: "NULL entries with passages", nuin: null, npas: 382,
+    })));
+    let data = await read();
+    assert.equal(data.progressive.previousTotal, 500);
+    assert.equal(data.progressive.currentTotal, 960);
+    assert.equal(data.weekly.previousTotal, 150);
+    assert.equal(data.weekly.currentTotal, 260);
+    assert.deepEqual(data.progressive.missingPreviousDays, []);
+    assert.deepEqual(data.progressive.missingCurrentDays, []);
+
+    // Entire batches of NULL counters are genuine zero days, not missing days.
+    await db.update(liftSnapshotsTable).set({ nuin: null }).where(previousBatch);
+    await db.update(liftSnapshotsTable).set({ nuin: null }).where(currentBatch);
+    data = await read();
+    assert.equal(data.progressive.previousTotal, 450);
+    assert.equal(data.progressive.currentTotal, 900);
+    assert.equal(data.weekly.previousTotal, 100);
+    assert.equal(data.weekly.currentTotal, 200);
+    assert.equal(data.includedSelectedDay, true);
+    assert.deepEqual(data.progressive.missingPreviousDays, []);
+    assert.deepEqual(data.progressive.missingCurrentDays, []);
+
+    await db.update(liftSnapshotsTable).set({ nuin: -1 }).where(previousBatch);
+    await db.update(liftSnapshotsTable).set({ nuin: -1 }).where(currentBatch);
+    data = await read();
+    assert.equal(data.progressive.previousTotal, null);
+    assert.equal(data.progressive.currentTotal, null);
+    assert.deepEqual(data.progressive.missingPreviousDays, ["2024-12-09"]);
+    assert.deepEqual(data.progressive.missingCurrentDays, ["2025-12-08"]);
+  } finally {
+    await db.delete(liftSnapshotsTable).where(extraRows);
+    await db.update(liftSnapshotsTable).set({ nuin: 50 }).where(previousBatch);
+    await db.update(liftSnapshotsTable).set({ nuin: 60 }).where(currentBatch);
+  }
+});
 test("morning excludes the day, final 23:30 overrides the morning selection", async () => {
   let data = GetPeriodComparisonResponse.parse(await (await fetch(`${base}${url}&extraction=20251208103000`)).json());
   assert.equal(data.includedSelectedDay, false);

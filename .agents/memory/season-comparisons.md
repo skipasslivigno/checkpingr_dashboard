@@ -38,6 +38,16 @@ quando il riferimento è assente o zero.
 **How to apply:** indicare indisponibilità e rendere consultabili le date mancanti;
 conservare gli zeri effettivamente importati.
 
+Nei confronti settimanali e progressivi, un campo primi ingressi vuoto
+significa **zero**, anche se lo stesso impianto registra passaggi.
+
+**Why:** l'utente ha confermato esplicitamente «Sì, vuoto significa zero»
+dopo la verifica dei consuntivi della stagione 2023-24.
+
+**How to apply:** distinguere il contatore vuoto in un record presente da
+un'estrazione delle 23:30 realmente assente. Il primo vale zero; la seconda
+rimane mancante. I valori negativi restano invalidi.
+
 ## Durate diverse e fine stagione
 
 Le stagioni possono finire in giorni diversi, per esempio il primo maggio o

@@ -29,10 +29,9 @@ export async function loadComparisonBatches(
     season: liftSnapshotsTable.eser,
     extraction: liftSnapshotsTable.dupd,
     entries: sql<number>`COALESCE(SUM(${liftSnapshotsTable.nuin}), 0)::bigint`,
-    valid: sql<boolean>`bool_and(
-      (${liftSnapshotsTable.nuin} IS NULL OR ${liftSnapshotsTable.nuin} >= 0)
-      AND (COALESCE(${liftSnapshotsTable.npas}, 0) = 0 OR ${liftSnapshotsTable.nuin} IS NOT NULL)
-    )`,
+    // An imported NULL means zero first entries, even when passages are positive.
+    // Missing batches are still detected separately by the period calculator.
+    valid: sql<boolean>`bool_and(COALESCE(${liftSnapshotsTable.nuin}, 0) >= 0)`,
   }).from(liftSnapshotsTable).where(and(
     eq(liftSnapshotsTable.tenantId, tenantId), inArray(liftSnapshotsTable.eser, seasons),
     sql`LEFT(${liftSnapshotsTable.dtgg}, 10) >= ${fromDate}`,
