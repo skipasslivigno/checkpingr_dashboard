@@ -102,8 +102,12 @@ export function PeriodComparison({ date, season, extraction }: Props) {
       </View>
     );
   }
-  if (data.status !== "ready") {
-    const msg = data.status === "configuration_required" ? (isAdmin ? t.pc.configAdmin : t.pc.config)
+  // Missing prior-season configuration must not hide calculable current totals.
+  const previousConfigMissing = data.status === "configuration_required"
+    && !!data.currentSeasonStartDate && !data.missingConfiguration.includes(data.season);
+  const configurationMessage = `${isAdmin ? t.pc.configAdmin : t.pc.config} (${data.missingConfiguration.join(", ")})`;
+  if (data.status !== "ready" && !previousConfigMissing) {
+    const msg = data.status === "configuration_required" ? configurationMessage
       : data.status === "before_season" ? t.pc.beforeSeason : t.pc.noData;
     return (
       <View testID={`period-comparison-${data.status}`} style={[card, styles.msgRow]}>
@@ -128,6 +132,17 @@ export function PeriodComparison({ date, season, extraction }: Props) {
         )}
         {!data.previousSeason && <Text style={[styles.headText, { color: colors.mutedForeground }]}>{t.pc.noPrevSeason}</Text>}
       </View>
+      {previousConfigMissing && (
+        <View testID="period-comparison-previous-config" style={styles.msgRow}>
+          <Feather name="info" size={14} color={colors.mutedForeground} />
+          <Text style={[styles.msg, { color: colors.mutedForeground }]}>{configurationMessage}</Text>
+          {isAdmin && (
+            <TouchableOpacity testID="button-period-open-settings" onPress={() => router.push("/settings")} accessibilityRole="button">
+              <Text style={[styles.link, { color: colors.primary }]}>{t.pc.openSettings}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
       <View style={styles.cols}>
         <Column title={t.pc.weekly} v={data.weekly} id="weekly" showMissing={open} onToggle={() => setOpen(!open)} />
         <View style={[styles.sep, { backgroundColor: colors.border }]} />

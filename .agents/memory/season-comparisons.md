@@ -16,6 +16,17 @@ Il sabato della settimana dell'apertura è l'ancora del confronto; le somme
 iniziano comunque dalla data configurata. Un'apertura non di sabato è ammessa
 con avviso, perché «di prassi» non è un divieto.
 
+Se manca la configurazione della stagione precedente, mostrare comunque
+settimanali e progressivi della stagione selezionata quando calcolabili.
+Lasciare non disponibili solo riferimento precedente e percentuale, con
+un avviso che identifichi la stagione da configurare.
+
+**Why:** l'utente ha confermato «Sì, mostra i totali» dopo il blocco della
+stagione 2022-23 dovuto alla data iniziale 2021-22 non configurata.
+
+**How to apply:** la configurazione precedente non deve bloccare i valori
+correnti; la data d'inizio della stagione selezionata rimane necessaria.
+
 I consuntivi sono i record delle **23:30**. Senza consuntivo della giornata,
 alle 10:30/11:30 i totali si fermano al giorno precedente e si confrontano
 con il precedente giorno equivalente dell'altra stagione. Alle 14:00,

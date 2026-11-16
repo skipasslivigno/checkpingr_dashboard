@@ -174,6 +174,12 @@ test("removing and restoring a start date is persisted and makes missing configu
   const r = GetPeriodComparisonResponse.parse(await (await fetch(`${base}${url}`)).json());
   assert.equal(r.status, "configuration_required");
   assert.ok(r.missingConfiguration.includes(previous));
+  assert.equal(r.progressive.currentTotal, 960);
+  assert.equal(r.weekly.currentTotal, 260);
+  assert.equal(r.progressive.previousTotal, null);
+  assert.equal(r.weekly.previousTotal, null);
+  assert.equal(r.progressive.changePercent, null);
+  assert.equal(r.currentSeasonStartDate, "2025-11-29");
   assert.equal((await save(previous, "2024-12-02")).status, 200, "Non-Saturday opening is permitted");
 });
 

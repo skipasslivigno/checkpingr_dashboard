@@ -83,6 +83,35 @@ test("opening dates must be explicitly configured, not silently guessed", () => 
   assert.deepEqual(r.missingConfiguration, [season, previousSeason]);
   assert.equal(r.progressive.currentTotal, null);
 });
+test("missing previous opening leaves current totals available without inventing a comparison", () => {
+  const r = comparePeriods({
+    date, season, previousSeason, starts: { [season]: starts[season] },
+    rows: data(), extraction: "20251208140000",
+  });
+  assert.equal(r.status, "configuration_required");
+  assert.deepEqual(r.missingConfiguration, [previousSeason]);
+  assert.equal(r.currentSeasonStartDate, starts[season]);
+  assert.equal(r.progressive.currentTotal, 960);
+  assert.equal(r.weekly.currentTotal, 260);
+  for (const value of [r.weekly, r.progressive]) {
+    assert.equal(value.previousTotal, null);
+    assert.equal(value.changePercent, null);
+    assert.equal(value.previousFromDate, null);
+    assert.equal(value.previousToDate, null);
+    assert.deepEqual(value.missingCurrentDays, []);
+  }
+});
+test("no previous season still allows current totals", () => {
+  const r = comparePeriods({
+    date, season, previousSeason: null, starts: { [season]: starts[season] },
+    rows: data(), extraction: "20251208140000",
+  });
+  assert.equal(r.status, "ready");
+  assert.equal(r.progressive.currentTotal, 960);
+  assert.equal(r.weekly.currentTotal, 260);
+  assert.equal(r.progressive.previousTotal, null);
+  assert.equal(r.progressive.changePercent, null);
+});
 test("Saturday morning uses the completed previous week and the season boundary is safe", () => {
   const d = "2025-12-06";
   const r = comparePeriods({
