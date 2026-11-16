@@ -24,6 +24,8 @@ export interface AccessLog {
   success: boolean;
   reason: AccessLogReason;
   userAgent: string;
+  /** @nullable */
+  ipAddress: string | null;
   createdAt: string;
 }
 

@@ -9,6 +9,12 @@ Il registro deve includere gli accessi riusciti e i tentativi falliti.
 
 **How to apply:** mantenere entrambi gli esiti nelle future modifiche del registro; non ridurlo al solo ultimo accesso riuscito.
 
+Registrare anche l'IP di connessione.
+
+**Why:** l'utente ha chiesto esplicitamente di tracciare anche l'IP.
+
+**How to apply:** includerlo nei tentativi riusciti e falliti. Fidarsi delle intestazioni inoltrate solo da proxy affidabili, non dal client pubblico; sul VPS il proxy nginx documentato si collega localmente. Se cambia la topologia, rivalutare la fiducia prima di ampliarla.
+
 Gli eventi per email sconosciute non vanno mostrati agli amministratori di un'organizzazione.
 
 **Why:** un tentativo anonimo con email sconosciuta non contiene un'appartenenza affidabile; esporlo in tutti i registri violerebbe l'isolamento fra organizzazioni.

@@ -1,4 +1,4 @@
-import { boolean, index, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { boolean, index, inet, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 import { tenantsTable } from "./tenants";
@@ -13,6 +13,7 @@ export const accessLogsTable = pgTable("access_logs", {
   success: boolean("success").notNull(),
   reason: text("reason").notNull(),
   userAgent: text("user_agent").notNull(),
+  ipAddress: inet("ip_address"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 }, (table) => [
   index("access_logs_tenant_date_idx").on(table.tenantId, table.createdAt, table.id),

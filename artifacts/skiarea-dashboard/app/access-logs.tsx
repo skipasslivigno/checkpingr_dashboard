@@ -179,7 +179,7 @@ export default function AccessLogsScreen() {
               <ScrollView horizontal showsHorizontalScrollIndicator>
                 <View style={{ minWidth: TABLE_W }}>
                   <View style={[styles.tr, { backgroundColor: colors.secondary, borderBottomColor: colors.border, borderBottomWidth: 1 }]}>
-                    {[[s.colDate, COLS.date], [s.colUser, COLS.user], [s.colOutcome, COLS.outcome], [s.colDevice, COLS.device]].map(([label, w]) => (
+                    {[[s.colDate, COLS.date], [s.colUser, COLS.user], [s.colOutcome, COLS.outcome], [s.colIp, COLS.ip], [s.colDevice, COLS.device]].map(([label, w]) => (
                       <Text key={String(label)} style={[styles.th, { width: w as number, color: colors.mutedForeground }]}>{String(label).toUpperCase()}</Text>
                     ))}
                   </View>
@@ -203,6 +203,9 @@ export default function AccessLogsScreen() {
                             <Text style={[styles.badgeText, { color: tone }]}>{l.success ? s.success : s.failure}</Text>
                           </View>
                           <Text style={[styles.secondaryText, { color: colors.mutedForeground }]}>{reasonLabel(l)}</Text>
+                        </View>
+                        <View style={[styles.td, { width: COLS.ip }]}>
+                          <Text selectable testID={`access-log-ip-${l.id}`} style={[styles.mono, { color: colors.foreground }]}>{l.ipAddress ?? s.ipUnavailable}</Text>
                         </View>
                         <View style={[styles.td, { width: COLS.device }]}>
                           <Text style={[styles.primaryText, { color: colors.foreground }]}>{device ?? s.unknownDevice}</Text>
@@ -237,8 +240,8 @@ export default function AccessLogsScreen() {
   );
 }
 
-const COLS = { date: 170, user: 260, outcome: 190, device: 300 };
-const TABLE_W = COLS.date + COLS.user + COLS.outcome + COLS.device + 24;
+const COLS = { date: 170, user: 260, outcome: 190, ip: 190, device: 300 };
+const TABLE_W = COLS.date + COLS.user + COLS.outcome + COLS.ip + COLS.device + 24;
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

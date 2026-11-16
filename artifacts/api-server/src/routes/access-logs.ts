@@ -26,7 +26,7 @@ router.get("/access-logs", requireRole("admin"), async (req, res): Promise<void>
     db.select({
       id: accessLogsTable.id, userId: accessLogsTable.userId, email: accessLogsTable.email,
       name: accessLogsTable.name, success: accessLogsTable.success, reason: accessLogsTable.reason,
-      userAgent: accessLogsTable.userAgent, createdAt: accessLogsTable.createdAt,
+      userAgent: accessLogsTable.userAgent, ipAddress: accessLogsTable.ipAddress, createdAt: accessLogsTable.createdAt,
     }).from(accessLogsTable).where(where)
       .orderBy(desc(accessLogsTable.createdAt), desc(accessLogsTable.id))
       .limit(PAGE_SIZE).offset((page - 1) * PAGE_SIZE),

@@ -1,6 +1,7 @@
 import type { Request, Response } from "express";
 import { accessLogsTable, db, type User } from "@workspace/db";
 import { logger } from "./logger";
+import { getClientIp } from "./client-ip";
 
 // Use an explicit allowlist: never persist the request body, headers, password or token.
 export async function recordLogin(
@@ -19,6 +20,7 @@ export async function recordLogin(
       success: reason === "success",
       reason,
       userAgent: (req.get("user-agent") ?? "").slice(0, 512),
+      ipAddress: getClientIp(req),
     });
     return true;
   } catch {

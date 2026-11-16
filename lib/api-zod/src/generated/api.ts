@@ -283,6 +283,7 @@ export const GetAccessLogsResponse = zod.object({
   "success": zod.boolean(),
   "reason": zod.enum(['success', 'invalid_credentials', 'account_inactive']),
   "userAgent": zod.string(),
+  "ipAddress": zod.string().nullable(),
   "createdAt": zod.coerce.date()
 })),
   "total": zod.number(),

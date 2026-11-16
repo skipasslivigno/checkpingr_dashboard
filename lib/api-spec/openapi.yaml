@@ -699,7 +699,7 @@ components:
   schemas:
     AccessLog:
       type: object
-      required: [id, userId, email, name, success, reason, userAgent, createdAt]
+      required: [id, userId, email, name, success, reason, userAgent, ipAddress, createdAt]
       properties:
         id: { type: string }
         userId: { type: [string, "null"] }
@@ -708,6 +708,7 @@ components:
         success: { type: boolean }
         reason: { type: string, enum: [success, invalid_credentials, account_inactive] }
         userAgent: { type: string }
+        ipAddress: { type: [string, "null"] }
         createdAt: { type: string, format: date-time }
     AccessLogPage:
       type: object
