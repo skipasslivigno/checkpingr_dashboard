@@ -4,6 +4,8 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "test:diary": "esbuild src/routes/operational-notes.test.ts --bundle --platform=node --format=cjs --external:pg-native --outfile=node_modules/.cache/diary-tests.cjs && NODE_ENV=test node --test \"$PWD/node_modules/.cache/diary-tests.cjs\"",
+    "test:diary-pdf": "esbuild ../skiarea-dashboard/lib/diary.test.ts --bundle --platform=node --format=cjs --outfile=node_modules/.cache/diary-pdf-tests.cjs && node --test \"$PWD/node_modules/.cache/diary-pdf-tests.cjs\"",
     "test:access-logs": "esbuild src/routes/access-logs.test.ts --bundle --platform=node --format=cjs --external:pg-native --external:pino --outfile=node_modules/.cache/access-log-tests.cjs && NODE_ENV=test node --test \"$PWD/node_modules/.cache/access-log-tests.cjs\"",
     "dev": "export NODE_ENV=development && pnpm run build && pnpm run start",
     "build": "node ./build.mjs",

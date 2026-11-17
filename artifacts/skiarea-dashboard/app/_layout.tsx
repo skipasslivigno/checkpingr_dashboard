@@ -93,6 +93,7 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="lift/[ggnr]" />
       <Stack.Screen name="settings" />
+      <Stack.Screen name="diary" />
       <Stack.Screen name="login" />
       <Stack.Screen name="change-password" options={{ gestureEnabled: false }} />
     </Stack>

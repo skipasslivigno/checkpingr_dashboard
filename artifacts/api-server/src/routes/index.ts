@@ -10,6 +10,7 @@ import emailRouter from "./email";
 import forecastRouter from "./forecast";
 import periodComparisonRouter from "./period-comparison";
 import accessLogsRouter from "./access-logs";
+import operationalNotesRouter from "./operational-notes";
 
 const router: IRouter = Router();
 
@@ -24,5 +25,6 @@ router.use(emailRouter);
 router.use(forecastRouter);
 router.use(periodComparisonRouter);
 router.use(accessLogsRouter);
+router.use(operationalNotesRouter);
 
 export default router;

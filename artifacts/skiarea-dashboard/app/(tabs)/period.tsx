@@ -31,6 +31,10 @@ import { useSeason, formatSeason } from "@/contexts/SeasonContext";
 import { useTenantSettings } from "@/contexts/TenantSettingsContext";
 import { useMetricColors } from "@/hooks/useMetricColors";
 import { CalendarRangePicker } from "@/components/CalendarRangePicker";
+import { PeriodNotesPanel } from "@/components/NotesPanels";
+import { diaryStrings } from "@/i18n/diary";
+import { NOTES_QUERY_OPTIONS, NOTES_PDF_CSS, buildPeriodNotesHtml, buildSinglePeriodHtml, escapeHtml } from "@/lib/diary";
+import { getGetOperationalNotesQueryKey, getOperationalNotes, useGetOperationalNotes } from "@workspace/api-client-react";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -106,6 +110,7 @@ function buildComparisonHtml(
   priorFrom: string,
   priorTo: string,
   language: string,
+  notesHtml: string,
 ): string {
   const fmt = (n: number) => n.toLocaleString();
   const fmtDate = (d: string) => formatDate(d, language);
@@ -130,7 +135,7 @@ function buildComparisonHtml(
         <td style="padding:8px 10px;text-align:center">
           <span style="display:inline-block;width:24px;height:24px;line-height:24px;border-radius:50%;background:${rankBg};color:${rankColor};font-size:11px;font-weight:700;text-align:center">${i + 1}</span>
         </td>
-        <td style="padding:8px 10px;font-size:13px;color:#0C2340;font-weight:600">${lift.ggbz}</td>
+        <td style="padding:8px 10px;font-size:13px;color:#0C2340;font-weight:600">${escapeHtml(lift.ggbz)}</td>
         <td style="padding:8px 10px;text-align:right;font-size:14px;color:#00A9E0;font-weight:700">${fmt(lift.totalPassages)}</td>
         <td style="padding:8px 10px;text-align:right;font-size:13px;color:#4E82A0">${prior ? fmt(prior.totalPassages) : "—"}</td>
         <td style="padding:8px 10px;text-align:right;font-size:11px;${d ? (d.positive ? posStyle : negStyle) : ""}">${d ? d.text : "—"}</td>
@@ -168,6 +173,7 @@ function buildComparisonHtml(
   th:nth-child(2) { text-align: left; }
   .footer { margin-top: 20px; font-size: 10px; color: #4E82A0; text-align: center; }
   @media print { body { padding: 16px; } }
+${NOTES_PDF_CSS}
 </style>
 </head>
 <body>
@@ -226,6 +232,8 @@ function buildComparisonHtml(
     <tbody>${liftRows}</tbody>
   </table>
 
+  ${notesHtml}
+
   <div class="footer">Ski Area Dashboard · ${currentSeason} vs ${priorSeason}</div>
 </body>
 </html>`;
@@ -241,17 +249,23 @@ async function shareComparison(
   priorFrom: string,
   priorTo: string,
   language: string,
+  notesHtml: string,
+  webWindow?: Window | null,
 ): Promise<void> {
-  const html = buildComparisonHtml(data, priorData, currentSeason, priorSeason, fromDate, toDate, priorFrom, priorTo, language);
+  const html = buildComparisonHtml(data, priorData, currentSeason, priorSeason, fromDate, toDate, priorFrom, priorTo, language, notesHtml);
+  await openPdf(html, webWindow);
+}
+
+async function openPdf(html: string, webWindow?: Window | null): Promise<void> {
 
   if (Platform.OS === "web") {
-    const win = window.open("", "_blank");
+    const win = webWindow ?? window.open("", "_blank");
     if (win) {
       win.document.write(html);
       win.document.close();
       win.focus();
       win.print();
-    }
+    } else { throw new Error("PDF window blocked"); }
   } else {
     const { uri } = await Print.printToFileAsync({ html });
     await Sharing.shareAsync(uri, {
@@ -510,6 +524,57 @@ export default function PeriodScreen() {
 
   const anyLoading = isLoading || (comparing && priorLoading);
 
+  // Operational notes: actual current interval and actual compared interval, kept separate.
+  const ds = diaryStrings(language);
+  const curNotesParams = { from: appliedFrom, to: appliedTo, scope: "all" as const };
+  const priorNotesParams = { from: priorFrom <= priorTo ? priorFrom : priorTo, to: priorFrom <= priorTo ? priorTo : priorFrom, scope: "all" as const };
+  const curNotesQ = useGetOperationalNotes(curNotesParams, { query: { queryKey: getGetOperationalNotesQueryKey(curNotesParams), ...NOTES_QUERY_OPTIONS } });
+  const priorNotesQ = useGetOperationalNotes(priorNotesParams, { query: { queryKey: getGetOperationalNotesQueryKey(priorNotesParams), ...NOTES_QUERY_OPTIONS, enabled: comparing } });
+  const notesBlocked =
+    curNotesQ.isLoading || curNotesQ.isError || (comparing && (priorNotesQ.isLoading || priorNotesQ.isError));
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState<string | null>(null);
+
+  async function fetchNotesFresh(params: typeof curNotesParams) {
+    return queryClient.fetchQuery({
+      queryKey: getGetOperationalNotesQueryKey(params),
+      queryFn: () => getOperationalNotes(params),
+      staleTime: 0,
+    });
+  }
+
+  async function exportPdf() {
+    if (!data || notesBlocked || exporting) return;
+    // Reserve synchronously in the click event; opening after a fetch is blocked by browsers.
+    const webWindow = Platform.OS === "web" ? window.open("", "_blank") : null;
+    if (Platform.OS === "web" && !webWindow) { setExportError(ds.popupBlocked); return; }
+    setExporting(true);
+    setExportError(null);
+    try {
+      const curNotes = await fetchNotesFresh(curNotesParams);
+      if (comparing && priorData) {
+        const priorNotes = await fetchNotesFresh(priorNotesParams);
+        const notesHtml = buildPeriodNotesHtml(
+          { from: appliedFrom, to: appliedTo, notes: curNotes },
+          { from: priorNotesParams.from, to: priorNotesParams.to, notes: priorNotes },
+          ds, language,
+        );
+        await shareComparison(data, priorData, escapeHtml(currentSeasonStr ?? ""), escapeHtml(priorSeason ?? ""), appliedFrom, appliedTo, priorFrom, priorTo, language, notesHtml, webWindow);
+      } else {
+        await openPdf(buildSinglePeriodHtml({
+          from: appliedFrom, to: appliedTo, season: currentSeasonStr ?? "", language, s: ds,
+          totals: { passages: data.totalPassages, guests: data.totalGuests, activeDays: data.activeDays },
+          lifts: data.lifts, notes: curNotes,
+        }), webWindow);
+      }
+    } catch {
+      webWindow?.close();
+      setExportError(ds.exportError);
+    } finally {
+      setExporting(false);
+    }
+  }
+
   const topPadding = Platform.OS === "web" ? 67 : 0;
 
   const onRefresh = async () => {
@@ -600,26 +665,16 @@ export default function PeriodScreen() {
           <Text style={[styles.title, { color: colors.foreground }]}>{t.period}</Text>
         </View>
         <View style={styles.headerButtons}>
-          {hasData && comparing && priorData && (
+          {data && (!comparing || priorData) && (
             <TouchableOpacity
-              style={[styles.exportBtn, { backgroundColor: colors.primary, borderColor: colors.primary }]}
-              onPress={() =>
-                shareComparison(
-                  data,
-                  priorData,
-                  currentSeasonStr ?? "",
-                  priorSeason ?? "",
-                  appliedFrom,
-                  appliedTo,
-                  priorFrom,
-                  priorTo,
-                  language,
-                )
-              }
+              testID="period-export-pdf"
+              disabled={notesBlocked || exporting}
+              style={[styles.exportBtn, { backgroundColor: colors.primary, borderColor: colors.primary, opacity: notesBlocked || exporting ? 0.5 : 1 }]}
+              onPress={exportPdf}
               activeOpacity={0.7}
             >
               <Feather name="share-2" size={14} color={colors.primaryForeground} />
-              <Text style={[styles.exportBtnText, { color: colors.primaryForeground }]}>{t.periodShareComparison}</Text>
+              <Text style={[styles.exportBtnText, { color: colors.primaryForeground }]}>{comparing ? t.periodShareComparison : "PDF"}</Text>
             </TouchableOpacity>
           )}
           {hasData && (
@@ -905,6 +960,19 @@ export default function PeriodScreen() {
           </Text>
         </View>
       )}
+
+      {data && (notesBlocked || exportError) ? (
+        <Text testID="period-export-blocked" style={{ marginHorizontal: 16, marginTop: 8, fontSize: 12, fontFamily: "Inter_500Medium", color: exportError ? colors.destructive : colors.mutedForeground }}>
+          {exportError ?? ds.exportBlocked}
+        </Text>
+      ) : null}
+
+      <PeriodNotesPanel
+        current={{ from: appliedFrom, to: appliedTo }}
+        compared={comparing ? { from: priorNotesParams.from, to: priorNotesParams.to } : null}
+        currentQ={curNotesQ}
+        comparedQ={priorNotesQ}
+      />
 
       <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
         {t.periodViewGroups}

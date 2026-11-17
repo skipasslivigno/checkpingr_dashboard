@@ -8,6 +8,95 @@
 import * as zod from 'zod';
 
 
+export const GetOperationalNoteLiftsResponseItem = zod.object({
+  "id": zod.number(),
+  "name": zod.string()
+})
+export const GetOperationalNoteLiftsResponse = zod.array(GetOperationalNoteLiftsResponseItem)
+
+
+export const getOperationalNotesQueryFromRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const getOperationalNotesQueryToRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const getOperationalNotesQueryScopeDefault = `all`;
+export const getOperationalNotesQueryLiftIdMin = 0;
+
+
+
+export const GetOperationalNotesQueryParams = zod.object({
+  "from": zod.coerce.string().regex(getOperationalNotesQueryFromRegExp),
+  "to": zod.coerce.string().regex(getOperationalNotesQueryToRegExp),
+  "scope": zod.enum(['all', 'general', 'lift']).default(getOperationalNotesQueryScopeDefault),
+  "liftId": zod.coerce.number().min(getOperationalNotesQueryLiftIdMin).optional(),
+  "includeGeneral": zod.enum(['true', 'false']).optional()
+})
+
+export const GetOperationalNotesResponseItem = zod.object({
+  "id": zod.string().uuid(),
+  "date": zod.string(),
+  "liftId": zod.number().nullable(),
+  "liftName": zod.string().nullable(),
+  "category": zod.enum(['weather', 'opening_closure', 'technical', 'event', 'other']),
+  "text": zod.string(),
+  "authorName": zod.string(),
+  "updatedByName": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const GetOperationalNotesResponse = zod.array(GetOperationalNotesResponseItem)
+
+
+export const createOperationalNoteBodyDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const createOperationalNoteBodyLiftIdMin = 0;
+
+export const createOperationalNoteBodyTextMax = 4000;
+
+
+
+export const CreateOperationalNoteBody = zod.object({
+  "date": zod.string().regex(createOperationalNoteBodyDateRegExp),
+  "liftId": zod.number().min(createOperationalNoteBodyLiftIdMin).nullable(),
+  "category": zod.enum(['weather', 'opening_closure', 'technical', 'event', 'other']),
+  "text": zod.string().min(1).max(createOperationalNoteBodyTextMax)
+})
+
+
+export const UpdateOperationalNoteParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+export const updateOperationalNoteBodyDateRegExp = new RegExp('^\\d{4}-\\d{2}-\\d{2}$');
+export const updateOperationalNoteBodyLiftIdMin = 0;
+
+export const updateOperationalNoteBodyTextMax = 4000;
+
+
+
+export const UpdateOperationalNoteBody = zod.object({
+  "date": zod.string().regex(updateOperationalNoteBodyDateRegExp),
+  "liftId": zod.number().min(updateOperationalNoteBodyLiftIdMin).nullable(),
+  "category": zod.enum(['weather', 'opening_closure', 'technical', 'event', 'other']),
+  "text": zod.string().min(1).max(updateOperationalNoteBodyTextMax)
+})
+
+export const UpdateOperationalNoteResponse = zod.object({
+  "id": zod.string().uuid(),
+  "date": zod.string(),
+  "liftId": zod.number().nullable(),
+  "liftName": zod.string().nullable(),
+  "category": zod.enum(['weather', 'opening_closure', 'technical', 'event', 'other']),
+  "text": zod.string(),
+  "authorName": zod.string(),
+  "updatedByName": zod.string(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+export const DeleteOperationalNoteParams = zod.object({
+  "id": zod.coerce.string().uuid()
+})
+
+
 /**
  * @summary Current administrator's Gmail settings, without secrets
  */

@@ -27,6 +27,7 @@ import type {
   CreateUserRequest,
   CredentialEmailInput,
   DashboardSummary,
+  DiaryLift,
   EmailPreview,
   EmailPreviewInput,
   EmailReceipt,
@@ -41,12 +42,15 @@ import type {
   GetLiftExtractionsParams,
   GetLiftHistoryParams,
   GetLiftsPeriodParams,
+  GetOperationalNotesParams,
   GetPeriodComparisonParams,
   GetSeasonTrendParams,
   GetWeekTrendParams,
   HealthStatus,
   LiftSnapshot,
   LogoUpload,
+  OperationalNote,
+  OperationalNoteInput,
   PeriodComparison,
   PeriodResult,
   SeasonStart,
@@ -72,6 +76,350 @@ type AwaitedInput<T> = PromiseLike<T> | T;
 type SecondParameter<T extends (...args: never) => unknown> = Parameters<T>[1];
 
 
+
+export const getGetOperationalNoteLiftsUrl = () => {
+
+
+
+
+  return `/api/operational-notes/lifts`
+}
+
+export const getOperationalNoteLifts = async ( options?: RequestInit): Promise<DiaryLift[]> => {
+
+  return customFetch<DiaryLift[]>(getGetOperationalNoteLiftsUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetOperationalNoteLiftsQueryKey = () => {
+    return [
+    `/api/operational-notes/lifts`
+    ] as const;
+    }
+
+
+export const getGetOperationalNoteLiftsQueryOptions = <TData = Awaited<ReturnType<typeof getOperationalNoteLifts>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOperationalNoteLifts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOperationalNoteLiftsQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOperationalNoteLifts>>> = ({ signal }) => getOperationalNoteLifts({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOperationalNoteLifts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetOperationalNoteLiftsQueryResult = NonNullable<Awaited<ReturnType<typeof getOperationalNoteLifts>>>
+export type GetOperationalNoteLiftsQueryError = ErrorType<unknown>
+
+
+
+export function useGetOperationalNoteLifts<TData = Awaited<ReturnType<typeof getOperationalNoteLifts>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOperationalNoteLifts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetOperationalNoteLiftsQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getGetOperationalNotesUrl = (params: GetOperationalNotesParams,) => {
+  const normalizedParams = new URLSearchParams();
+
+  Object.entries(params || {}).forEach(([key, value]) => {
+
+    if (value !== undefined) {
+      normalizedParams.append(key, value === null ? 'null' : value.toString())
+    }
+  });
+
+  const stringifiedParams = normalizedParams.toString();
+
+  return stringifiedParams.length > 0 ? `/api/operational-notes?${stringifiedParams}` : `/api/operational-notes`
+}
+
+export const getOperationalNotes = async (params: GetOperationalNotesParams, options?: RequestInit): Promise<OperationalNote[]> => {
+
+  return customFetch<OperationalNote[]>(getGetOperationalNotesUrl(params),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetOperationalNotesQueryKey = (params?: GetOperationalNotesParams,) => {
+    return [
+    `/api/operational-notes`, ...(params ? [params] : [])
+    ] as const;
+    }
+
+
+export const getGetOperationalNotesQueryOptions = <TData = Awaited<ReturnType<typeof getOperationalNotes>>, TError = ErrorType<void>>(params: GetOperationalNotesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOperationalNotes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetOperationalNotesQueryKey(params);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getOperationalNotes>>> = ({ signal }) => getOperationalNotes(params, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getOperationalNotes>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetOperationalNotesQueryResult = NonNullable<Awaited<ReturnType<typeof getOperationalNotes>>>
+export type GetOperationalNotesQueryError = ErrorType<void>
+
+
+
+export function useGetOperationalNotes<TData = Awaited<ReturnType<typeof getOperationalNotes>>, TError = ErrorType<void>>(
+ params: GetOperationalNotesParams, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getOperationalNotes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetOperationalNotesQueryOptions(params,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getCreateOperationalNoteUrl = () => {
+
+
+
+
+  return `/api/operational-notes`
+}
+
+export const createOperationalNote = async (operationalNoteInput: OperationalNoteInput, options?: RequestInit): Promise<OperationalNote> => {
+
+  return customFetch<OperationalNote>(getCreateOperationalNoteUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      operationalNoteInput,)
+  }
+);}
+
+
+
+
+export const getCreateOperationalNoteMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createOperationalNote>>, TError,{data: BodyType<OperationalNoteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createOperationalNote>>, TError,{data: BodyType<OperationalNoteInput>}, TContext> => {
+
+const mutationKey = ['createOperationalNote'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createOperationalNote>>, {data: BodyType<OperationalNoteInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createOperationalNote(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateOperationalNoteMutationResult = NonNullable<Awaited<ReturnType<typeof createOperationalNote>>>
+    export type CreateOperationalNoteMutationBody = BodyType<OperationalNoteInput>
+    export type CreateOperationalNoteMutationError = ErrorType<void>
+
+    export const useCreateOperationalNote = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createOperationalNote>>, TError,{data: BodyType<OperationalNoteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createOperationalNote>>,
+        TError,
+        {data: BodyType<OperationalNoteInput>},
+        TContext
+      > => {
+      return useMutation(getCreateOperationalNoteMutationOptions(options));
+    }
+
+export const getUpdateOperationalNoteUrl = (id: string,) => {
+
+
+
+
+  return `/api/operational-notes/${id}`
+}
+
+export const updateOperationalNote = async (id: string,
+    operationalNoteInput: OperationalNoteInput, options?: RequestInit): Promise<OperationalNote> => {
+
+  return customFetch<OperationalNote>(getUpdateOperationalNoteUrl(id),
+  {
+    ...options,
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      operationalNoteInput,)
+  }
+);}
+
+
+
+
+export const getUpdateOperationalNoteMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOperationalNote>>, TError,{id: string;data: BodyType<OperationalNoteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateOperationalNote>>, TError,{id: string;data: BodyType<OperationalNoteInput>}, TContext> => {
+
+const mutationKey = ['updateOperationalNote'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateOperationalNote>>, {id: string;data: BodyType<OperationalNoteInput>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateOperationalNote(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateOperationalNoteMutationResult = NonNullable<Awaited<ReturnType<typeof updateOperationalNote>>>
+    export type UpdateOperationalNoteMutationBody = BodyType<OperationalNoteInput>
+    export type UpdateOperationalNoteMutationError = ErrorType<void>
+
+    export const useUpdateOperationalNote = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateOperationalNote>>, TError,{id: string;data: BodyType<OperationalNoteInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateOperationalNote>>,
+        TError,
+        {id: string;data: BodyType<OperationalNoteInput>},
+        TContext
+      > => {
+      return useMutation(getUpdateOperationalNoteMutationOptions(options));
+    }
+
+export const getDeleteOperationalNoteUrl = (id: string,) => {
+
+
+
+
+  return `/api/operational-notes/${id}`
+}
+
+export const deleteOperationalNote = async (id: string, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getDeleteOperationalNoteUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteOperationalNoteMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteOperationalNote>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteOperationalNote>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteOperationalNote'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteOperationalNote>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteOperationalNote(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteOperationalNoteMutationResult = NonNullable<Awaited<ReturnType<typeof deleteOperationalNote>>>
+
+    export type DeleteOperationalNoteMutationError = ErrorType<void>
+
+    export const useDeleteOperationalNote = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteOperationalNote>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteOperationalNote>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteOperationalNoteMutationOptions(options));
+    }
 
 export const getGetEmailSettingsUrl = () => {
 

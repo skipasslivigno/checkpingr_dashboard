@@ -5,6 +5,64 @@
  * Ski Area Dashboard API
  * OpenAPI spec version: 0.1.0
  */
+export interface DiaryLift {
+  id: number;
+  name: string;
+}
+
+export type OperationalNoteInputCategory = typeof OperationalNoteInputCategory[keyof typeof OperationalNoteInputCategory];
+
+
+export const OperationalNoteInputCategory = {
+  weather: 'weather',
+  opening_closure: 'opening_closure',
+  technical: 'technical',
+  event: 'event',
+  other: 'other',
+} as const;
+
+export interface OperationalNoteInput {
+  /** @pattern ^\d{4}-\d{2}-\d{2}$ */
+  date: string;
+  /**
+     * @minimum 0
+     * @nullable
+     */
+  liftId: number | null;
+  category: OperationalNoteInputCategory;
+  /**
+     * @minLength 1
+     * @maxLength 4000
+     */
+  text: string;
+}
+
+export type OperationalNoteCategory = typeof OperationalNoteCategory[keyof typeof OperationalNoteCategory];
+
+
+export const OperationalNoteCategory = {
+  weather: 'weather',
+  opening_closure: 'opening_closure',
+  technical: 'technical',
+  event: 'event',
+  other: 'other',
+} as const;
+
+export interface OperationalNote {
+  id: string;
+  date: string;
+  /** @nullable */
+  liftId: number | null;
+  /** @nullable */
+  liftName: string | null;
+  category: OperationalNoteCategory;
+  text: string;
+  authorName: string;
+  updatedByName: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type AccessLogReason = typeof AccessLogReason[keyof typeof AccessLogReason];
 
 
@@ -662,6 +720,40 @@ export interface PeriodResult {
   /** Per-lift aggregated totals, sorted by total passages descending */
   lifts: PeriodLiftRow[];
 }
+
+export type GetOperationalNotesParams = {
+/**
+ * @pattern ^\d{4}-\d{2}-\d{2}$
+ */
+from: string;
+/**
+ * @pattern ^\d{4}-\d{2}-\d{2}$
+ */
+to: string;
+scope?: GetOperationalNotesScope;
+/**
+ * @minimum 0
+ */
+liftId?: number;
+includeGeneral?: GetOperationalNotesIncludeGeneral;
+};
+
+export type GetOperationalNotesScope = typeof GetOperationalNotesScope[keyof typeof GetOperationalNotesScope];
+
+
+export const GetOperationalNotesScope = {
+  all: 'all',
+  general: 'general',
+  lift: 'lift',
+} as const;
+
+export type GetOperationalNotesIncludeGeneral = typeof GetOperationalNotesIncludeGeneral[keyof typeof GetOperationalNotesIncludeGeneral];
+
+
+export const GetOperationalNotesIncludeGeneral = {
+  true: 'true',
+  false: 'false',
+} as const;
 
 export type ChangePassword200 = {
   token: string;

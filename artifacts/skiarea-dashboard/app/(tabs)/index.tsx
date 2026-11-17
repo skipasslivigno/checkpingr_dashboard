@@ -27,6 +27,7 @@ import { FirstEntriesForecast } from "@/components/FirstEntriesForecast";
 import { DateExtractionPicker } from "@/components/DateExtractionPicker";
 import { LiftRowSkeleton, StatCardSkeleton } from "@/components/SkeletonLoader";
 import { StatCard } from "@/components/StatCard";
+import { DayNotesSummary } from "@/components/NotesPanels";
 import { DashboardLiftSearch } from "@/components/DashboardLiftSearch";
 import { useColors } from "@/hooks/useColors";
 import { useResponsive } from "@/hooks/useResponsive";
@@ -375,6 +376,8 @@ export default function DashboardScreen() {
       </View>
 
       <PeriodComparison date={selectedDate} season={effectiveSeason} extraction={selectedExtraction} />
+
+      <DayNotesSummary date={selectedDate} />
     </View>
   );
 

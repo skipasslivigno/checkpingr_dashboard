@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { useGetLiftHistory } from "@workspace/api-client-react";
 import { LiftRowSkeleton } from "@/components/SkeletonLoader";
+import { LiftNotesPanel } from "@/components/NotesPanels";
 import { StatCard } from "@/components/StatCard";
 import { useColors } from "@/hooks/useColors";
 import { useMetricColors } from "@/hooks/useMetricColors";
@@ -84,6 +85,8 @@ export default function LiftDetailScreen() {
           <StatCard label={t.firstPassage} value={latest?.npin ?? "—"} accentColor={metrics.primiIngressi.color} />
           <StatCard label={t.secondPassage} value={latest?.npic ?? "—"} />
         </View>
+
+        {Number.isFinite(ggnrNum) ? <LiftNotesPanel date={selectedDate} liftId={ggnrNum} /> : null}
 
         <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
           {t.todaysHistory} — {selectedDate}
