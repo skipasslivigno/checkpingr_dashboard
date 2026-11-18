@@ -27,7 +27,7 @@ import { FirstEntriesForecast } from "@/components/FirstEntriesForecast";
 import { DateExtractionPicker } from "@/components/DateExtractionPicker";
 import { LiftRowSkeleton, StatCardSkeleton } from "@/components/SkeletonLoader";
 import { StatCard } from "@/components/StatCard";
-import { DayNotesSummary } from "@/components/NotesPanels";
+import { DayDiaryButton, DayNotesSummary } from "@/components/NotesPanels";
 import { DashboardLiftSearch } from "@/components/DashboardLiftSearch";
 import { useColors } from "@/hooks/useColors";
 import { useResponsive } from "@/hooks/useResponsive";
@@ -308,6 +308,7 @@ export default function DashboardScreen() {
             {t.dashboard}
           </Text>
         </View>
+        <DayDiaryButton date={selectedDate} />
         <View style={[styles.langToggle, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {(["it", "en"] as const).map((lang) => (
             <TouchableOpacity
@@ -377,7 +378,6 @@ export default function DashboardScreen() {
 
       <PeriodComparison date={selectedDate} season={effectiveSeason} extraction={selectedExtraction} />
 
-      <DayNotesSummary date={selectedDate} />
     </View>
   );
 
@@ -395,6 +395,11 @@ export default function DashboardScreen() {
             return `group-${item.group.name}`;
           }}
           contentContainerStyle={[styles.list, { paddingBottom: Platform.OS === "web" ? 100 : 100 }]}
+          ListFooterComponent={
+            <View style={{ marginHorizontal: -16 }}>
+              <DayNotesSummary date={selectedDate} />
+            </View>
+          }
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }

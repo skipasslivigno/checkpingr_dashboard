@@ -42,7 +42,25 @@ function PanelHeader({ title, count, onOpen, onAdd }: { title: string; count?: n
   );
 }
 
-/** Dashboard: selected-day summary, independent of extraction availability. */
+/** Always available, including days without notes or extractions. */
+export function DayDiaryButton({ date }: { date: string }) {
+  const colors = useColors();
+  const s = useDiary();
+  const router = useRouter();
+  return (
+    <TouchableOpacity
+      testID="dashboard-open-diary"
+      accessibilityRole="button"
+      accessibilityLabel={s.open}
+      onPress={() => openDiary(router, { date })}
+      style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}
+    >
+      <Feather name="book-open" size={21} color={colors.primary} />
+    </TouchableOpacity>
+  );
+}
+
+/** Dashboard footer: no empty panel, independent of extraction availability. */
 export function DayNotesSummary({ date }: { date: string }) {
   const colors = useColors();
   const s = useDiary();
@@ -53,6 +71,8 @@ export function DayNotesSummary({ date }: { date: string }) {
   const q = useGetOperationalNotes(params, { query: { queryKey: getGetOperationalNotesQueryKey(params), ...NOTES_QUERY_OPTIONS } });
   const notes = sortNotes(q.data ?? []);
   const shown = notes.slice(0, 3);
+  if (!q.isError && notes.length === 0) return null;
+
   return (
     <View testID="dashboard-notes" style={[st.panel, { backgroundColor: colors.card, borderColor: colors.border, marginHorizontal: 16, marginTop: 10 }]}>
       <PanelHeader
@@ -61,8 +81,7 @@ export function DayNotesSummary({ date }: { date: string }) {
         onOpen={() => openDiary(router, { date })}
         onAdd={canWrite ? () => setAdding(true) : undefined}
       />
-      {q.isLoading ? <NotesSkeleton rows={1} /> : q.isError ? <NotesError onRetry={() => q.refetch()} /> :
-        notes.length === 0 ? <Text style={[st.emptyHint, { color: colors.mutedForeground, textAlign: "left" }]}>{s.emptyDay}</Text> : (
+      {q.isError ? <NotesError onRetry={() => q.refetch()} /> : (
           <View style={{ gap: 6 }}>
             {shown.map((n) => <NoteCard key={n.id} note={n} compact />)}
             {notes.length > shown.length ? (
