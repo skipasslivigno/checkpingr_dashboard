@@ -1,4 +1,5 @@
 import type { Language } from "@/i18n";
+import { formatCount } from "../lib/format-number";
 
 const it = {
   title: "Diario operativo",
@@ -49,8 +50,8 @@ const it = {
   readOnly: "Accesso in sola lettura",
   createdBy: (name: string, when: string) => `Creata da ${name} il ${when}`,
   editedBy: (name: string, when: string) => `Ultima modifica di ${name} il ${when}`,
-  count: (n: number) => `${n} ${n === 1 ? "nota" : "note"}`,
-  more: (n: number) => `altre ${n}`,
+  count: (n: number) => `${formatCount(n, "it")} ${n === 1 ? "nota" : "note"}`,
+  more: (n: number) => `altre ${formatCount(n, "it")}`,
   currentInterval: "Intervallo corrente",
   comparedInterval: "Intervallo di confronto",
   periodNotes: "Note operative del periodo",
@@ -118,8 +119,8 @@ const en: DiaryStrings = {
   readOnly: "Read-only access",
   createdBy: (name: string, when: string) => `Created by ${name} on ${when}`,
   editedBy: (name: string, when: string) => `Last edited by ${name} on ${when}`,
-  count: (n: number) => `${n} ${n === 1 ? "note" : "notes"}`,
-  more: (n: number) => `${n} more`,
+  count: (n: number) => `${formatCount(n, "en")} ${n === 1 ? "note" : "notes"}`,
+  more: (n: number) => `${formatCount(n, "en")} more`,
   currentInterval: "Current interval",
   comparedInterval: "Compared interval",
   periodNotes: "Operational notes for the period",

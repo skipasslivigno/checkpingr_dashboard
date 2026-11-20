@@ -11,7 +11,8 @@ import { useMetricColors } from "@/hooks/useMetricColors";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { extractionBelongsToDate, defaultForecastSlot, forecastDateAllowed } from "@/lib/forecast-view";
-import { ForecastDetails, fmtExtractionTime, fmtGrouped, type ForecastPanelState } from "@/components/ForecastDetails";
+import { ForecastDetails, fmtExtractionTime, type ForecastPanelState } from "@/components/ForecastDetails";
+import { formatCount } from "@/lib/format-number";
 
 interface Props {
   date: string;
@@ -96,7 +97,7 @@ export function FirstEntriesForecast({ date, season, extraction, actualEntries }
     );
   }
 
-  const estimate = ready ? fmtGrouped(focus!.predictedTotal, language) : "";
+  const estimate = ready ? formatCount(focus!.predictedTotal, language) : "";
   const time = ready ? fmtExtractionTime(focus!.extraction) : "";
   const a11y = ready
     ? `${t.fcTileLabel}: ${estimate}. ${t.fcTileAt.replace("{time}", time)}. ${t.fcTileOpen}`

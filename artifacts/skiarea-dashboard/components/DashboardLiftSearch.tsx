@@ -3,6 +3,7 @@ import React, { useEffect, useRef } from "react";
 import { Platform, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { formatCount } from "@/lib/format-number";
 
 interface Props {
   /** Undefined while the summary is loading: renders a placeholder, never a false zero. */
@@ -21,7 +22,7 @@ interface Props {
  */
 export function DashboardLiftSearch({ activeLifts, totalLifts, loading, query, onQueryChange, open, onOpenChange }: Props) {
   const colors = useColors();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const inputRef = useRef<TextInput>(null);
 
   useEffect(() => {
@@ -41,15 +42,15 @@ export function DashboardLiftSearch({ activeLifts, totalLifts, loading, query, o
   return (
     <View testID="strip-lift-search" style={[styles.strip, { backgroundColor: colors.card, borderColor: colors.border }]}>
       <View style={styles.toolbar}>
-        <View style={styles.summary} accessible accessibilityLabel={countReady ? `${t.activeLifts}: ${activeLifts} / ${totalLifts}` : t.activeLifts}>
+        <View style={styles.summary} accessible accessibilityLabel={countReady ? `${t.activeLifts}: ${formatCount(activeLifts, language)} / ${formatCount(totalLifts, language)}` : t.activeLifts}>
           <View style={[styles.dot, { backgroundColor: countReady && activeLifts! > 0 ? colors.success : colors.border }]} />
           <Text style={[styles.label, { color: colors.mutedForeground }]} numberOfLines={1}>
             {t.activeLifts.toUpperCase()}
           </Text>
           {countReady ? (
             <Text testID="text-active-lifts" style={[styles.count, { color: colors.foreground }]}>
-              {activeLifts}
-              <Text style={[styles.countTotal, { color: colors.mutedForeground }]}>{` / ${totalLifts}`}</Text>
+              {formatCount(activeLifts, language)}
+              <Text style={[styles.countTotal, { color: colors.mutedForeground }]}>{` / ${formatCount(totalLifts, language)}`}</Text>
             </Text>
           ) : (
             <View testID="active-lifts-loading" style={[styles.skel, { backgroundColor: colors.secondary }]} />

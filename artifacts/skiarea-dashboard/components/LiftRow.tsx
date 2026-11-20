@@ -3,6 +3,8 @@ import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { useMetricColors } from "@/hooks/useMetricColors";
+import { useTranslation } from "@/contexts/LanguageContext";
+import { formatCount } from "@/lib/format-number";
 
 interface LiftRowProps {
   name: string;
@@ -17,6 +19,7 @@ interface LiftRowProps {
 export function LiftRow({ name, passages, guests, firstPassage, company, group, onPress }: LiftRowProps) {
   const colors = useColors();
   const metrics = useMetricColors();
+  const { language } = useTranslation();
 
   const isActive = (passages ?? 0) > 0;
 
@@ -48,7 +51,7 @@ export function LiftRow({ name, passages, guests, firstPassage, company, group, 
       <View style={styles.metricBlock}>
         <Feather name="log-in" size={11} color={isActive ? metrics.primiIngressi.color : colors.border} />
         <Text style={[styles.metricCount, { color: isActive ? metrics.primiIngressi.color : colors.border }]}>
-          {(firstPassage ?? 0).toLocaleString()}
+          {formatCount(firstPassage ?? 0, language)}
         </Text>
       </View>
 
@@ -56,13 +59,13 @@ export function LiftRow({ name, passages, guests, firstPassage, company, group, 
       <View style={styles.metricBlock}>
         <Feather name="users" size={11} color={isActive ? metrics.presenze.color : colors.border} />
         <Text style={[styles.metricCount, { color: isActive ? metrics.presenze.color : colors.border }]}>
-          {guests ?? 0}
+          {formatCount(guests ?? 0, language)}
         </Text>
       </View>
 
       {/* Passaggi totali */}
       <Text style={[styles.passageCount, { color: isActive ? metrics.passages.color : colors.border }]}>
-        {(passages ?? 0).toLocaleString()}
+        {formatCount(passages ?? 0, language)}
       </Text>
 
       {onPress ? <Feather name="chevron-right" size={16} color={colors.mutedForeground} /> : null}

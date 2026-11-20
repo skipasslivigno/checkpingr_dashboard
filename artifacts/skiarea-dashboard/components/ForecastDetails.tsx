@@ -17,6 +17,7 @@ import type { FirstEntriesForecast, FirstEntriesForecastPoint } from "@workspace
 import { useColors } from "@/hooks/useColors";
 import { useMetricColors } from "@/hooks/useMetricColors";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { formatCount, formatPercent } from "@/lib/format-number";
 import { FORECAST_VIEW_SLOTS as SLOTS } from "@/lib/forecast-view";
 
 export type ForecastPanelState = "no_season" | "live_only" | "loading" | "error" | "empty" | "data";
@@ -44,18 +45,8 @@ export function fmtExtractionTime(e: string | null | undefined): string {
   if (!e || e.length < 12) return "—";
   return `${e.slice(8, 10)}:${e.slice(10, 12)}`;
 }
-export function fmtNum(n: number | null | undefined): string {
-  return n == null || !Number.isFinite(n) ? "—" : Math.round(n).toLocaleString();
-}
-/** Locale-stable integer grouping: IT uses dots, EN commas (independent of runtime Intl). */
-export function fmtGrouped(n: number | null | undefined, language: string): string {
-  if (n == null || !Number.isFinite(n)) return "—";
-  const r = Math.round(n);
-  const sep = language === "it" ? "." : ",";
-  return (r < 0 ? "-" : "") + Math.abs(r).toString().replace(/\B(?=(\d{3})+(?!\d))/g, sep);
-}
-function fmtPct(f: number | null | undefined): string {
-  return f == null || !Number.isFinite(f) ? "—" : `${(f * 100).toFixed(1)}%`;
+function fmtPct(f: number | null | undefined, language: string): string {
+  return f == null ? "—" : formatPercent(f * 100, language);
 }
 
 export function ForecastDetails(props: Props) {
@@ -138,14 +129,14 @@ export function ForecastDetails(props: Props) {
         {ready && focus ? (
           <View style={{ gap: 4 }}>
             <Text style={[styles.focusLabel, { color: colors.mutedForeground }]}>{t.fcPredictedAt.replace("{slot}", slot)}</Text>
-            <Text testID="text-forecast-predicted" style={[styles.bigValue, { color: accent.color }]}>{fmtNum(focus.predictedTotal)}</Text>
+            <Text testID="text-forecast-predicted" style={[styles.bigValue, { color: accent.color }]}>{formatCount(focus.predictedTotal, language)}</Text>
             {focus.lowerBound != null && focus.upperBound != null && (
               <Text testID="text-forecast-interval" style={[styles.interval, { color: colors.foreground }]}>
-                {t.fcInterval}: {fmtNum(focus.lowerBound)} – {fmtNum(focus.upperBound)}
+                {t.fcInterval}: {formatCount(focus.lowerBound, language)} – {formatCount(focus.upperBound, language)}
               </Text>
             )}
             <View style={styles.metaGrid}>
-              <Meta label={t.fcObserved.replace("{time}", fmtExtractionTime(focus.extraction))} value={fmtNum(focus.observedEntries)} testID="text-forecast-observed" />
+              <Meta label={t.fcObserved.replace("{time}", fmtExtractionTime(focus.extraction))} value={formatCount(focus.observedEntries, language)} testID="text-forecast-observed" />
               <Meta label={t.fcTrainingDays} value={String(focus.sampleDays)} testID="text-forecast-training" />
               <Meta label={t.fcReliability} value={t.fcConfidence[focus.confidence] ?? focus.confidence} testID="text-forecast-confidence" />
             </View>
@@ -159,7 +150,7 @@ export function ForecastDetails(props: Props) {
             <Text style={[styles.scope, { color: colors.mutedForeground }]}>{focus ? t.fcStatusHelp[focus.status] : t.fcStatusHelp.no_data}</Text>
             {focus && focus.observedEntries != null && focus.status !== "before_extraction" && (
               <View style={styles.metaGrid}>
-                <Meta label={t.fcObserved.replace("{time}", fmtExtractionTime(focus.extraction))} value={fmtNum(focus.observedEntries)} testID="text-forecast-observed" />
+                <Meta label={t.fcObserved.replace("{time}", fmtExtractionTime(focus.extraction))} value={formatCount(focus.observedEntries, language)} testID="text-forecast-observed" />
               </View>
             )}
           </View>
@@ -169,15 +160,15 @@ export function ForecastDetails(props: Props) {
           <Text style={[styles.section, { color: colors.foreground }]}>{t.fcDetails}</Text>
           {focus && (
             <>
-              <Row label={t.fcMape} value={fmtPct(focus.validation.medianAbsolutePercentageError)} />
-              <Row label={t.fcMae} value={fmtNum(focus.validation.meanAbsoluteError)} />
-              <Row label={t.fcValidationDays} value={String(focus.validation.sampleDays)} />
-              <Row label={t.fcCoverage} value={fmtPct(focus.validation.intervalCoverage)} />
+              <Row label={t.fcMape} value={fmtPct(focus.validation.medianAbsolutePercentageError, language)} />
+              <Row label={t.fcMae} value={formatCount(focus.validation.meanAbsoluteError, language)} />
+              <Row label={t.fcValidationDays} value={formatCount(focus.validation.sampleDays, language)} />
+              <Row label={t.fcCoverage} value={fmtPct(focus.validation.intervalCoverage, language)} />
             </>
           )}
           <Row
             label={t.fcHistory}
-            value={`${data.history.completeDays} / ${data.history.daysExamined}${data.history.fromDate && data.history.toDate ? ` (${data.history.fromDate} – ${data.history.toDate})` : ""}`}
+            value={`${formatCount(data.history.completeDays, language)} / ${formatCount(data.history.daysExamined, language)}${data.history.fromDate && data.history.toDate ? ` (${data.history.fromDate} – ${data.history.toDate})` : ""}`}
           />
           <Text style={[styles.method, { color: colors.mutedForeground }]}>{t.fcMethod}</Text>
           <Text style={[styles.method, { color: colors.mutedForeground }]}>{t.fcIntervalNote}</Text>
@@ -257,7 +248,7 @@ export function ForecastDetails(props: Props) {
                   {actualExtraction ? t.fcActualAt.replace("{time}", fmtExtractionTime(actualExtraction)) : t.fcActualLatest}
                 </Text>
               </View>
-              <Text testID="text-forecast-actual" style={[styles.actualValue, { color: colors.foreground }]}>{fmtGrouped(actualEntries, language)}</Text>
+              <Text testID="text-forecast-actual" style={[styles.actualValue, { color: colors.foreground }]}>{formatCount(actualEntries, language)}</Text>
             </View>
             {body()}
           </ScrollView>

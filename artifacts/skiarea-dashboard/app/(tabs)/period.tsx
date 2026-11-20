@@ -27,6 +27,7 @@ import { StatCardSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { formatCount } from "@/lib/format-number";
 import { useSeason, formatSeason } from "@/contexts/SeasonContext";
 import { useTenantSettings } from "@/contexts/TenantSettingsContext";
 import { useMetricColors } from "@/hooks/useMetricColors";
@@ -112,11 +113,11 @@ function buildComparisonHtml(
   language: string,
   notesHtml: string,
 ): string {
-  const fmt = (n: number) => n.toLocaleString();
+  const fmt = (n: number) => formatCount(n, language);
   const fmtDate = (d: string) => formatDate(d, language);
   const diff = (a: number, b: number) => {
     const v = a - b;
-    return { val: v, text: (v >= 0 ? "+" : "") + v.toLocaleString(), positive: v >= 0 };
+    return { val: v, text: (v >= 0 ? "+" : "") + fmt(v), positive: v >= 0 };
   };
 
   const passagesDiff = diff(data.totalPassages, priorData.totalPassages);
@@ -133,13 +134,13 @@ function buildComparisonHtml(
     return `
       <tr style="border-bottom:1px solid #C8E6F5">
         <td style="padding:8px 10px;text-align:center">
-          <span style="display:inline-block;width:24px;height:24px;line-height:24px;border-radius:50%;background:${rankBg};color:${rankColor};font-size:11px;font-weight:700;text-align:center">${i + 1}</span>
+          <span style="display:inline-block;min-width:24px;height:24px;line-height:24px;border-radius:50%;background:${rankBg};color:${rankColor};font-size:11px;font-weight:700;text-align:center">${fmt(i + 1)}</span>
         </td>
         <td style="padding:8px 10px;font-size:13px;color:#0C2340;font-weight:600">${escapeHtml(lift.ggbz)}</td>
         <td style="padding:8px 10px;text-align:right;font-size:14px;color:#00A9E0;font-weight:700">${fmt(lift.totalPassages)}</td>
         <td style="padding:8px 10px;text-align:right;font-size:13px;color:#4E82A0">${prior ? fmt(prior.totalPassages) : "—"}</td>
         <td style="padding:8px 10px;text-align:right;font-size:11px;${d ? (d.positive ? posStyle : negStyle) : ""}">${d ? d.text : "—"}</td>
-        <td style="padding:8px 10px;text-align:right;font-size:11px;color:#4E82A0">${lift.activeDays}d</td>
+        <td style="padding:8px 10px;text-align:right;font-size:11px;color:#4E82A0">${fmt(lift.activeDays)}d</td>
       </tr>`;
   }).join("");
 
@@ -206,8 +207,8 @@ ${NOTES_PDF_CSS}
     <div class="card">
       <div class="card-label">${language === "it" ? "Giorni attivi" : "Active days"}</div>
       <div class="card-row">
-        <div class="card-current">${data.activeDays}</div>
-        <div class="card-prior">${priorData.activeDays} ${priorSeason}</div>
+        <div class="card-current">${fmt(data.activeDays)}</div>
+        <div class="card-prior">${fmt(priorData.activeDays)} ${priorSeason}</div>
       </div>
     </div>
     <div class="card">
@@ -275,10 +276,10 @@ async function openPdf(html: string, webWindow?: Window | null): Promise<void> {
   }
 }
 
-function formatDelta(current: number, prior: number): { text: string; positive: boolean } {
+function formatDelta(current: number, prior: number, language: string): { text: string; positive: boolean } {
   const diff = current - prior;
   const sign = diff >= 0 ? "+" : "";
-  return { text: `${sign}${diff.toLocaleString()}`, positive: diff >= 0 };
+  return { text: `${sign}${formatCount(diff, language)}`, positive: diff >= 0 };
 }
 
 /**
@@ -323,7 +324,7 @@ function PeriodGroupSection({
 }) {
   const colors = useColors();
   const metrics = useMetricColors();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
 
   return (
     <View style={[pgStyles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
@@ -337,7 +338,7 @@ function PeriodGroupSection({
         <View style={pgStyles.totalsRow}>
           <View style={pgStyles.totalItem}>
             <Text style={[pgStyles.totalValue, { color: metrics.primiIngressi.color }]}>
-              {group.totalFirstPassages.toLocaleString()}
+              {formatCount(group.totalFirstPassages, language)}
             </Text>
             <Text style={[pgStyles.totalLabel, { color: colors.mutedForeground }]}>
               {t.firstPassages.toUpperCase()}
@@ -346,7 +347,7 @@ function PeriodGroupSection({
           <View style={[pgStyles.divider, { backgroundColor: colors.border }]} />
           <View style={pgStyles.totalItem}>
             <Text style={[pgStyles.totalValue, { color: metrics.presenze.color }]}>
-              {group.totalGuests.toLocaleString()}
+              {formatCount(group.totalGuests, language)}
             </Text>
             <Text style={[pgStyles.totalLabel, { color: colors.mutedForeground }]}>
               {t.onLiftLabel.toUpperCase()}
@@ -355,7 +356,7 @@ function PeriodGroupSection({
           <View style={[pgStyles.divider, { backgroundColor: colors.border }]} />
           <View style={pgStyles.totalItem}>
             <Text style={[pgStyles.totalValue, { color: metrics.passages.color }]}>
-              {group.totalPassages.toLocaleString()}
+              {formatCount(group.totalPassages, language)}
             </Text>
             <Text style={[pgStyles.totalLabel, { color: colors.mutedForeground }]}>
               {t.passages.toUpperCase()}
@@ -364,8 +365,8 @@ function PeriodGroupSection({
           <View style={[pgStyles.divider, { backgroundColor: colors.border }]} />
           <View style={pgStyles.totalItem}>
             <Text style={[pgStyles.totalValue, { color: group.activeLifts > 0 ? colors.success : colors.mutedForeground }]}>
-              {group.activeLifts}
-              <Text style={[pgStyles.totalSmall, { color: colors.mutedForeground }]}>{" / "}{group.totalLifts}</Text>
+              {formatCount(group.activeLifts, language)}
+              <Text style={[pgStyles.totalSmall, { color: colors.mutedForeground }]}>{" / "}{formatCount(group.totalLifts, language)}</Text>
             </Text>
             <Text style={[pgStyles.totalLabel, { color: colors.mutedForeground }]}>
               {t.activeLifts.toUpperCase()}
@@ -394,13 +395,13 @@ function PeriodGroupSection({
                   {lift.ggbz}
                 </Text>
                 <Text style={[pgStyles.col, { color: active ? metrics.primiIngressi.color : colors.mutedForeground }]}>
-                  {lift.totalFirstPassages.toLocaleString()}
+                  {formatCount(lift.totalFirstPassages, language)}
                 </Text>
                 <Text style={[pgStyles.col, { color: active ? metrics.presenze.color : colors.border }]}>
-                  {lift.totalGuests.toLocaleString()}
+                  {formatCount(lift.totalGuests, language)}
                 </Text>
                 <Text style={[pgStyles.colWide, { color: active ? metrics.passages.color : colors.border }]}>
-                  {lift.totalPassages.toLocaleString()}
+                  {formatCount(lift.totalPassages, language)}
                 </Text>
               </View>
             );
@@ -886,11 +887,11 @@ export default function PeriodScreen() {
           <>
             <StatCard
               label={t.periodTotalPassages}
-              value={(data?.totalPassages ?? 0).toLocaleString()}
+              value={formatCount(data?.totalPassages ?? 0, language)}
               sub={
                 comparing && priorData
                   ? (() => {
-                      const d = formatDelta(data?.totalPassages ?? 0, priorData.totalPassages);
+                      const d = formatDelta(data?.totalPassages ?? 0, priorData.totalPassages, language);
                       return `${d.text} ${t.periodVs} ${priorSeason}`;
                     })()
                   : undefined
@@ -899,11 +900,11 @@ export default function PeriodScreen() {
             />
             <StatCard
               label={t.periodTotalGuests}
-              value={(data?.totalGuests ?? 0).toLocaleString()}
+              value={formatCount(data?.totalGuests ?? 0, language)}
               sub={
                 comparing && priorData
                   ? (() => {
-                      const d = formatDelta(data?.totalGuests ?? 0, priorData.totalGuests);
+                      const d = formatDelta(data?.totalGuests ?? 0, priorData.totalGuests, language);
                       return `${d.text} ${t.periodVs} ${priorSeason}`;
                     })()
                   : undefined
@@ -924,10 +925,10 @@ export default function PeriodScreen() {
           <>
             <StatCard
               label={t.periodActiveDays}
-              value={`${data?.activeDays ?? 0} ${t.periodDays}`}
+              value={`${formatCount(data?.activeDays ?? 0, language)} ${t.periodDays}`}
               sub={
                 comparing && priorData
-                  ? `${priorData.activeDays} ${t.periodDays} ${t.periodVs} ${priorSeason}`
+                  ? `${formatCount(priorData.activeDays, language)} ${t.periodDays} ${t.periodVs} ${priorSeason}`
                   : undefined
               }
             />

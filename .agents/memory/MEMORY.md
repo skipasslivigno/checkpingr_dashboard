@@ -10,3 +10,4 @@
 - [Codegen con Expo attivo](expo-codegen-refresh.md) — Orval ricrea il client; un errore di modulo mancante durante la rigenerazione non richiede di cambiare import validi.
 - [Registro accessi](access-log-policy.md) — richiesti sia accessi riusciti sia tentativi falliti.
 - [Diario operativo](operational-diary-policy.md) — note indipendenti dalle estrazioni, senza effetti su conteggi e previsioni; confronti con date effettive separate.
+- [Separatore delle migliaia](numeric-display.md) — sempre nei valori numerici visualizzati, anche a quattro cifre.

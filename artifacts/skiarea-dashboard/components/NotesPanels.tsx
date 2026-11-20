@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { getGetOperationalNotesQueryKey, useGetOperationalNotes } from "@workspace/api-client-react";
 import type { OperationalNote } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
@@ -43,7 +43,7 @@ function PanelHeader({ title, count, onOpen, onAdd }: { title: string; count?: n
 }
 
 /** Always available, including days without notes or extractions. */
-export function DayDiaryButton({ date }: { date: string }) {
+export function DayDiaryButton({ date, noteCount }: { date: string; noteCount: number }) {
   const colors = useColors();
   const s = useDiary();
   const router = useRouter();
@@ -51,24 +51,33 @@ export function DayDiaryButton({ date }: { date: string }) {
     <TouchableOpacity
       testID="dashboard-open-diary"
       accessibilityRole="button"
-      accessibilityLabel={s.open}
+      accessibilityLabel={noteCount > 0 ? `${s.open}: ${s.count(noteCount)}` : s.open}
       onPress={() => openDiary(router, { date })}
-      style={{ width: 44, height: 44, alignItems: "center", justifyContent: "center" }}
+      style={dayStyles.button}
     >
-      <Feather name="book-open" size={21} color={colors.primary} />
+      <Feather name="book-open" size={21} color={noteCount > 0 ? colors.primary : colors.mutedForeground} />
+      {noteCount > 0 && <View testID="dashboard-diary-has-notes" style={[dayStyles.badge, { backgroundColor: colors.primary }]} />}
     </TouchableOpacity>
   );
 }
 
+const dayStyles = StyleSheet.create({
+  button: { width: 44, height: 44, alignItems: "center", justifyContent: "center" },
+  badge: { position: "absolute", top: 7, right: 6, width: 8, height: 8, borderRadius: 4 },
+});
+
+export function useDayNotes(date: string) {
+  const params = { from: date, to: date, scope: "all" as const };
+  return useGetOperationalNotes(params, { query: { queryKey: getGetOperationalNotesQueryKey(params), ...NOTES_QUERY_OPTIONS } });
+}
+
 /** Dashboard footer: no empty panel, independent of extraction availability. */
-export function DayNotesSummary({ date }: { date: string }) {
+export function DayNotesSummary({ date, q }: { date: string; q: Pick<ReturnType<typeof useDayNotes>, "data" | "isError" | "refetch"> }) {
   const colors = useColors();
   const s = useDiary();
   const router = useRouter();
   const canWrite = useCanWriteNotes();
   const [adding, setAdding] = useState(false);
-  const params = { from: date, to: date, scope: "all" as const };
-  const q = useGetOperationalNotes(params, { query: { queryKey: getGetOperationalNotesQueryKey(params), ...NOTES_QUERY_OPTIONS } });
   const notes = sortNotes(q.data ?? []);
   const shown = notes.slice(0, 3);
   if (!q.isError && notes.length === 0) return null;

@@ -1,5 +1,6 @@
 import type { OperationalNote } from "@workspace/api-client-react";
 import type { DiaryStrings } from "@/i18n/diary";
+import { formatCount } from "./format-number";
 
 export const NOTE_MAX = 4000;
 export const NOTE_CATEGORIES = ["weather", "opening_closure", "technical", "event", "other"] as const;
@@ -114,8 +115,8 @@ export function buildSinglePeriodHtml(args: {
 }): string {
   const { from, to, season, language, s, totals, lifts, notes } = args;
   const it = language === "it";
-  const fmt = (n: number) => n.toLocaleString(it ? "it-IT" : "en-GB");
-  const rows = lifts.map((l, i) => `<tr><td>${i + 1}</td><td style="text-align:left">${escapeHtml(l.ggbz)}</td><td>${fmt(l.totalPassages)}</td><td>${fmt(l.totalGuests)}</td><td>${l.activeDays}</td></tr>`).join("");
+  const fmt = (n: number) => formatCount(n, language);
+  const rows = lifts.map((l, i) => `<tr><td>${fmt(i + 1)}</td><td style="text-align:left">${escapeHtml(l.ggbz)}</td><td>${fmt(l.totalPassages)}</td><td>${fmt(l.totalGuests)}</td><td>${fmt(l.activeDays)}</td></tr>`).join("");
   return `<!DOCTYPE html><html><head><meta charset="utf-8"><title>${escapeHtml(it ? "Report periodo" : "Period report")}</title><style>
   * { box-sizing: border-box; margin: 0; padding: 0; }
   body { font-family: -apple-system, 'Segoe UI', sans-serif; background: #F1F8FC; color: #0C2340; padding: 24px; }
@@ -128,7 +129,7 @@ export function buildSinglePeriodHtml(args: {
   <h1>${escapeHtml(formatNoteDate(from, language))} — ${escapeHtml(formatNoteDate(to, language))}</h1>
   <div class="cards"><div class="card"><div class="lbl">${it ? "Passaggi totali" : "Total passages"}</div><div class="val">${fmt(totals.passages)}</div></div>
   <div class="card"><div class="lbl">${it ? "Ospiti totali" : "Total guests"}</div><div class="val">${fmt(totals.guests)}</div></div>
-  <div class="card"><div class="lbl">${it ? "Giorni attivi" : "Active days"}</div><div class="val">${totals.activeDays}</div></div></div>
+  <div class="card"><div class="lbl">${it ? "Giorni attivi" : "Active days"}</div><div class="val">${fmt(totals.activeDays)}</div></div></div>
   <table><thead><tr><th>#</th><th style="text-align:left">${it ? "Impianto" : "Lift"}</th><th>${it ? "Passaggi" : "Passages"}</th><th>${it ? "Ospiti" : "Guests"}</th><th>${it ? "Giorni" : "Days"}</th></tr></thead><tbody>${rows}</tbody></table>
   ${buildPeriodNotesHtml({ from, to, notes }, null, s, language)}
   </body></html>`;

@@ -27,7 +27,7 @@ import { FirstEntriesForecast } from "@/components/FirstEntriesForecast";
 import { DateExtractionPicker } from "@/components/DateExtractionPicker";
 import { LiftRowSkeleton, StatCardSkeleton } from "@/components/SkeletonLoader";
 import { StatCard } from "@/components/StatCard";
-import { DayDiaryButton, DayNotesSummary } from "@/components/NotesPanels";
+import { DayDiaryButton, DayNotesSummary, useDayNotes } from "@/components/NotesPanels";
 import { DashboardLiftSearch } from "@/components/DashboardLiftSearch";
 import { useColors } from "@/hooks/useColors";
 import { useResponsive } from "@/hooks/useResponsive";
@@ -36,6 +36,7 @@ import { useSeason, formatSeason } from "@/contexts/SeasonContext";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
 import { useTenantSettings } from "@/contexts/TenantSettingsContext";
 import { useMetricColors } from "@/hooks/useMetricColors";
+import { formatCount } from "@/lib/format-number";
 
 function todayIso(): string {
   return new Date().toISOString().slice(0, 10);
@@ -76,7 +77,7 @@ function GroupSection({
 }) {
   const colors = useColors();
   const metrics = useMetricColors();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const router = useRouter();
 
   return (
@@ -92,7 +93,7 @@ function GroupSection({
         <View style={groupStyles.subtotalsRow}>
           <View style={groupStyles.subtotalItem}>
             <Text style={[groupStyles.subtotalValue, { color: metrics.primiIngressi.color }]}>
-              {group.totalFirstPassages.toLocaleString()}
+              {formatCount(group.totalFirstPassages, language)}
             </Text>
             <Text style={[groupStyles.subtotalLabel, { color: colors.mutedForeground }]}>
               {t.firstPassages.toUpperCase()}
@@ -101,7 +102,7 @@ function GroupSection({
           <View style={[groupStyles.divider, { backgroundColor: colors.border }]} />
           <View style={groupStyles.subtotalItem}>
             <Text style={[groupStyles.subtotalValue, { color: metrics.presenze.color }]}>
-              {group.totalGuests}
+              {formatCount(group.totalGuests, language)}
             </Text>
             <Text style={[groupStyles.subtotalLabel, { color: colors.mutedForeground }]}>
               {t.onLiftLabel.toUpperCase()}
@@ -110,7 +111,7 @@ function GroupSection({
           <View style={[groupStyles.divider, { backgroundColor: colors.border }]} />
           <View style={groupStyles.subtotalItem}>
             <Text style={[groupStyles.subtotalValue, { color: metrics.passages.color }]}>
-              {group.totalPassages.toLocaleString()}
+              {formatCount(group.totalPassages, language)}
             </Text>
             <Text style={[groupStyles.subtotalLabel, { color: colors.mutedForeground }]}>
               {t.passages.toUpperCase()}
@@ -119,9 +120,9 @@ function GroupSection({
           <View style={[groupStyles.divider, { backgroundColor: colors.border }]} />
           <View style={groupStyles.subtotalItem}>
             <Text style={[groupStyles.subtotalValue, { color: group.activeLifts > 0 ? colors.success : colors.mutedForeground }]}>
-              {group.activeLifts}
+              {formatCount(group.activeLifts, language)}
               <Text style={[groupStyles.subtotalSmall, { color: colors.mutedForeground }]}>
-                {" / "}{group.totalLifts}
+                {" / "}{formatCount(group.totalLifts, language)}
               </Text>
             </Text>
             <Text style={[groupStyles.subtotalLabel, { color: colors.mutedForeground }]}>
@@ -155,13 +156,13 @@ function GroupSection({
                   {lift.ggbz}
                 </Text>
                 <Text style={[groupStyles.tableCol, { color: isActive ? metrics.primiIngressi.color : colors.mutedForeground }]}>
-                  {(lift.npin ?? 0).toLocaleString()}
+                  {formatCount(lift.npin ?? 0, language)}
                 </Text>
                 <Text style={[groupStyles.tableCol, { color: isActive ? metrics.presenze.color : colors.border }]}>
-                  {(lift.nuin ?? 0).toLocaleString()}
+                  {formatCount(lift.nuin ?? 0, language)}
                 </Text>
                 <Text style={[groupStyles.tableColPassages, { color: isActive ? metrics.passages.color : colors.border }]}>
-                  {(lift.npas ?? 0).toLocaleString()}
+                  {formatCount(lift.npas ?? 0, language)}
                 </Text>
                 <Feather name="chevron-right" size={13} color={colors.border} />
               </TouchableOpacity>
@@ -198,6 +199,7 @@ export default function DashboardScreen() {
 
   const { data: summary, isLoading: summaryLoading } = useGetDashboardSummary(queryParams);
   const { data: lifts, isLoading: liftsLoading } = useGetLatestLifts(queryParams);
+  const dayNotes = useDayNotes(selectedDate);
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -205,6 +207,7 @@ export default function DashboardScreen() {
     await queryClient.invalidateQueries({ queryKey: getGetLatestLiftsQueryKey() });
     await queryClient.invalidateQueries({ queryKey: getGetFirstEntriesForecastQueryKey() });
     await queryClient.invalidateQueries({ queryKey: getGetPeriodComparisonQueryKey() });
+    await dayNotes.refetch();
     setRefreshing(false);
   };
 
@@ -257,7 +260,8 @@ export default function DashboardScreen() {
 
   const topPadding = Platform.OS === "web" ? 16 : 0;
   const isToday = selectedDate === todayIso();
-  const { isContentWide: isWide, containerStyle } = useResponsive();
+  const { isContentWide: isWide, contentWidth, containerStyle } = useResponsive();
+  const compactHeader = contentWidth < 400;
 
   type ListItem =
     | { type: "header" }
@@ -294,21 +298,20 @@ export default function DashboardScreen() {
   const renderHeader = () => (
     <View style={[styles.headerBlock, { paddingTop: topPadding + 16 }]}>
       {/* Logo / title / lang */}
-      <View style={styles.headerRow}>
+      <View style={[styles.headerRow, compactHeader && styles.headerRowCompact]}>
         <Image
           source={logoBase64 ? { uri: logoBase64 } : require("@/assets/images/logo.png")}
-          style={[styles.logoImage, isWide && styles.logoImageWide]}
+          style={[styles.logoImage, isWide && styles.logoImageWide, compactHeader && styles.logoImageCompact]}
           resizeMode="contain"
         />
         <View style={styles.titleBlock}>
           <Text style={[styles.dateText, { color: colors.mutedForeground }]} numberOfLines={1}>
             {isToday ? t.today : selectedDate}
           </Text>
-          <Text style={[styles.title, { color: colors.foreground }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
-            {t.dashboard}
+          <Text testID="dashboard-title" accessibilityRole="header" style={[styles.title, compactHeader && styles.titleCompact, { color: colors.primary }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
+            {t.dashboard.toUpperCase()}
           </Text>
         </View>
-        <DayDiaryButton date={selectedDate} />
         <View style={[styles.langToggle, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {(["it", "en"] as const).map((lang) => (
             <TouchableOpacity
@@ -368,8 +371,8 @@ export default function DashboardScreen() {
           <><StatCardSkeleton /><StatCardSkeleton /></>
         ) : (
           <>
-            <StatCard compact={isWide} accentColor={metrics.passages.color} label={t.passages} value={(summary?.totalPassages ?? 0).toLocaleString()} />
-            <StatCard compact={isWide} accentColor={metrics.primiIngressi.color} label={t.guestsOnLifts} value={(summary?.totalGuests ?? 0).toLocaleString()}>
+            <StatCard compact={isWide} accentColor={metrics.passages.color} label={t.passages} value={formatCount(summary?.totalPassages ?? 0, language)} />
+            <StatCard compact={isWide} accentColor={metrics.primiIngressi.color} label={t.guestsOnLifts} value={formatCount(summary?.totalGuests ?? 0, language)}>
               {forecastInline}
             </StatCard>
           </>
@@ -397,7 +400,7 @@ export default function DashboardScreen() {
           contentContainerStyle={[styles.list, { paddingBottom: Platform.OS === "web" ? 100 : 100 }]}
           ListFooterComponent={
             <View style={{ marginHorizontal: -16 }}>
-              <DayNotesSummary date={selectedDate} />
+              <DayNotesSummary date={selectedDate} q={dayNotes} />
             </View>
           }
           refreshControl={
@@ -407,15 +410,20 @@ export default function DashboardScreen() {
             if (item.type === "header") return renderHeader();
             if (item.type === "search") {
               return (
-                <DashboardLiftSearch
-                  activeLifts={summary?.activeLifts}
-                  totalLifts={summary?.totalLifts}
-                  loading={summaryLoading}
-                  query={searchQuery}
-                  onQueryChange={setSearchQuery}
-                  open={searchOpen}
-                  onOpenChange={setSearchOpen}
-                />
+                <View style={styles.liftToolbar}>
+                  <DayDiaryButton date={selectedDate} noteCount={dayNotes.data?.length ?? 0} />
+                  <View style={styles.liftSearch}>
+                    <DashboardLiftSearch
+                      activeLifts={summary?.activeLifts}
+                      totalLifts={summary?.totalLifts}
+                      loading={summaryLoading}
+                      query={searchQuery}
+                      onQueryChange={setSearchQuery}
+                      open={searchOpen}
+                      onOpenChange={setSearchOpen}
+                    />
+                  </View>
+                </View>
               );
             }
             if (item.type === "skeleton") return <LiftRowSkeleton />;
@@ -448,6 +456,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   listWrap: { flex: 1, width: "100%" },
   list: { paddingHorizontal: 16, gap: 10 },
+  liftToolbar: { flexDirection: "row", alignItems: "flex-start", gap: 4 },
+  liftSearch: { flex: 1, minWidth: 0 },
   headerBlock: { marginHorizontal: -16, paddingHorizontal: 0, marginBottom: 4 },
   headerRow: {
     flexDirection: "row",
@@ -457,11 +467,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     minHeight: 56,
   },
+  headerRowCompact: { paddingHorizontal: 12, gap: 8 },
   logoImage: { width: 110, height: 44, flexShrink: 0 },
   logoImageWide: { width: 180, height: 64 },
-  titleBlock: { flex: 1, justifyContent: "center" },
+  logoImageCompact: { width: 84 },
+  titleBlock: { flex: 1, minWidth: 0, justifyContent: "center" },
   dateText: { fontSize: 11, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
   title: { fontSize: 26, fontFamily: "Inter_700Bold", letterSpacing: -0.5, marginTop: 1 },
+  titleCompact: { fontSize: 20 },
   langToggle: {
     flexDirection: "row", borderRadius: 16, borderWidth: 1, overflow: "hidden", flexShrink: 0,
   },

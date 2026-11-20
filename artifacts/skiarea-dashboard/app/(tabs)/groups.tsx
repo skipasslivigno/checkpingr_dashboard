@@ -22,6 +22,7 @@ import { LiftRowSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { formatCount } from "@/lib/format-number";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
 import { useSeason, formatSeason } from "@/contexts/SeasonContext";
 import { useTenantSettings } from "@/contexts/TenantSettingsContext";
@@ -58,6 +59,7 @@ function GroupLiftRow({
 }) {
   const colors = useColors();
   const metrics = useMetricColors();
+  const { language } = useTranslation();
   const isActive = (lift.npas ?? 0) > 0;
 
   return (
@@ -70,13 +72,13 @@ function GroupLiftRow({
         {lift.ggbz}
       </Text>
       <Text style={[liftRowStyles.col, { color: isActive ? metrics.primiIngressi.color : colors.mutedForeground }]}>
-        {(lift.npin ?? 0).toLocaleString()}
+        {formatCount(lift.npin ?? 0, language)}
       </Text>
       <Text style={[liftRowStyles.col, { color: isActive ? metrics.presenze.color : colors.border }]}>
-        {(lift.nuin ?? 0).toLocaleString()}
+        {formatCount(lift.nuin ?? 0, language)}
       </Text>
       <Text style={[liftRowStyles.colPassages, { color: isActive ? metrics.passages.color : colors.border }]}>
-        {(lift.npas ?? 0).toLocaleString()}
+        {formatCount(lift.npas ?? 0, language)}
       </Text>
       <Feather name="chevron-right" size={13} color={colors.border} />
     </TouchableOpacity>
@@ -127,7 +129,7 @@ function GroupSection({
 }) {
   const colors = useColors();
   const metrics = useMetricColors();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const router = useRouter();
 
   return (
@@ -147,7 +149,7 @@ function GroupSection({
         <View style={styles.subtotalsRow}>
           <View style={styles.subtotalItem}>
             <Text style={[styles.subtotalValue, { color: metrics.primiIngressi.color }]}>
-              {group.totalFirstPassages.toLocaleString()}
+              {formatCount(group.totalFirstPassages, language)}
             </Text>
             <Text style={[styles.subtotalLabel, { color: colors.mutedForeground }]}>
               {t.firstPassages.toUpperCase()}
@@ -158,7 +160,7 @@ function GroupSection({
 
           <View style={styles.subtotalItem}>
             <Text style={[styles.subtotalValue, { color: metrics.presenze.color }]}>
-              {group.totalGuests}
+              {formatCount(group.totalGuests, language)}
             </Text>
             <Text style={[styles.subtotalLabel, { color: colors.mutedForeground }]}>
               {t.onLiftLabel.toUpperCase()}
@@ -169,7 +171,7 @@ function GroupSection({
 
           <View style={styles.subtotalItem}>
             <Text style={[styles.subtotalValue, { color: metrics.passages.color }]}>
-              {group.totalPassages.toLocaleString()}
+              {formatCount(group.totalPassages, language)}
             </Text>
             <Text style={[styles.subtotalLabel, { color: colors.mutedForeground }]}>
               {t.passages.toUpperCase()}
@@ -180,9 +182,9 @@ function GroupSection({
 
           <View style={styles.subtotalItem}>
             <Text style={[styles.subtotalValue, { color: group.activeLifts > 0 ? colors.success : colors.mutedForeground }]}>
-              {group.activeLifts}
+              {formatCount(group.activeLifts, language)}
               <Text style={[styles.subtotalValueSmall, { color: colors.mutedForeground }]}>
-                {" / "}{group.totalLifts}
+                {" / "}{formatCount(group.totalLifts, language)}
               </Text>
             </Text>
             <Text style={[styles.subtotalLabel, { color: colors.mutedForeground }]}>

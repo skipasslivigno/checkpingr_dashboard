@@ -25,6 +25,7 @@ import { LiftRowSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
 import { useResponsive } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { formatCount } from "@/lib/format-number";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
 import { useSeason } from "@/contexts/SeasonContext";
 
@@ -37,7 +38,7 @@ export default function LiftsScreen() {
   const colors = useColors();
   const router = useRouter();
   const queryClient = useQueryClient();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [search, setSearch] = useState("");
   const [refreshing, setRefreshing] = useState(false);
   const { selectedDate, setSelectedDate, selectedExtraction, setSelectedExtraction } = useSelectedDate();
@@ -226,7 +227,7 @@ export default function LiftsScreen() {
                 </TouchableOpacity>
               </View>
               <Text style={[styles.filterCount, { color: colors.mutedForeground }]}>
-                {filtered.length} {filtered.length !== 1 ? t.lifts : t.lift}
+                {formatCount(filtered.length, language)} {filtered.length !== 1 ? t.lifts : t.lift}
               </Text>
             </View>
           )}

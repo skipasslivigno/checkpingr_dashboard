@@ -18,13 +18,14 @@ import { useColors } from "@/hooks/useColors";
 import { useMetricColors } from "@/hooks/useMetricColors";
 import { useResponsive, CONTENT_MAX_WIDTH } from "@/hooks/useResponsive";
 import { useTranslation } from "@/contexts/LanguageContext";
+import { formatCount } from "@/lib/format-number";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
 
 export default function LiftDetailScreen() {
   const colors = useColors();
   const metrics = useMetricColors();
   const router = useRouter();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const { ggnr, name } = useLocalSearchParams<{ ggnr: string; name: string }>();
   const { selectedDate } = useSelectedDate();
 
@@ -78,12 +79,12 @@ export default function LiftDetailScreen() {
 
         {/* Current stats */}
         <View style={styles.statsRow}>
-          <StatCard label={t.passages} value={(latest?.npas ?? 0).toLocaleString()} accentColor={metrics.passages.color} />
-          <StatCard label={t.onLiftsNow} value={latest?.nuin ?? "—"} accentColor={metrics.presenze.color} />
+          <StatCard label={t.passages} value={formatCount(latest?.npas ?? 0, language)} accentColor={metrics.passages.color} />
+          <StatCard label={t.onLiftsNow} value={formatCount(latest?.nuin, language)} accentColor={metrics.presenze.color} />
         </View>
         <View style={styles.statsRow}>
-          <StatCard label={t.firstPassage} value={latest?.npin ?? "—"} accentColor={metrics.primiIngressi.color} />
-          <StatCard label={t.secondPassage} value={latest?.npic ?? "—"} />
+          <StatCard label={t.firstPassage} value={formatCount(latest?.npin, language)} accentColor={metrics.primiIngressi.color} />
+          <StatCard label={t.secondPassage} value={formatCount(latest?.npic, language)} />
         </View>
 
         {Number.isFinite(ggnrNum) ? <LiftNotesPanel date={selectedDate} liftId={ggnrNum} /> : null}
@@ -119,19 +120,19 @@ export default function LiftDetailScreen() {
               <View style={styles.histStats}>
                 <View style={styles.histStat}>
                   <Text style={[styles.histVal, { color: metrics.passages.color }]}>
-                    {(snap.npas ?? 0).toLocaleString()}
+                    {formatCount(snap.npas ?? 0, language)}
                   </Text>
                   <Text style={[styles.histLabel, { color: colors.mutedForeground }]}>{t.passagesRowLabel}</Text>
                 </View>
                 <View style={styles.histStat}>
                   <Text style={[styles.histVal, { color: metrics.presenze.color }]}>
-                    {snap.nuin ?? "—"}
+                    {formatCount(snap.nuin, language)}
                   </Text>
                   <Text style={[styles.histLabel, { color: colors.mutedForeground }]}>{t.onLiftLabel}</Text>
                 </View>
                 <View style={styles.histStat}>
                   <Text style={[styles.histVal, { color: metrics.primiIngressi.color }]}>
-                    {snap.npin ?? "—"}
+                    {formatCount(snap.npin, language)}
                   </Text>
                   <Text style={[styles.histLabel, { color: colors.mutedForeground }]}>{t.firstPassLabel}</Text>
                 </View>

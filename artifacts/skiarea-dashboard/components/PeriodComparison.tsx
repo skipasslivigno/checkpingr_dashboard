@@ -9,22 +9,20 @@ import { useMetricColors } from "@/hooks/useMetricColors";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { extractionBelongsToDate } from "@/lib/forecast-view";
+import { formatCount, formatPercent } from "@/lib/format-number";
 
 interface Props { date: string; season?: string; extraction?: string }
 
-const fmtNum = (n: number | null | undefined) => (n == null ? null : n.toLocaleString("it-IT"));
 const fmtDate = (d: string | null | undefined) => (d ? `${d.slice(8, 10)}/${d.slice(5, 7)}/${d.slice(2, 4)}` : "?");
 const range = (a: string | null, b: string | null) => (a || b ? (a === b ? fmtDate(a) : `${fmtDate(a)}–${fmtDate(b)}`) : "");
-const fmtPct = (p: number | null | undefined) =>
-  p == null ? null : `${p > 0 ? "+" : p < 0 ? "−" : ""}${Math.abs(p).toLocaleString("it-IT", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
 
 function Column({ title, v, id, showMissing, onToggle }: { title: string; v: PeriodComparisonValue; id: string; showMissing: boolean; onToggle: () => void }) {
   const colors = useColors();
   const accent = useMetricColors().primiIngressi;
-  const { t } = useTranslation();
-  const cur = fmtNum(v.currentTotal);
-  const prev = fmtNum(v.previousTotal);
-  const pct = fmtPct(v.changePercent);
+  const { t, language } = useTranslation();
+  const cur = v.currentTotal == null ? null : formatCount(v.currentTotal, language);
+  const prev = v.previousTotal == null ? null : formatCount(v.previousTotal, language);
+  const pct = v.changePercent == null ? null : formatPercent(v.changePercent, language, true);
   const pctColor = v.changePercent == null ? colors.mutedForeground : v.changePercent > 0 ? colors.success : v.changePercent < 0 ? colors.destructive : colors.foreground;
   const missing = v.missingCurrentDays.length + v.missingPreviousDays.length;
   return (
@@ -50,7 +48,7 @@ function Column({ title, v, id, showMissing, onToggle }: { title: string; v: Per
       {missing > 0 && (
         <TouchableOpacity testID={`button-${id}-missing`} onPress={onToggle} accessibilityRole="button" style={styles.missBtn}>
           <Feather name="alert-triangle" size={11} color={colors.destructive} />
-          <Text style={[styles.missText, { color: colors.destructive }]}>{t.pc.missing} ({missing})</Text>
+          <Text style={[styles.missText, { color: colors.destructive }]}>{t.pc.missing} ({formatCount(missing, language)})</Text>
         </TouchableOpacity>
       )}
       {showMissing && missing > 0 && (
@@ -123,15 +121,17 @@ export function PeriodComparison({ date, season, extraction }: Props) {
   }
   const time = data.sourceExtraction && /^\d{14}$/.test(data.sourceExtraction)
     ? `${data.sourceExtraction.slice(8, 10)}:${data.sourceExtraction.slice(10, 12)}` : null;
+  const showPartial = data.includedSelectedDay && time && time !== "23:30";
   return (
     <View testID="period-comparison" style={card}>
-      <View style={styles.head}>
-        <Text style={[styles.headText, { color: colors.mutedForeground }]}>{t.pc.title}</Text>
-        {data.includedSelectedDay && time && time !== "23:30" && (
-          <Text testID="text-period-partial" style={[styles.headText, { color: colors.mutedForeground }]}>{t.pc.partial.replace("{time}", time)}</Text>
-        )}
-        {!data.previousSeason && <Text style={[styles.headText, { color: colors.mutedForeground }]}>{t.pc.noPrevSeason}</Text>}
-      </View>
+      {(showPartial || !data.previousSeason) && (
+        <View style={styles.head}>
+          {showPartial && (
+            <Text testID="text-period-partial" style={[styles.headText, { color: colors.mutedForeground }]}>{t.pc.partial.replace("{time}", time)}</Text>
+          )}
+          {!data.previousSeason && <Text style={[styles.headText, { color: colors.mutedForeground }]}>{t.pc.noPrevSeason}</Text>}
+        </View>
+      )}
       {previousConfigMissing && (
         <View testID="period-comparison-previous-config" style={styles.msgRow}>
           <Feather name="info" size={14} color={colors.mutedForeground} />

@@ -25,12 +25,7 @@ import { useTranslation } from "@/contexts/LanguageContext";
 import { useSeason, formatSeason } from "@/contexts/SeasonContext";
 import { useTenantSettings } from "@/contexts/TenantSettingsContext";
 import { buildSeasonColorMap, resolveChartSeasons, toggleChartSeason } from "@/lib/chart-seasons";
-
-function formatBigNumber(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}k`;
-  return String(n);
-}
+import { formatCount, formatPercent } from "@/lib/format-number";
 
 function formatDate(iso: string): string {
   const parts = iso.split("T")[0]?.split("-");
@@ -95,7 +90,8 @@ interface LineChartProps {
 }
 
 function LineChart({ lines, valueKey, containerWidth, height, colors, yLabel, xLabel }: LineChartProps) {
-  const PAD = { top: 16, right: 16, bottom: 40, left: 52 };
+  const { language } = useTranslation();
+  const PAD = { top: 16, right: 16, bottom: 40, left: 66 };
   const [activePoint, setActivePoint] = useState<ActivePoint | null>(null);
 
   const allPoints = lines.flatMap((l) => l.points);
@@ -153,7 +149,7 @@ function LineChart({ lines, valueKey, containerWidth, height, colors, yLabel, xL
           <G key={v}>
             <Line x1={0} y1={toY(v)} x2={chartW} y2={toY(v)} stroke={colors.border} strokeWidth={1} strokeDasharray="3,3" />
             <SvgText x={-6} y={toY(v) + 4} textAnchor="end" fontSize={9} fill={colors.mutedForeground} fontFamily="Inter_400Regular">
-              {formatBigNumber(v)}
+              {formatCount(v, language)}
             </SvgText>
           </G>
         ))}
@@ -163,7 +159,7 @@ function LineChart({ lines, valueKey, containerWidth, height, colors, yLabel, xL
           <G key={v}>
             <Line x1={toX(v)} y1={0} x2={toX(v)} y2={chartH} stroke={colors.border} strokeWidth={0.5} strokeDasharray="2,4" />
             <SvgText x={toX(v)} y={chartH + 14} textAnchor="middle" fontSize={9} fill={colors.mutedForeground} fontFamily="Inter_400Regular">
-              {v}
+              {formatCount(v, language)}
             </SvgText>
           </G>
         ))}
@@ -302,7 +298,7 @@ function LineChart({ lines, valueKey, containerWidth, height, colors, yLabel, xL
               fill={activePoint.seasonColor}
               fontFamily="Inter_700Bold"
             >
-              {activePoint.value.toLocaleString()}
+              {formatCount(activePoint.value, language)}
             </SvgText>
           </G>
         )}
@@ -346,8 +342,9 @@ interface ActiveBar {
 }
 
 function WeekBarChart({ bars, containerWidth, height, colors, weekLabel }: WeekBarChartProps) {
+  const { language } = useTranslation();
   const hasDelta = bars.length >= 2;
-  const PAD = { top: 16, right: 16, bottom: 44, left: 52 };
+  const PAD = { top: 16, right: 16, bottom: 44, left: 66 };
   const TIP_H = hasDelta ? 76 : 58;
   const [activeBar, setActiveBar] = useState<ActiveBar | null>(null);
 
@@ -405,7 +402,7 @@ function WeekBarChart({ bars, containerWidth, height, colors, weekLabel }: WeekB
           <G key={v}>
             <Line x1={0} y1={toY(v)} x2={chartW} y2={toY(v)} stroke={colors.border} strokeWidth={1} strokeDasharray="3,3" />
             <SvgText x={-6} y={toY(v) + 4} textAnchor="end" fontSize={9} fill={colors.mutedForeground} fontFamily="Inter_400Regular">
-              {formatBigNumber(v)}
+              {formatCount(v, language)}
             </SvgText>
           </G>
         ))}
@@ -431,7 +428,7 @@ function WeekBarChart({ bars, containerWidth, height, colors, weekLabel }: WeekB
                   fill={colors.mutedForeground}
                   fontFamily="Inter_400Regular"
                 >
-                  {`${weekLabel.slice(0, 1)}${weekNum}`}
+                  {`${weekLabel.slice(0, 1)}${formatCount(weekNum, language)}`}
                 </SvgText>
               )}
 
@@ -509,7 +506,7 @@ function WeekBarChart({ bars, containerWidth, height, colors, weekLabel }: WeekB
           const otherVal = otherBar?.weeks.find((w) => w.weekNumber === activeBar.weekNumber)?.totalPassages ?? 0;
           const delta = hasDelta && otherVal > 0 ? ((activeBar.value - otherVal) / otherVal) * 100 : null;
           const deltaPositive = delta !== null && delta >= 0;
-          const deltaLabel = delta !== null ? `${deltaPositive ? "+" : ""}${delta.toFixed(1)}%` : null;
+          const deltaLabel = delta !== null ? formatPercent(delta, language, true) : null;
 
           return (
             <G x={tooltipPos.tx} y={tooltipPos.ty}>
@@ -525,11 +522,11 @@ function WeekBarChart({ bars, containerWidth, height, colors, weekLabel }: WeekB
               </SvgText>
               {/* Week number */}
               <SvgText x={TOOLTIP_PADDING + 4} y={TOOLTIP_PADDING + 24} fontSize={11} fill={colors.foreground} fontFamily="Inter_600SemiBold">
-                {`${weekLabel.slice(0, 1)}${activeBar.weekNumber}`}
+                {`${weekLabel.slice(0, 1)}${formatCount(activeBar.weekNumber, language)}`}
               </SvgText>
               {/* Value */}
               <SvgText x={TOOLTIP_PADDING + 4} y={TOOLTIP_PADDING + 42} fontSize={13} fill={activeBar.seasonColor} fontFamily="Inter_700Bold">
-                {activeBar.value.toLocaleString()}
+                {formatCount(activeBar.value, language)}
               </SvgText>
               {/* Delta % vs other season */}
               {deltaLabel && (
@@ -597,7 +594,7 @@ function WeekBarChartWithWidth({
 export default function ChartsScreen() {
   const colors = useColors();
   const { containerStyle } = useResponsive();
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const queryClient = useQueryClient();
   const { colors: tenantColors, maxSeasons } = useTenantSettings();
   const [refreshing, setRefreshing] = useState(false);
@@ -818,7 +815,7 @@ export default function ChartsScreen() {
             const delta = prevTotal > 0 ? ((total - prevTotal) / prevTotal) * 100 : null;
             const deltaPositive = delta !== null && delta >= 0;
             const deltaText = delta !== null
-              ? `${deltaPositive ? "+" : ""}${delta.toFixed(1)}%`
+              ? formatPercent(delta, language, true)
               : null;
 
             return (
@@ -829,7 +826,7 @@ export default function ChartsScreen() {
                   <View style={styles.summaryStats}>
                     <View style={styles.summaryStat}>
                       <View style={styles.summaryValueRow}>
-                        <Text style={[styles.summaryValue, { color: colors.foreground }]}>{total.toLocaleString()}</Text>
+                        <Text style={[styles.summaryValue, { color: colors.foreground }]}>{formatCount(total, language)}</Text>
                         {deltaText && (
                           <View style={[styles.deltaBadge, { backgroundColor: deltaPositive ? colors.success + "22" : colors.destructive + "22" }]}>
                             <Text style={[styles.deltaBadgeText, { color: deltaPositive ? colors.success : colors.destructive }]}>
@@ -844,11 +841,11 @@ export default function ChartsScreen() {
                       <Text style={[styles.summaryStatLabel, { color: colors.mutedForeground }]}>{t.chartsFirstEntries.toLowerCase()}</Text>
                     </View>
                     <View style={styles.summaryStat}>
-                      <Text style={[styles.summaryValue, { color: colors.foreground }]}>{totalDays}</Text>
+                      <Text style={[styles.summaryValue, { color: colors.foreground }]}>{formatCount(totalDays, language)}</Text>
                       <Text style={[styles.summaryStatLabel, { color: colors.mutedForeground }]}>{t.periodDays}</Text>
                     </View>
                     <View style={styles.summaryStat}>
-                      <Text style={[styles.summaryValue, { color: colors.foreground }]}>{peak.toLocaleString()}</Text>
+                      <Text style={[styles.summaryValue, { color: colors.foreground }]}>{formatCount(peak, language)}</Text>
                       <Text style={[styles.summaryStatLabel, { color: colors.mutedForeground }]}>{t.periodBusiestDay.toLowerCase()}</Text>
                     </View>
                   </View>

@@ -1,4 +1,5 @@
 import type { Language } from "@/i18n";
+import { formatCount } from "../lib/format-number";
 
 const it = {
   link: "Registro accessi",
@@ -29,8 +30,8 @@ const it = {
   retry: "Riprova",
   prev: "Precedente",
   next: "Successiva",
-  pageOf: (p: number, n: number) => `Pagina ${p} di ${n}`,
-  total: (n: number) => `${n} ${n === 1 ? "tentativo" : "tentativi"}`,
+  pageOf: (p: number, n: number) => `Pagina ${formatCount(p, "it")} di ${formatCount(n, "it")}`,
+  total: (n: number) => `${formatCount(n, "it")} ${n === 1 ? "tentativo" : "tentativi"}`,
   forbidden: "Solo gli amministratori possono consultare il registro accessi.",
 };
 
@@ -65,8 +66,8 @@ const en: AccessLogStrings = {
   retry: "Try again",
   prev: "Previous",
   next: "Next",
-  pageOf: (p: number, n: number) => `Page ${p} of ${n}`,
-  total: (n: number) => `${n} ${n === 1 ? "attempt" : "attempts"}`,
+  pageOf: (p: number, n: number) => `Page ${formatCount(p, "en")} of ${formatCount(n, "en")}`,
+  total: (n: number) => `${formatCount(n, "en")} ${n === 1 ? "attempt" : "attempts"}`,
   forbidden: "Only administrators can view the access log.",
 };
 
