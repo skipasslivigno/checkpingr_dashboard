@@ -26,6 +26,7 @@ import { StatCard } from "@/components/StatCard";
 import { StatCardSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
 import { useResponsive } from "@/hooks/useResponsive";
+import { TabHeader } from "@/components/TabHeader";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { formatCount } from "@/lib/format-number";
 import { useSeason, formatSeason } from "@/contexts/SeasonContext";
@@ -658,38 +659,38 @@ export default function PeriodScreen() {
       }
     >
       {/* Header */}
-      <View style={styles.headerRow}>
-        <View style={styles.titleBlock}>
-          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-            {formatDate(appliedFrom, language)} — {formatDate(appliedTo, language)}
-          </Text>
-          <Text style={[styles.title, { color: colors.foreground }]}>{t.period}</Text>
-        </View>
-        <View style={styles.headerButtons}>
-          {data && (!comparing || priorData) && (
-            <TouchableOpacity
-              testID="period-export-pdf"
-              disabled={notesBlocked || exporting}
-              style={[styles.exportBtn, { backgroundColor: colors.primary, borderColor: colors.primary, opacity: notesBlocked || exporting ? 0.5 : 1 }]}
-              onPress={exportPdf}
-              activeOpacity={0.7}
-            >
-              <Feather name="share-2" size={14} color={colors.primaryForeground} />
-              <Text style={[styles.exportBtnText, { color: colors.primaryForeground }]}>{comparing ? t.periodShareComparison : "PDF"}</Text>
-            </TouchableOpacity>
-          )}
-          {hasData && (
-            <TouchableOpacity
-              style={[styles.exportBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
-              onPress={() => exportCsv(data, appliedFrom, appliedTo)}
-              activeOpacity={0.7}
-            >
-              <Feather name="download" size={14} color={colors.primary} />
-              <Text style={[styles.exportBtnText, { color: colors.primary }]}>{t.periodExportCsv}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      </View>
+      <TabHeader
+        title={t.period}
+        subtitle={`${formatDate(appliedFrom, language)} — ${formatDate(appliedTo, language)}`}
+        style={styles.headerInset}
+        inlineActionsMinWidth={620}
+        actions={(hasData || (data && (!comparing || priorData))) ? (
+          <View style={styles.headerButtons}>
+            {data && (!comparing || priorData) && (
+              <TouchableOpacity
+                testID="period-export-pdf"
+                disabled={notesBlocked || exporting}
+                style={[styles.exportBtn, { backgroundColor: colors.primary, borderColor: colors.primary, opacity: notesBlocked || exporting ? 0.5 : 1 }]}
+                onPress={exportPdf}
+                activeOpacity={0.7}
+              >
+                <Feather name="share-2" size={14} color={colors.primaryForeground} />
+                <Text style={[styles.exportBtnText, { color: colors.primaryForeground }]}>{comparing ? t.periodShareComparison : "PDF"}</Text>
+              </TouchableOpacity>
+            )}
+            {hasData && (
+              <TouchableOpacity
+                style={[styles.exportBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+                onPress={() => exportCsv(data, appliedFrom, appliedTo)}
+                activeOpacity={0.7}
+              >
+                <Feather name="download" size={14} color={colors.primary} />
+                <Text style={[styles.exportBtnText, { color: colors.primary }]}>{t.periodExportCsv}</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : null}
+      />
 
       {/* Season chips */}
       {seasons && seasons.length > 1 && (
@@ -1022,14 +1023,7 @@ export default function PeriodScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingBottom: 32 },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-    paddingHorizontal: 16,
-  },
-  titleBlock: { flex: 1 },
+  headerInset: { paddingHorizontal: 16, marginBottom: 16 },
   headerButtons: {
     flexDirection: "row",
     alignItems: "center",
@@ -1051,13 +1045,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: "Inter_600SemiBold",
   },
-  subtitle: {
-    fontSize: 12,
-    fontFamily: "Inter_500Medium",
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-  },
-  title: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: -0.5, marginTop: 2 },
   seasonRow: {
     flexDirection: "row",
     paddingHorizontal: 16,

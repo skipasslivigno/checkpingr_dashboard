@@ -5,7 +5,6 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Animated,
   FlatList,
-  Image,
   Platform,
   RefreshControl,
   ScrollView,
@@ -27,6 +26,7 @@ import { FirstEntriesForecast } from "@/components/FirstEntriesForecast";
 import { DateExtractionPicker } from "@/components/DateExtractionPicker";
 import { LiftRowSkeleton, StatCardSkeleton } from "@/components/SkeletonLoader";
 import { StatCard } from "@/components/StatCard";
+import { TabHeader } from "@/components/TabHeader";
 import { DayDiaryButton, DayNotesSummary, useDayNotes } from "@/components/NotesPanels";
 import { DashboardLiftSearch } from "@/components/DashboardLiftSearch";
 import { useColors } from "@/hooks/useColors";
@@ -37,10 +37,6 @@ import { useSelectedDate } from "@/contexts/SelectedDateContext";
 import { useTenantSettings } from "@/contexts/TenantSettingsContext";
 import { useMetricColors } from "@/hooks/useMetricColors";
 import { formatCount } from "@/lib/format-number";
-
-function todayIso(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 // ── Group types & section component (mirrored from groups.tsx) ──────────────
 
@@ -259,9 +255,7 @@ export default function DashboardScreen() {
   const isGroupExpanded = (name: string) => isSearching || expandedGroups.has(name);
 
   const topPadding = Platform.OS === "web" ? 16 : 0;
-  const isToday = selectedDate === todayIso();
-  const { isContentWide: isWide, contentWidth, containerStyle } = useResponsive();
-  const compactHeader = contentWidth < 400;
+  const { isContentWide: isWide, containerStyle } = useResponsive();
 
   type ListItem =
     | { type: "header" }
@@ -288,8 +282,6 @@ export default function DashboardScreen() {
     ];
   }, [liftsLoading, isSearching, filteredGroups, summaryLoading, selectedSeason, seasons, summary, selectedDate, selectedExtraction]);
 
-  const { logoBase64 } = useTenantSettings();
-
   // Inline estimate embedded under PRIMI INGRESSI; modal also shows the actual metric.
   const forecastInline = (
     <FirstEntriesForecast date={selectedDate} season={effectiveSeason} extraction={selectedExtraction} actualEntries={summary?.totalGuests ?? null} />
@@ -297,21 +289,7 @@ export default function DashboardScreen() {
 
   const renderHeader = () => (
     <View style={[styles.headerBlock, { paddingTop: topPadding + 16 }]}>
-      {/* Logo / title / lang */}
-      <View style={[styles.headerRow, compactHeader && styles.headerRowCompact]}>
-        <Image
-          source={logoBase64 ? { uri: logoBase64 } : require("@/assets/images/logo.png")}
-          style={[styles.logoImage, isWide && styles.logoImageWide, compactHeader && styles.logoImageCompact]}
-          resizeMode="contain"
-        />
-        <View style={styles.titleBlock}>
-          <Text style={[styles.dateText, { color: colors.mutedForeground }]} numberOfLines={1}>
-            {isToday ? t.today : selectedDate}
-          </Text>
-          <Text testID="dashboard-title" accessibilityRole="header" style={[styles.title, compactHeader && styles.titleCompact, { color: colors.primary }]} numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.75}>
-            {t.dashboard.toUpperCase()}
-          </Text>
-        </View>
+      <TabHeader title={t.dashboard} titleTestID="dashboard-title" style={styles.headerInset} actions={
         <View style={[styles.langToggle, { backgroundColor: colors.card, borderColor: colors.border }]}>
           {(["it", "en"] as const).map((lang) => (
             <TouchableOpacity
@@ -326,7 +304,7 @@ export default function DashboardScreen() {
             </TouchableOpacity>
           ))}
         </View>
-      </View>
+      } />
 
       {/* Season segmented control */}
       {seasons && seasons.length > 0 && (
@@ -459,22 +437,7 @@ const styles = StyleSheet.create({
   liftToolbar: { flexDirection: "row", alignItems: "flex-start", gap: 4 },
   liftSearch: { flex: 1, minWidth: 0 },
   headerBlock: { marginHorizontal: -16, paddingHorizontal: 0, marginBottom: 4 },
-  headerRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    marginBottom: 10,
-    gap: 10,
-    paddingHorizontal: 16,
-    minHeight: 56,
-  },
-  headerRowCompact: { paddingHorizontal: 12, gap: 8 },
-  logoImage: { width: 110, height: 44, flexShrink: 0 },
-  logoImageWide: { width: 180, height: 64 },
-  logoImageCompact: { width: 84 },
-  titleBlock: { flex: 1, minWidth: 0, justifyContent: "center" },
-  dateText: { fontSize: 11, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
-  title: { fontSize: 26, fontFamily: "Inter_700Bold", letterSpacing: -0.5, marginTop: 1 },
-  titleCompact: { fontSize: 20 },
+  headerInset: { paddingHorizontal: 16 },
   langToggle: {
     flexDirection: "row", borderRadius: 16, borderWidth: 1, overflow: "hidden", flexShrink: 0,
   },

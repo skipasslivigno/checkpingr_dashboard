@@ -25,3 +25,13 @@ righe: nomi e colonne numeriche restavano distanti su monitor larghi.
 **How to apply:** per nuove schede riusare la preferenza condivisa; misurare i
 grafici sul contenitore effettivo, non sul monitor. Non cambiare incidentalmente
 i breakpoint delle schermate amministrative o dei modali non vincolati.
+
+Usare il logo e il titolo in maiuscolo nel colore principale in tutte le
+intestazioni delle schede. In Dashboard la data va mostrata nel selettore,
+non ripetuta nell'intestazione.
+
+**Why:** l'utente vuole uno stile uniforme e ha segnalato che il logo mobile
+era diventato troppo piccolo.
+
+**How to apply:** su schermi stretti spostare i comandi secondari sotto
+l'intestazione piuttosto che ridurre troppo il logo o troncare il titolo.

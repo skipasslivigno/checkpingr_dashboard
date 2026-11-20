@@ -13,6 +13,7 @@ import {
 import { useRouter } from "expo-router";
 import { useColors } from "@/hooks/useColors";
 import { useResponsive } from "@/hooks/useResponsive";
+import { TabHeader } from "@/components/TabHeader";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 import type { Translations } from "@/i18n";
@@ -171,7 +172,7 @@ export default function InfoScreen() {
       style={[styles.container, { backgroundColor: colors.background }]}
       contentContainerStyle={[styles.content, containerStyle, { paddingTop: topPadding + 16, paddingBottom: Platform.OS === "web" ? 34 : 100 }]}
     >
-      <Text style={[styles.title, { color: colors.foreground }]}>{t.integration}</Text>
+      <TabHeader title={t.integration} style={styles.header} />
       <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
         {t.integrationSubtitle}
       </Text>
@@ -279,7 +280,7 @@ export default function InfoScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingHorizontal: 16, gap: 12 },
-  title: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: -0.5, marginBottom: 4 },
+  header: { marginBottom: 0 },
   subtitle: { fontSize: 14, fontFamily: "Inter_400Regular", marginBottom: 8 },
   section: {
     borderRadius: 14,

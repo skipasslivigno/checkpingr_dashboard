@@ -21,6 +21,7 @@ import {
 } from "@workspace/api-client-react";
 import { useColors } from "@/hooks/useColors";
 import { useResponsive } from "@/hooks/useResponsive";
+import { TabHeader } from "@/components/TabHeader";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { useSeason, formatSeason } from "@/contexts/SeasonContext";
 import { useTenantSettings } from "@/contexts/TenantSettingsContext";
@@ -679,12 +680,7 @@ export default function ChartsScreen() {
       }
     >
       {/* Header */}
-      <View style={styles.headerRow}>
-        <View style={styles.titleBlock}>
-          <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>{t.chartsSubtitle}</Text>
-          <Text style={[styles.title, { color: colors.foreground }]}>{t.charts}</Text>
-        </View>
-      </View>
+      <TabHeader title={t.charts} subtitle={t.chartsSubtitle} style={styles.headerInset} />
 
       {/* Season selector */}
       {visibleSeasons.length > 0 && (
@@ -864,16 +860,7 @@ export default function ChartsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   content: { paddingBottom: 32 },
-  headerRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 16,
-    paddingHorizontal: 16,
-  },
-  titleBlock: { flex: 1 },
-  subtitle: { fontSize: 12, fontFamily: "Inter_500Medium", textTransform: "uppercase", letterSpacing: 0.5 },
-  title: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: -0.5, marginTop: 2 },
+  headerInset: { paddingHorizontal: 16, marginBottom: 16 },
   selectorSection: { marginBottom: 16, paddingHorizontal: 16 },
   selectorHeader: { flexDirection: "row", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 10 },
   selectAllButton: { flexDirection: "row", alignItems: "center", gap: 5, borderWidth: 1, borderRadius: 16, paddingHorizontal: 10, paddingVertical: 7 },

@@ -24,6 +24,7 @@ import { LiftRow } from "@/components/LiftRow";
 import { LiftRowSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
 import { useResponsive } from "@/hooks/useResponsive";
+import { TabHeader } from "@/components/TabHeader";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { formatCount } from "@/lib/format-number";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
@@ -162,7 +163,7 @@ export default function LiftsScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: topPadding + 16, backgroundColor: colors.background }]}>
         <View style={[styles.inner, containerStyle]}>
-          <Text style={[styles.title, { color: colors.foreground }]}>{t.allLifts}</Text>
+          <TabHeader title={t.allLifts} style={styles.headerInset} />
 
           <DateExtractionPicker
             season={effectiveSeason}
@@ -304,10 +305,7 @@ const styles = StyleSheet.create({
   header: { paddingBottom: 8 },
   inner: { width: "100%" },
   listWrap: { flex: 1, width: "100%" },
-  title: {
-    fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: -0.5,
-    marginBottom: 12, paddingHorizontal: 16,
-  },
+  headerInset: { paddingHorizontal: 16 },
   filterRow: {
     flexDirection: "row", alignItems: "center",
     paddingHorizontal: 16, gap: 8, marginTop: 8,

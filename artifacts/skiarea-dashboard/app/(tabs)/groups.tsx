@@ -21,6 +21,7 @@ import { DateExtractionPicker } from "@/components/DateExtractionPicker";
 import { LiftRowSkeleton } from "@/components/SkeletonLoader";
 import { useColors } from "@/hooks/useColors";
 import { useResponsive } from "@/hooks/useResponsive";
+import { TabHeader } from "@/components/TabHeader";
 import { useTranslation } from "@/contexts/LanguageContext";
 import { formatCount } from "@/lib/format-number";
 import { useSelectedDate } from "@/contexts/SelectedDateContext";
@@ -338,7 +339,7 @@ export default function GroupsScreen() {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: topPadding + 16 }]}>
         <View style={[styles.inner, containerStyle]}>
-          <Text style={[styles.title, { color: colors.foreground }]}>{t.groups}</Text>
+          <TabHeader title={t.groups} />
           {seasons.length > 1 && (
             <View style={[styles.seasonSegment, { backgroundColor: colors.secondary, borderColor: colors.border }]}>
               <Feather name="layers" size={13} color={colors.mutedForeground} style={styles.seasonIcon} />
@@ -449,7 +450,6 @@ const styles = StyleSheet.create({
   header: { paddingBottom: 4 },
   inner: { width: "100%", paddingHorizontal: 16 },
   listWrap: { flex: 1, width: "100%" },
-  title: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: -0.5, marginBottom: 4 },
   list: { paddingHorizontal: 16, paddingTop: 8, gap: 10 },
   searchBox: {
     flexDirection: "row", alignItems: "center",
