@@ -10,6 +10,8 @@ import type { UserRole } from './userRole';
 export interface User {
   /** @nullable */
   credentialsSentAt?: Date | null;
+  /** Returned by the user list. True if this account has at least one successful login in its tenant's access log. */
+  hasLoggedIn?: boolean;
   id: string;
   email: string;
   name: string;

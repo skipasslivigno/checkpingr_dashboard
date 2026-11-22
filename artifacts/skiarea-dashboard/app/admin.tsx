@@ -93,6 +93,15 @@ type SortColumn = "name" | "email" | "role" | "status" | "password" | "id";
 const COLS = { name: 200, email: 230, role: 150, status: 125, password: 160, id: 310, send: 190, actions: 96 };
 const TABLE_WIDTH = Object.values(COLS).reduce((sum, width) => sum + width, 24);
 
+function UserStatusLight({ testID, label, color }: { testID: string; label: string; color: string }) {
+  return (
+    <View style={styles.statusLight}>
+      <View style={[styles.statusDot, { backgroundColor: color }]} />
+      <Text testID={testID} style={[styles.statusLightText, { color }]}>{label}</Text>
+    </View>
+  );
+}
+
 function UserRow({ user, onEdit, onDelete, onSend, currentUserId, colors, t, last }: {
   user: User;
   onEdit: (u: User) => void;
@@ -116,13 +125,25 @@ function UserRow({ user, onEdit, onDelete, onSend, currentUserId, colors, t, las
         <View style={[styles.avatar, { backgroundColor: roleColor + "20" }]}>
           <Text style={[styles.initials, { color: roleColor }]}>{initials(user.name)}</Text>
         </View>
-        <Text style={[styles.userName, { color: colors.foreground }]} numberOfLines={1}>
-          {user.name}
-          {isSelf ? <Text style={[styles.selfTag, { color: colors.mutedForeground }]}>{` (${t.adminYou})`}</Text> : null}
-        </Text>
+        <View style={styles.userIdentity}>
+          <Text style={[styles.userName, { color: colors.foreground }]} numberOfLines={1}>
+            {user.name}
+            {isSelf ? <Text style={[styles.selfTag, { color: colors.mutedForeground }]}>{` (${t.adminYou})`}</Text> : null}
+          </Text>
+          <UserStatusLight
+            testID={`user-login-status-${user.id}`}
+            label={user.hasLoggedIn ? t.adminLoginRecorded : user.hasLoggedIn === false ? t.adminNoLoginRecorded : t.adminLoginUnavailable}
+            color={user.hasLoggedIn ? colors.success : colors.mutedForeground}
+          />
+        </View>
       </View>
       <View style={[styles.td, { width: COLS.email }]}>
         <Text style={[styles.userEmail, { color: colors.mutedForeground }]} numberOfLines={1}>{user.email}</Text>
+        <UserStatusLight
+          testID={`credentials-status-${user.id}`}
+          label={user.credentialsSentAt ? t.adminCredentialsSent : t.adminCredentialsNotSent}
+          color={user.credentialsSentAt ? colors.success : colors.warning}
+        />
       </View>
       <View style={[styles.td, { width: COLS.role }]}>
         <View style={[styles.roleBadge, { backgroundColor: roleColor + "18" }]}>
@@ -241,7 +262,9 @@ export default function AdminScreen() {
   const queryClient = useQueryClient();
   const { isWide } = useResponsive();
 
-  const { data: users = [], isLoading, isError, refetch } = useGetUsers();
+  const { data: users = [], isLoading, isError, refetch } = useGetUsers({
+    query: { queryKey: getGetUsersQueryKey(), refetchInterval: 60_000 },
+  });
   const [sort, setSort] = useState<{ column: SortColumn; direction: "asc" | "desc" }>({
     column: "name", direction: "asc",
   });
@@ -688,6 +711,9 @@ const styles = StyleSheet.create({
   thead: { minHeight: 38, borderBottomWidth: 1 },
   th: { fontSize: 11, fontFamily: "Inter_600SemiBold", letterSpacing: 0.5, paddingRight: 12 },
   td: { paddingRight: 12, paddingVertical: 8 },
+  userIdentity: { flex: 1, minWidth: 0 },
+  statusLight: { flexDirection: "row", alignItems: "center", gap: 5, marginTop: 4 },
+  statusLightText: { flexShrink: 1, fontSize: 11, fontFamily: "Inter_600SemiBold" },
   avatar: { width: 32, height: 32, borderRadius: 16, alignItems: "center", justifyContent: "center" },
   initials: { fontSize: 12, fontFamily: "Inter_700Bold" },
   userName: { fontSize: 14, fontFamily: "Inter_600SemiBold", flexShrink: 1 },

@@ -10,6 +10,7 @@ import { GetAccessLogsResponse } from "@workspace/api-zod";
 import { requireAuth } from "../middleware/requireAuth";
 import authRouter from "./auth";
 import accessRouter from "./access-logs";
+import usersRouter from "./users";
 
 const tenantId = randomUUID(), otherTenantId = randomUUID();
 const unknownEmail = `unknown-${randomUUID()}@example.invalid`;
@@ -43,7 +44,7 @@ before(async () => {
   })));
   app.set("trust proxy", "loopback");
   app.use(express.json());
-  app.use(requireAuth, authRouter, accessRouter);
+  app.use(requireAuth, authRouter, accessRouter, usersRouter);
   server = createServer(app);
   await new Promise<void>(resolve => server!.listen(0, "127.0.0.1", resolve));
   const address = server.address(); assert.ok(address && typeof address !== "string");
@@ -100,6 +101,20 @@ test("admins are tenant-isolated; viewers, forced-password sessions and anonymou
   assert.equal(other.total, 1); assert.equal(other.items[0].email, emails.other);
   const ours = GetAccessLogsResponse.parse(await (await list()).json());
   assert.ok(ours.items.every(item => item.email !== emails.other && item.email !== unknownEmail));
+});
+test("users list reports only successful logins for each account in the current tenant", async () => {
+  const users = (token: string) => fetch(`${base}/users`, { headers: { authorization: `Bearer ${token}` } });
+  assert.equal((await users(viewerToken)).status, 403);
+  const result = await users(adminToken);
+  assert.equal(result.status, 200);
+  assert.equal(result.headers.get("cache-control"), "no-store");
+  const rows = await result.json() as Array<{ id: string; hasLoggedIn: boolean; credentialsSentAt: string | null }>;
+  assert.equal(rows.find(row => row.id === ids.viewer)?.hasLoggedIn, true);
+  assert.equal(rows.find(row => row.id === ids.viewer)?.credentialsSentAt, null);
+  assert.equal(rows.find(row => row.id === ids.inactive)?.hasLoggedIn, false);
+  assert.ok(!rows.some(row => row.id === ids.other));
+  const otherRows = await (await users(otherToken)).json() as typeof rows;
+  assert.deepEqual(otherRows.map(row => [row.id, row.hasLoggedIn]), [[ids.other, true]]);
 });
 test("filters validate input and match literal search characters", async () => {
   for (const query of ["?page=0", "?page=1.5", "?page=100001", "?outcome=invalid", `?search=${"a".repeat(255)}`]) {

@@ -1,7 +1,7 @@
 import { Router } from "express";
 import bcrypt from "bcryptjs";
-import { eq, and, sql } from "drizzle-orm";
-import { db, usersTable } from "@workspace/db";
+import { eq, and, exists, sql } from "drizzle-orm";
+import { accessLogsTable, db, usersTable } from "@workspace/db";
 import { requireRole } from "../middleware/requireAuth";
 import { z } from "zod";
 
@@ -25,13 +25,23 @@ const UpdateUserBody = z.object({
 
 router.get("/users", requireRole("admin"), async (req, res): Promise<void> => {
   const tenantId = req.user!.tenantId;
+  const successfulLogin = db.select({ found: sql`1` }).from(accessLogsTable).where(and(
+    eq(accessLogsTable.tenantId, tenantId),
+    eq(accessLogsTable.userId, usersTable.id),
+    eq(accessLogsTable.success, true),
+  ));
   const users = await db
-    .select({ id: usersTable.id, email: usersTable.email, name: usersTable.name, role: usersTable.role, isActive: usersTable.isActive, mustChangePassword: usersTable.mustChangePassword, credentialsSentAt: usersTable.credentialsSentAt, createdAt: usersTable.createdAt })
+    .select({
+      id: usersTable.id, email: usersTable.email, name: usersTable.name, role: usersTable.role,
+      isActive: usersTable.isActive, mustChangePassword: usersTable.mustChangePassword,
+      credentialsSentAt: usersTable.credentialsSentAt, createdAt: usersTable.createdAt,
+      hasLoggedIn: sql<boolean>`${exists(successfulLogin)}`,
+    })
     .from(usersTable)
     .where(eq(usersTable.tenantId, tenantId))
     .orderBy(usersTable.createdAt);
 
-  res.json(users);
+  res.set("Cache-Control", "no-store").json(users);
 });
 
 router.post("/users", requireRole("admin"), async (req, res): Promise<void> => {

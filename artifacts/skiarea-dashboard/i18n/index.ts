@@ -195,6 +195,11 @@ export interface Translations {
   adminSortAscending: string;
   adminSortDescending: string;
   adminYou: string;
+  adminLoginRecorded: string;
+  adminNoLoginRecorded: string;
+  adminLoginUnavailable: string;
+  adminCredentialsSent: string;
+  adminCredentialsNotSent: string;
   adminDeleteTitle: string;
   adminDeleteSelf: string;
   adminDeleting: string;
@@ -509,6 +514,11 @@ const it: Translations = {
   adminSortAscending: "Ordina in modo crescente",
   adminSortDescending: "Ordina in modo decrescente",
   adminYou: "tu",
+  adminLoginRecorded: "Accesso effettuato",
+  adminNoLoginRecorded: "Nessun accesso registrato",
+  adminLoginUnavailable: "Accessi non disponibili",
+  adminCredentialsSent: "Mail inviata",
+  adminCredentialsNotSent: "Mail non inviata",
   adminDeleteTitle: "Eliminare utente?",
   adminDeleteSelf: "Non puoi eliminare il tuo account",
   adminDeleting: "Eliminazione...",
@@ -855,6 +865,11 @@ const en: Translations = {
   adminSortAscending: "Sort ascending",
   adminSortDescending: "Sort descending",
   adminYou: "you",
+  adminLoginRecorded: "Has signed in",
+  adminNoLoginRecorded: "No sign-in recorded",
+  adminLoginUnavailable: "Sign-in status unavailable",
+  adminCredentialsSent: "Email sent",
+  adminCredentialsNotSent: "Email not sent",
   adminDeleteTitle: "Delete user?",
   adminDeleteSelf: "You cannot delete your own account",
   adminDeleting: "Deleting...",

@@ -650,6 +650,8 @@ export const UserRole = {
 export interface User {
   /** @nullable */
   credentialsSentAt?: string | null;
+  /** Returned by the user list. True if this account has at least one successful login in its tenant's access log. */
+  hasLoggedIn?: boolean;
   id: string;
   email: string;
   name: string;

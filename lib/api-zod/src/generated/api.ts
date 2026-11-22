@@ -386,6 +386,7 @@ export const GetAccessLogsResponse = zod.object({
  */
 export const GetUsersResponseItem = zod.object({
   "credentialsSentAt": zod.coerce.date().nullish(),
+  "hasLoggedIn": zod.boolean().optional().describe('Returned by the user list. True if this account has at least one successful login in its tenant\'s access log.'),
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string(),
@@ -428,6 +429,7 @@ export const UpdateUserBody = zod.object({
 
 export const UpdateUserResponse = zod.object({
   "credentialsSentAt": zod.coerce.date().nullish(),
+  "hasLoggedIn": zod.boolean().optional().describe('Returned by the user list. True if this account has at least one successful login in its tenant\'s access log.'),
   "id": zod.string(),
   "email": zod.string(),
   "name": zod.string(),

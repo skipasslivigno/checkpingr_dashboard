@@ -34,9 +34,11 @@ export function SendCredentialsCell({ user, onSend, colors, width }: {
           {t.emSendCreds}
         </Text>
       </Pressable>
-      <Text testID={`credentials-status-${user.id}`} style={[cs.status, { color: colors.mutedForeground }]} numberOfLines={1}>
-        {disabled ? t.emInactive : user.credentialsSentAt ? formatStamp(user.credentialsSentAt, language) : t.emNeverSent}
-      </Text>
+      {(user.credentialsSentAt || disabled) && (
+        <Text style={[cs.status, { color: colors.mutedForeground }]} numberOfLines={1}>
+          {user.credentialsSentAt ? formatStamp(user.credentialsSentAt, language) : t.emInactive}
+        </Text>
+      )}
     </View>
   );
 }

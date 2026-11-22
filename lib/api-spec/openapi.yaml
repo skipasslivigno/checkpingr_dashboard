@@ -1329,6 +1329,9 @@ components:
         credentialsSentAt:
           type: ["string", "null"]
           format: date-time
+        hasLoggedIn:
+          type: boolean
+          description: Returned by the user list. True if this account has at least one successful login in its tenant's access log.
         id:
           type: string
         email:
